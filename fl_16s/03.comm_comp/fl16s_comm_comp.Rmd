@@ -1,0 +1,1653 @@
+---
+title: "Florida 16s community composition"
+author: "Nicola G. Kriefall"
+date: "12/7/2021"
+output:
+ rmarkdown::html_document:
+    theme: cerulean
+    toc: yes
+    toc_float: yes
+    highlight: haddock
+    number_sections: true
+---
+
+# Setup
+
+```{r packages composition}
+# library(rlang)
+# library(dplyr)
+# library(stats)
+# #library(MCMC.OTU)
+# #install.packages("remotes")
+# #remotes::install_github("Jtrachsel/funfuns")
+# library("funfuns")
+```
+
+```{r packages used composition}
+library(stringr)
+library(ggpubr)
+library(vegan)
+library(cowplot)
+library(ggplot2)
+library(tidyverse)
+```
+
+Read in data
+
+```{r read in data}
+setwd("~/nicfall@bu.edu - Google Drive/My Drive/Flirma/flirma_networks_master/fl_16s/03.comm_comp")
+
+#ps.clean <- readRDS("../01.generate_asv_table/fl16s.ps.cleaner.rd3_newvars.rds")
+
+#made these below:
+ps.fam <- readRDS("ps.asvsnamed.fam.RDS")
+ps.cla <- readRDS("ps.asvsnamed.cla.RDS")
+ps.clean <- readRDS("ps.asvsnamed.clean.RDS")
+```
+
+Rename ASVs to be more informative
+
+(ran once then skip)
+
+```{r rename ASVs}
+#tax <- as.data.frame(ps.rare@tax_table@.Data)
+#tax <- as.data.frame(ps.rare@tax_table@.Data)
+tax <- as.data.frame(ps.clean@tax_table@.Data)
+#tax <- as.data.frame(ps.norm@tax_table@.Data)
+
+tax.clean <- data.frame(row.names = row.names(tax),
+                        Kingdom = str_replace(tax[,1], "D_0__",""),
+                        Phylum = str_replace(tax[,2], "D_1__",""),
+                        Class = str_replace(tax[,3], "D_2__",""),
+                        Order = str_replace(tax[,4], "D_3__",""),
+                        Family = str_replace(tax[,5], "D_4__",""),
+                        Genus = str_replace(tax[,6], "D_5__",""),
+                        Species = str_replace(tax[,7], "D_6__",""),
+                        stringsAsFactors = FALSE)
+tax.clean[is.na(tax.clean)] <- ""
+
+for (i in 1:7){ tax.clean[,i] <- as.character(tax.clean[,i])}
+####### Fill holes in the tax table
+tax.clean[is.na(tax.clean)] <- ""
+for (i in 1:nrow(tax.clean)){
+  if (tax.clean[i,2] == ""){
+    kingdom <- paste("Kingdom_", tax.clean[i,1], sep = "")
+    tax.clean[i, 2:7] <- kingdom
+  } else if (tax.clean[i,3] == ""){
+    phylum <- paste("Phylum_", tax.clean[i,2], sep = "")
+    tax.clean[i, 3:7] <- phylum
+  } else if (tax.clean[i,4] == ""){
+    class <- paste("Class_", tax.clean[i,3], sep = "")
+    tax.clean[i, 4:7] <- class
+  } else if (tax.clean[i,5] == ""){
+    order <- paste("Order_", tax.clean[i,4], sep = "")
+    tax.clean[i, 5:7] <- order
+  } else if (tax.clean[i,6] == ""){
+    family <- paste("Family_", tax.clean[i,5], sep = "")
+    tax.clean[i, 6:7] <- family
+  } else if (tax.clean[i,7] == ""){
+    tax.clean$Species[i] <- paste("Genus",tax.clean$Genus[i], sep = "_")
+  }
+}
+
+tax_table(ps.clean) <- as.matrix(tax.clean)
+
+#ps.clean.gen <- tax_glom(ps.clean,"Genus")
+#ps.otu.gen <- data.frame(ps.clean.gen@otu_table)
+#sum(colSums(ps.otu.gen))
+
+#ps.clean.gen.wayless <- prune_taxa(taxa_sums(ps.clean.gen) < 72605, ps.clean.gen) 
+
+#family
+ps.clean.fam <- tax_glom(ps.clean,"Family")
+ps.clean.fam.no0 <- prune_taxa(taxa_sums(ps.clean.fam) > 0, ps.clean.fam) 
+
+#class
+ps.clean.cla <- tax_glom(ps.clean,"Class")
+ps.clean.cla.no0 <- prune_taxa(taxa_sums(ps.clean.cla) > 0, ps.clean.cla) 
+
+#ps.otu.fam <- data.frame(ps.clean.fam@otu_table)
+#sum(colSums(ps.otu.gen))
+
+#ps.clean.gen.wayless <- prune_taxa(taxa_sums(ps.clean.gen) < 72605, ps.clean.gen) 
+# sum(colSums(ps.otu))
+# ps.clean.less <- prune_taxa(taxa_sums(ps.clean) > 64914, ps.clean) 
+```
+
+Saving
+
+```{r save renamed files, eval=FALSE}
+# saveRDS(ps.clean.fam.no0,"ps.asvsnamed.fam.RDS")
+# saveRDS(ps.clean.cla.no0,"ps.asvsnamed.cla.RDS")
+# saveRDS(ps.clean,"ps.asvsnamed.clean.RDS")
+```
+
+# Pcoa {.tabset}
+
+Subset samples
+
+```{r}
+##option to clr transform here or not
+ps.clr <-  microbiome::transform(ps.clean,"clr")
+ps.temp <- subset_samples(ps.clr,site!="UK3")
+
+##other option
+#ps.temp <- subset_samples(ps.clean,site!="UK3")
+
+ps.clean.sid <- subset_samples(ps.temp,spp=="ssid")
+
+#time
+ps.clean.sid.pre <- subset_samples(ps.clean.sid,time=="Pre")
+ps.clean.sid.irm <- subset_samples(ps.clean.sid,time=="Irma")
+ps.clean.sid.pos <- subset_samples(ps.clean.sid,time=="Post")
+
+#sites & time
+ps.clean.sid.pre.lk1 <- subset_samples(ps.clean.sid.pre,site=="LK1")
+ps.clean.sid.pre.uk1 <- subset_samples(ps.clean.sid.pre,site=="UK1")
+ps.clean.sid.pre.uk2 <- subset_samples(ps.clean.sid.pre,site=="UK2")
+
+ps.clean.sid.irm.lk1 <- subset_samples(ps.clean.sid.irm,site=="LK1")
+ps.clean.sid.irm.uk1 <- subset_samples(ps.clean.sid.irm,site=="UK1")
+ps.clean.sid.irm.uk2 <- subset_samples(ps.clean.sid.irm,site=="UK2")
+
+ps.clean.sid.pos.lk1 <- subset_samples(ps.clean.sid.pos,site=="LK1")
+ps.clean.sid.pos.uk1 <- subset_samples(ps.clean.sid.pos,site=="UK1")
+ps.clean.sid.pos.uk2 <- subset_samples(ps.clean.sid.pos,site=="UK2")
+
+#radians
+ps.clean.rad <- subset_samples(ps.temp,spp=="srad")
+
+#time
+ps.clean.rad.pre <- subset_samples(ps.clean.rad,time=="Pre")
+ps.clean.rad.irm <- subset_samples(ps.clean.rad,time=="Irma")
+ps.clean.rad.pos <- subset_samples(ps.clean.rad,time=="Post")
+
+#sites & time
+ps.clean.rad.pre.lk1 <- subset_samples(ps.clean.rad.pre,site=="LK1")
+ps.clean.rad.pre.uk1 <- subset_samples(ps.clean.rad.pre,site=="UK1")
+ps.clean.rad.pre.uk2 <- subset_samples(ps.clean.rad.pre,site=="UK2")
+
+ps.clean.rad.irm.lk1 <- subset_samples(ps.clean.rad.irm,site=="LK1")
+ps.clean.rad.irm.uk1 <- subset_samples(ps.clean.rad.irm,site=="UK1")
+ps.clean.rad.irm.uk2 <- subset_samples(ps.clean.rad.irm,site=="UK2")
+
+ps.clean.rad.pos.lk1 <- subset_samples(ps.clean.rad.pos,site=="LK1")
+#ps.clean.rad.pos.uk1 <- subset_samples(ps.clean.rad.pos,site=="UK1")
+ps.clean.rad.pos.uk2 <- subset_samples(ps.clean.rad.pos,site=="UK2")
+```
+
+## CLR
+
+### Sids
+
+#### All data
+
+```{r}
+ord.clean.sid <- ordinate(ps.clean.sid, "PCoA", "euclidean")
+
+gg.clean.sid <- plot_ordination(ps.clean.sid, ord.clean.sid,color="time",shape="zone",axes=c(1,2))+
+  stat_ellipse()+
+  theme_cowplot()
+  #scale_color_manual(name="Site",values=c("darkslategray3","darkslategray4","#000004"))+
+  #scale_shape_manual(name="Site",values=c(8,4,9))+
+  #xlab("Axis 1 (44.1%)")+
+  #ylab("Axis 2 (23%)")+
+  #ggtitle("S. siderea")+
+  #facet_wrap(time~site)
+gg.clean.sid
+```
+
+#### LK1
+
+```{r}
+ps.clean.sid.lk1 <- subset_samples(ps.clean.sid,site=="LK1")
+
+ord.clean.sid.lk1 <- ordinate(ps.clean.sid.lk1, "PCoA", "euclidean")
+
+gg.clean.sid.lk1 <- plot_ordination(ps.clean.sid.lk1, ord.clean.sid.lk1,color="time",shape="zone",axes=c(1,2))+
+  stat_ellipse()+
+  theme_cowplot()
+  #scale_color_manual(name="Site",values=c("darkslategray3","darkslategray4","#000004"))+
+  #scale_shape_manual(name="Site",values=c(8,4,9))+
+  #xlab("Axis 1 (44.1%)")+
+  #ylab("Axis 2 (23%)")+
+  #ggtitle("S. siderea")+
+  #facet_wrap(time~site)
+gg.clean.sid.lk1
+```
+
+```{r}
+ord.clean.sid.pre.lk1 <- ordinate(ps.clean.sid.pre.lk1, "PCoA", "euclidean")
+
+gg.clean.sid.pre.lk1 <- plot_ordination(ps.clean.sid.pre.lk1, ord.clean.sid.pre.lk1,color="zone",shape="zone",axes=c(1,2))+
+  stat_ellipse()+
+  theme_cowplot()+
+  #scale_color_manual(name="Site",values=c("darkslategray3","darkslategray4","#000004"))+
+  #scale_shape_manual(name="Site",values=c(8,4,9))+
+  #xlab("Axis 1 (44.1%)")+
+  #ylab("Axis 2 (23%)")+
+  #ggtitle("S. siderea")+
+  facet_wrap(time~site)
+gg.clean.sid.pre.lk1
+
+ord.clean.sid.irm.lk1 <- ordinate(ps.clean.sid.irm.lk1, "PCoA", "euclidean")
+
+gg.clean.sid.irm.lk1 <- plot_ordination(ps.clean.sid.irm.lk1, ord.clean.sid.irm.lk1,color="zone",shape="zone",axes=c(1,2))+
+  stat_ellipse()+
+  theme_cowplot()+
+  #scale_color_manual(name="Site",values=c("darkslategray3","darkslategray4","#000004"))+
+  #scale_shape_manual(name="Site",values=c(8,4,9))+
+  #xlab("Axis 1 (44.1%)")+
+  #ylab("Axis 2 (23%)")+
+  #ggtitle("S. siderea")+
+  facet_wrap(time~site)
+gg.clean.sid.irm.lk1
+
+ord.clean.sid.pos.lk1 <- ordinate(ps.clean.sid.pos.lk1, "PCoA", "euclidean")
+
+gg.clean.sid.pos.lk1 <- plot_ordination(ps.clean.sid.pos.lk1, ord.clean.sid.pos.lk1,color="zone",shape="zone",axes=c(1,2))+
+  stat_ellipse()+
+  theme_cowplot()+
+  #scale_color_manual(name="Site",values=c("darkslategray3","darkslategray4","#000004"))+
+  #scale_shape_manual(name="Site",values=c(8,4,9))+
+  #xlab("Axis 1 (44.1%)")+
+  #ylab("Axis 2 (23%)")+
+  #ggtitle("S. siderea")+
+  facet_wrap(time~site)
+gg.clean.sid.pos.lk1
+
+gg.sid <- ggarrange(gg.clean.sid.pre.lk1,gg.clean.sid.irm.lk1,gg.clean.sid.pos.lk1,nrow=1,common.legend=T,legend="right")
+annotate_figure(gg.sid, fig.lab="S. siderea - CLR transformed",fig.lab.face = "bold")
+```
+
+### Rads
+
+```{r}
+ps.clean.rad.pre.lk1.clr <- microbiome::transform(ps.clean.rad.pre.lk1,"clr")
+ord.clean.rad.pre.lk1.clr <- ordinate(ps.clean.rad.pre.lk1.clr, "PCoA", "euclidean")
+
+gg.clean.rad.pre.lk1.clr <- plot_ordination(ps.clean.rad.pre.lk1.clr, ord.clean.rad.pre.lk1.clr,color="zone",shape="zone",axes=c(1,2))+
+  stat_ellipse()+
+  theme_cowplot()+
+  #scale_color_manual(name="Site",values=c("darkslategray3","darkslategray4","#000004"))+
+  #scale_shape_manual(name="Site",values=c(8,4,9))+
+  #xlab("Axis 1 (44.1%)")+
+  #ylab("Axis 2 (23%)")+
+  #ggtitle("S. raderea")+
+  facet_wrap(time~site)
+gg.clean.rad.pre.lk1.clr
+
+ps.clean.rad.irm.lk1.clr <- microbiome::transform(ps.clean.rad.irm.lk1,"clr")
+ord.clean.rad.irm.lk1.clr <- ordinate(ps.clean.rad.irm.lk1.clr, "PCoA", "euclidean")
+
+gg.clean.rad.irm.lk1.clr <- plot_ordination(ps.clean.rad.irm.lk1.clr, ord.clean.rad.irm.lk1.clr,color="zone",shape="zone",axes=c(1,2))+
+  stat_ellipse()+
+  theme_cowplot()+
+  #scale_color_manual(name="Site",values=c("darkslategray3","darkslategray4","#000004"))+
+  #scale_shape_manual(name="Site",values=c(8,4,9))+
+  #xlab("Axis 1 (44.1%)")+
+  #ylab("Axis 2 (23%)")+
+  #ggtitle("S. raderea")+
+  facet_wrap(time~site)
+gg.clean.rad.irm.lk1.clr
+
+ps.clean.rad.pos.lk1.clr <- microbiome::transform(ps.clean.rad.pos.lk1,"clr")
+ord.clean.rad.pos.lk1.clr <- ordinate(ps.clean.rad.pos.lk1.clr, "PCoA", "euclidean")
+
+gg.clean.rad.pos.lk1.clr <- plot_ordination(ps.clean.rad.pos.lk1.clr, ord.clean.rad.pos.lk1.clr,color="zone",shape="zone",axes=c(1,2))+
+  stat_ellipse()+
+  theme_cowplot()+
+  #scale_color_manual(name="Site",values=c("darkslategray3","darkslategray4","#000004"))+
+  #scale_shape_manual(name="Site",values=c(8,4,9))+
+  #xlab("Axis 1 (44.1%)")+
+  #ylab("Axis 2 (23%)")+
+  #ggtitle("S. raderea")+
+  facet_wrap(time~site)
+gg.clean.rad.pos.lk1.clr
+
+ggarrange(gg.clean.rad.pre.lk1.clr,gg.clean.rad.irm.lk1.clr,gg.clean.rad.pos.lk1.clr,nrow=1,common.legend=T,legend="right")+
+  ggtitle("S. radians")
+```
+
+## Relative abundance
+
+```{r}
+ps.clean.rel <- transform_sample_counts(ps.clean, function(x) x / sum(x))
+
+ord.rel <- ordinate(ps.clean.rel, "NMDS", "bray")
+
+gg.clean.rel <- plot_ordination(ps.clean.rel, ord.rel,color="time",shape="time",axes=c(1,2))+
+  stat_ellipse()+
+  theme_cowplot()+
+  #scale_color_manual(name="Site",values=c("darkslategray3","darkslategray4","#000004"))+
+  #scale_shape_manual(name="Site",values=c(8,4,9))+
+  #xlab("Axis 1 (44.1%)")+
+  #ylab("Axis 2 (23%)")+
+  ggtitle("Relative abundance")+
+  facet_wrap(~spp)
+gg.clean.rel
+
+p3 = plot_ordination(ps.clean.rel, ord.rel, type="biplot", color="Phylum", shape="year", title="biplot")
+p3
+
+```
+
+# Core vs. accessory
+
+## Core
+
+```{r packages core, echo=FALSE}
+#BiocManager::install("microbiome")
+#remotes::install_github("r-lib/rlang")
+library(microbiome)
+```
+
+```{r core}
+pseq.core <- core(ps.norm, detection = 0, prevalence = .5)
+pseq.core #3 taxa
+
+#saving
+#core.tax <- data.frame(pseq.core@tax_table)
+#write.csv(core.tax,"core.taxa.csv")
+
+ps_glom <- tax_glom(pseq.core, "Genus")
+#ps0 <- transform_sample_counts(ps_glom, function(x) x / sum(x))
+ps1 <- merge_samples(ps_glom, "site_zone")
+#ps2 <- transform_sample_counts(ps1, function(x) x / sum(x))
+
+plot_bar(ps1, fill="Genus")+
+  geom_bar(stat="identity")+
+  theme_cowplot()+
+  scale_fill_brewer(palette="BrBG")+
+  facet_wrap(~year)
+#ggsave(file="core.bar.pdf",width=8)
+
+#plot_ordination(pseq.core,ordination="")
+plot_ordination(pseq.core,ordinate(pseq.core,"PCoA", "bray"),color="site", shape="site")+
+  stat_ellipse()+
+  theme_cowplot()+
+  scale_color_manual(name="Site",values=c("darkslategray3","darkslategray4","#000004"))+
+  scale_shape_manual(name="Site",values=c(8,4,9))#+
+  #xlab("Axis 1 (42.6%)")+
+  #ylab("Axis 2 (24.1%)")+
+  #ggtitle("Rarefied")
+
+#by site
+ps.core.mnw <- subset_samples(pseq.core,site=="MNW")
+ps.core.mse <- subset_samples(pseq.core,site=="MSE")
+ps.core.tnw <- subset_samples(pseq.core,site=="TNW")
+
+plot_ordination(ps.core.mnw,ordinate(ps.core.mnw,"PCoA", "bray"),color="zone", shape="zone")+
+  stat_ellipse()+
+  theme_cowplot()#+
+  #scale_color_manual(name="Site",values=c("darkslategray3","darkslategray4","#000004"))+
+  #scale_shape_manual(name="Site",values=c(8,4,9))#+
+  #xlab("Axis 1 (42.6%)")+
+  #ylab("Axis 2 (24.1%)")+
+  #ggtitle("Rarefied")
+```
+
+```{r calculate core abundance}
+# calculating core abundances #
+core.sqs <- tax_table(pseq.core)
+core.sqs.ids <- row.names(core.sqs)
+core.sqs.ids
+
+ps.rare.trim.rel <- transform_sample_counts(ps.rare.trim, function(x) x / sum(x))
+seq.rare.rel <- data.frame(otu_table(ps.rare.trim.rel))
+tax.core <- tax_table(ps.rare.trim.rel)
+
+seq.core <- seq.rare.rel %>% select(c(core.sqs.ids))
+core.rel <- data.frame(colMeans(seq.core))
+
+total.rel <- data.frame(colMeans(seq.rare.rel))
+total.rel.ordered <- data.frame(total.rel[order(-total.rel$colMeans.seq.rare.rel.),,drop=FALSE])
+```
+
+Core stats
+
+```{r core stats}
+seq.core <- data.frame(otu_table(pseq.core))
+
+dist.core <- vegdist(seq.core)
+samdf.core <- data.frame(sample_data(pseq.core))
+row.names(samdf.core)==row.names(seq.core)
+
+bet.all <- betadisper(dist.core,samdf.core$zone)
+anova(bet.all)
+plot(bet.all) #very much overlap, not sig
+
+bet.all <- betadisper(dist.core,samdf.core$site)
+anova(bet.all)
+plot(bet.all) #very much overlap, not sig
+
+adonis(seq.core ~ site, data=samdf.core, permutations=999)
+adonis(seq.core ~ site/zone, data=samdf.core, permutations=999)
+adonis(seq.core ~ zone, strata=samdf.core$site,data=samdf.core, permutations=999)
+
+pairwise.adonis(seq.core, factors = samdf.core$site, permutations = 999)
+#MNW only marginally different than TNW surprisingly
+
+#### by site - MNW ####
+seq.core.mnw <- data.frame(otu_table(ps.core.mnw))
+
+dist.core.mnw <- vegdist(seq.core.mnw)
+samdf.core.mnw <- data.frame(sample_data(ps.core.mnw))
+row.names(samdf.core.mnw)==row.names(seq.core.mnw)
+
+bet.all <- betadisper(dist.core.mnw,samdf.core.mnw$zone)
+anova(bet.all)
+plot(bet.all) #very much overlap, not sig
+
+adonis(seq.core.mnw ~ zone,data=samdf.core.mnw, permutations=999)
+#not sig
+```
+
+## Accessory
+
+```{r accessory, eval=FALSE}
+ps.rare.trim.otu <- data.frame(ps.rare.trim@otu_table)
+core.tax <- data.frame(pseq.core@tax_table)
+core.ids <- c(rownames(core.tax))
+ps.rare.trim.acc.otu <- ps.rare.trim.otu[,!colnames(ps.rare.trim.otu) %in% core.ids ]
+row.names(samdf) <- samdf$id
+
+#remake phyloseq object
+ps.acc <- phyloseq(otu_table(ps.rare.trim.acc.otu, taxa_are_rows=FALSE), 
+                         sample_data(samdf), 
+                         tax_table(taxa2))
+ps.acc #214 taxa accessory
+
+plot_ordination(ps.acc,ordinate(ps.acc,"PCoA", "bray"),color="site", shape="site")+
+  stat_ellipse()+
+  theme_cowplot()+
+  scale_color_manual(name="Site",values=c("darkslategray3","darkslategray4","#000004"))+
+  scale_shape_manual(name="Site",values=c(8,4,9))#+
+  #xlab("Axis 1 (42.6%)")+
+  #ylab("Axis 2 (24.1%)")+
+  #ggtitle("Rarefied")
+#ggsave(file="pcoa.acc.all.pdf")
+
+#by site
+ps.acc.mnw <- subset_samples(ps.acc,site=="MNW")
+ps.acc.mse <- subset_samples(ps.acc,site=="MSE")
+ps.acc.tnw <- subset_samples(ps.acc,site=="TNW")
+
+gg.pcoa.acc.mnw <- plot_ordination(ps.acc.mnw,ordinate(ps.acc.mnw,"PCoA", "bray"),color="zone", shape="zone")+
+  stat_ellipse()+
+  theme_cowplot()+
+  scale_shape_manual(values=c(16,15),labels=c("Back reef","Fore reef"))+
+  scale_color_manual(values=c("#ED7953FF","#8405A7FF"),labels=c("Back reef","Fore reef"))+
+  guides(color=guide_legend(title="Reef zone"),shape=guide_legend(title="Reef zone"))
+
+gg.pcoa.acc.mse <- plot_ordination(ps.acc.mse,ordinate(ps.acc.mse,"PCoA", "bray"),color="zone", shape="zone")+
+  stat_ellipse()+
+  theme_cowplot()+
+  scale_shape_manual(values=c(16,15),labels=c("Back reef","Fore reef"))+
+  scale_color_manual(values=c("#ED7953FF","#8405A7FF"),labels=c("Back reef","Fore reef"))+
+  guides(color=guide_legend(title="Reef zone"),shape=guide_legend(title="Reef zone"))
+
+gg.pcoa.acc.tnw <- plot_ordination(ps.acc.tnw,ordinate(ps.acc.tnw,"PCoA", "bray"),color="zone", shape="zone")+
+  stat_ellipse()+
+  theme_cowplot()+
+  scale_shape_manual(values=c(16,15),labels=c("Back reef","Fore reef"))+
+  scale_color_manual(values=c("#ED7953FF","#8405A7FF"),labels=c("Back reef","Fore reef"))+
+  guides(color=guide_legend(title="Reef zone"),shape=guide_legend(title="Reef zone"))
+
+ggarrange(gg.pcoa.acc.mnw,gg.pcoa.acc.mse,gg.pcoa.acc.tnw,nrow=1,common.legend=T,legend="right")
+#ggsave("pcoa.acc.zone.pdf",width=11,height=3)
+
+#### by site - MNW ####
+seq.acc.mnw <- data.frame(otu_table(ps.acc.mnw))
+
+dist.acc.mnw <- vegdist(seq.acc.mnw)
+samdf.acc.mnw <- data.frame(sample_data(ps.acc.mnw))
+row.names(samdf.acc.mnw)==row.names(seq.acc.mnw)
+
+bet.all <- betadisper(dist.acc.mnw,samdf.acc.mnw$zone)
+anova(bet.all)
+plot(bet.all) #very much overlap, not sig
+
+adonis(seq.acc.mnw ~ zone,data=samdf.acc.mnw, permutations=999)
+# Df SumsOfSqs MeanSqs F.Model      R2 Pr(>F)   
+# zone       1    0.7993 0.79929  2.1125 0.07514  0.002 **
+# Residuals 26    9.8374 0.37836         0.92486          
+# Total     27   10.6367                 1.00000          
+# ---
+# Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+#### by site - MSE ####
+seq.acc.mse <- data.frame(otu_table(ps.acc.mse))
+
+dist.acc.mse <- vegdist(seq.acc.mse)
+samdf.acc.mse <- data.frame(sample_data(ps.acc.mse))
+row.names(samdf.acc.mse)==row.names(seq.acc.mse)
+
+bet.all <- betadisper(dist.acc.mse,samdf.acc.mse$zone)
+anova(bet.all)
+plot(bet.all) 
+# Df   Sum Sq   Mean Sq F value  Pr(>F)  
+# Groups     1 0.021763 0.0217633  4.5724 0.04169 *
+# Residuals 27 0.128513 0.0047597                  
+# ---
+# Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+adonis(seq.acc.mse ~ zone,data=samdf.acc.mse, permutations=999)
+# Df SumsOfSqs MeanSqs F.Model      R2 Pr(>F)   
+# zone       1    0.8113 0.81126  2.2489 0.07689  0.004 **
+# Residuals 27    9.7400 0.36074         0.92311          
+# Total     28   10.5513                 1.00000 
+
+#### by site - TNW ####
+seq.acc.tnw <- data.frame(otu_table(ps.acc.tnw))
+
+dist.acc.tnw <- vegdist(seq.acc.tnw)
+samdf.acc.tnw <- data.frame(sample_data(ps.acc.tnw))
+row.names(samdf.acc.tnw)==row.names(seq.acc.tnw)
+
+bet.all <- betadisper(dist.acc.tnw,samdf.acc.tnw$zone)
+anova(bet.all)
+plot(bet.all) #ns                
+
+adonis(seq.acc.tnw ~ zone,data=samdf.acc.tnw, permutations=999)
+#  Df SumsOfSqs MeanSqs F.Model      R2 Pr(>F)   
+# zone       1    0.8429 0.84287  2.2735 0.08336  0.002 **
+# Residuals 25    9.2685 0.37074         0.91664          
+# Total     26   10.1113                 1.00000          
+```
+
+# Bar plots [needs fixing] {.tabset}
+
+## All, by Phylum
+
+```{r bar plot phylum}
+ps.clean.rel <- transform_sample_counts(ps.clean, function(x) x / sum(x))
+
+ps.all.tab <- psmelt(ps.clean.rel)%>%
+  filter(!is.na(Abundance))%>%
+  group_by(year,site,zone,Phylum,OTU)%>%
+  summarize_at("Abundance",mean)
+
+ps.all.tab$year <- factor(ps.all.tab$year,levels=c("Pre","Irma","Post"))
+#ps.all.tab.more <- subset(ps.all.tab,Abundance>0.01)
+
+#toggling .more in or not
+gg.bar.all.phy <- ggplot(ps.all.tab,aes(x=year,y=Abundance,fill=Phylum))+
+  geom_bar(stat="identity")+
+  theme_cowplot()+
+  #theme(legend.position="none")+
+  xlab('Reef zone')+  
+  facet_grid(zone~site)
+
+gg.bar.all.phy
+ggsave(gg.bar.all.phy,file="bac.bar.all.phy.pdf",width=10,height=5.5)
+```
+
+## All, by family
+
+```{r bar plot family}
+ps.clean.rel <- transform_sample_counts(ps.clean, function(x) x / sum(x))
+
+ps.all.tab <- psmelt(ps.clean.rel)%>%
+  filter(!is.na(Abundance))%>%
+  group_by(year,site,zone,Family,OTU)%>%
+  summarize_at("Abundance",mean)
+
+ps.all.tab.more <- subset(ps.all.tab,Abundance>0.01)
+ps.all.tab.more$year <- factor(ps.all.tab.more$year,levels=c("Pre","Irma","Post"))
+
+gg.bar.all.fam <- ggplot(ps.all.tab.more,aes(x=year,y=Abundance,fill=Family))+
+  geom_bar(stat="identity")+
+  theme_cowplot()+
+  #theme(legend.position="none")+
+  xlab('Reef zone')+  
+  facet_grid(zone~site)
+
+gg.bar.all.fam
+ggsave(gg.bar.all.fam,file="bac.bar.all.fam.pdf",width=10,height=5.5)
+```
+
+## All, by class
+
+```{r bar plot class}
+ps.clean.rel <- transform_sample_counts(ps.clean, function(x) x / sum(x))
+
+ps.all.tab <- psmelt(ps.clean.rel)%>%
+  filter(!is.na(Abundance))%>%
+  group_by(year,site,zone,Class,OTU)%>%
+  summarize_at("Abundance",mean)
+
+ps.all.tab$year <- factor(ps.all.tab$year,levels=c("Pre","Irma","Post"))
+ps.all.tab.more <- subset(ps.all.tab,Abundance>0.01)
+
+#toggling .more in or not
+gg.bar.all.cla <- ggplot(ps.all.tab.more,aes(x=year,y=Abundance,fill=Class))+
+  geom_bar(stat="identity")+
+  theme_cowplot()+
+  #theme(legend.position="none")+
+  xlab('Reef zone')+  
+  facet_grid(zone~site)
+
+gg.bar.all.cla
+ggsave(gg.bar.all.cla,file="bac.bar.all.cla.pdf",width=10,height=5.5)
+```
+
+```{r bar plot fam}
+ps.clean.fam.rel <- transform_sample_counts(ps.clean.fam, function(x) x / sum(x))
+
+ps.all.tab <- psmelt(ps.clean.fam.rel)%>%
+  filter(!is.na(Abundance))%>%
+  group_by(year,site,zone,Family)%>%
+  summarize_at("Abundance",mean)
+
+ps.all.tab.more <- subset(ps.all.tab,Abundance>0.01)
+ps.all.tab.more$year <- factor(ps.all.tab.more$year,levels=c("Pre","Irma","Post"))
+
+gg.bar.all.fam <- ggplot(ps.all.tab.more,aes(x=year,y=Abundance,fill=Family))+
+  geom_bar(stat="identity")+
+  theme_cowplot()+
+  #theme(legend.position="none")+
+  xlab('Reef zone')+  
+  facet_grid(zone~site)
+
+gg.bar.all.fam 
+#ggsave(gg.bar.all,file="bac.bar.all.pdf",height=4)
+```
+
+# PCOA plots
+
+## Plots - year {.tabset}
+
+```{r rel abun}
+#ps.clean.rel <- transform_sample_counts(ps.clean, function(x) x / sum(x))
+
+ps.clean.rel <- transform_sample_counts(ps.clean.lk1.fam.no0, function(x) x / sum(x))
+ord.rel <- ordinate(ps.clean.rel, "PCoA", "bray")
+gg.clean.rel <- plot_ordination(ps.clean.rel, ord.rel,color="year",shape="year",axes=c(1,3))+
+  #stat_ellipse()+
+  theme_cowplot()+
+  #scale_color_manual(name="Site",values=c("darkslategray3","darkslategray4","#000004"))+
+  #scale_shape_manual(name="Site",values=c(8,4,9))+
+  #xlab("Axis 1 (44.1%)")+
+  #ylab("Axis 2 (23%)")+
+  ggtitle("Relative abundance")+
+  facet_wrap(~spp)
+gg.clean.rel
+
+p3 = plot_ordination(ps.clean.rel, ord.rel, type="biplot", color="Phylum", shape="year", title="biplot")
+p3
+```
+
+```{r rel abun genus > 1%}
+ps.clean.rel <- transform_sample_counts(ps.clean.gen.wayless, function(x) x / sum(x))
+ord.rel <- ordinate(ps.clean.rel, "PCoA", "jaccard")
+gg.clean.rel <- plot_ordination(ps.clean.rel, ord.rel,color="year", shape="year")+
+  stat_ellipse()+
+  theme_cowplot()+
+  #scale_color_manual(name="Site",values=c("darkslategray3","darkslategray4","#000004"))+
+  #scale_shape_manual(name="Site",values=c(8,4,9))+
+  xlab("Axis 1 (44.1%)")+
+  ylab("Axis 2 (23%)")+
+  ggtitle("Relative abundance")+
+  facet_wrap(~site)
+gg.clean.rel
+
+p3 = plot_ordination(ps.clean.rel, ord.rel, type="biplot", color="Phylum", shape="year", title="biplot")
+p3
+```
+
+```{r rel abun fam}
+
+ps.clean.rel <- transform_sample_counts(ps.clean, function(x) x / sum(x))
+ord.rel <- ordinate(ps.clean.rel, "PCoA", "bray")
+gg.clean.rel <- plot_ordination(ps.clean.rel, ord.rel,color="year", shape="year",axes=2:3)+
+  stat_ellipse()+
+  theme_cowplot()+
+  #xlab("Axis 1 (44.1%)")+
+  #ylab("Axis 2 (23%)")+
+  ggtitle("Relative abundance")+
+  facet_grid(zone~site)+
+  scale_color_manual(values=c("#F8850F","#AE305C","#781C6D"))
+gg.clean.rel
+
+ggsave(gg.clean.rel,file="pca.all.2:3.pdf")
+
+p3 = plot_ordination(ps.clean.rel, ord.rel, type="biplot", color="Phylum", shape="year", title="biplot")
+p3
+```
+
+### Rarefied
+
+```{r site rare}
+library(ggplot2)
+
+
+
+ord.rare <- ordinate(ps.rare, "PCoA", "bray")
+gg.rare <- plot_ordination(ps.rare, ord.rare,color="year", shape="year",axes=2:3)+
+  stat_ellipse()+
+  facet_wrap(~site)
+  #scale_color_manual(name="Site",values=c("darkslategray3","darkslategray4","#000004"))+
+  #scale_shape_manual(name="Site",values=c(8,4,9))#+
+  #xlab("Axis 1 (42.6%)")+
+  #ylab("Axis 2 (24.1%)")+
+  #ggtitle("Rarefied")
+gg.rare
+
+ps.norm.gen <- tax_glom(ps.norm,"Genus")
+ord.norm.gen <- ordinate(ps.norm.gen, "PCoA", "bray")
+
+gg.norm.gen <- plot_ordination(ps.norm.gen, ord.norm.gen,color="year", shape="year")+
+  stat_ellipse()+
+  theme_cowplot()
+gg.norm.gen
+
+ps.norm.fam <- tax_glom(ps.norm,"Family")
+ord.norm.fam <- ordinate(ps.norm.fam, "PCoA", "bray")
+
+gg.norm.gen <- plot_ordination(ps.norm.gen, ord.norm.gen,color="year", shape="year")+
+  stat_ellipse()+
+  theme_cowplot()
+gg.norm.gen
+```
+
+```{r site rarefied}
+ord <- ordinate(ps.norm, "PCoA", "bray")
+gg.norm <- plot_ordination(ps.norm, ord,color="year", shape="year",axes=2:3)+
+  stat_ellipse()+
+  theme_cowplot()
+  #scale_color_manual(name="Site",values=c("darkslategray3","darkslategray4","#000004"))+
+  #scale_shape_manual(name="Site",values=c(8,4,9))#+
+  #xlab("Axis 1 (42.6%)")+
+  #ylab("Axis 2 (24.1%)")+
+  #ggtitle("Rarefied")
+gg.norm
+
+ps.norm.gen <- tax_glom(ps.norm,"Genus")
+ord.norm.gen <- ordinate(ps.norm.gen, "PCoA", "bray")
+
+gg.norm.gen <- plot_ordination(ps.norm.gen, ord.norm.gen,color="year", shape="year")+
+  stat_ellipse()+
+  theme_cowplot()
+gg.norm.gen
+
+ps.norm.fam <- tax_glom(ps.norm,"Family")
+ord.norm.fam <- ordinate(ps.norm.fam, "PCoA", "bray")
+
+p3 = plot_ordination(ps.norm.fam, ord.norm.fam, type="biplot", color="Family", shape="year", title="biplot")
+p3
+
+gg.norm.gen <- plot_ordination(ps.norm.fam, ord.norm.fam,color="year", shape="year",axes=2:3)+
+  stat_ellipse()#+
+  theme_cowplot()
+gg.norm.gen
+```
+
+Network
+
+```{r NETWORK}
+set.seed(711L)
+
+ps.clean.lk1 <- subset_samples(ps.clean,site=="LK1")
+ps.clean.lk1.pre <- subset_samples(ps.clean.lk1,year=="Pre")
+ps.clean.lk1.irm <- subset_samples(ps.clean.lk1,year=="Irma")
+ps.clean.lk1.pos <- subset_samples(ps.clean.lk1,year=="Post")
+
+plot_net(ps.clean.lk1.pre,color="zone",shape="zone")
+plot_net(ps.clean.lk1.irm,color="zone",shape="zone")
+plot_net(ps.clean.lk1.pos,color="zone",shape="zone")
+
+###sum by fam
+
+ps.clean.fam <- tax_glom(ps.clean,"Family")
+
+ps.clean.pre <- subset_samples(ps.clean.fam,year=="Pre")
+ps.clean.pre.no0 <- prune_taxa(taxa_sums(ps.clean.pre)>0,ps.clean.pre)
+ps.clean.pre.set <- make_network(ps.clean.pre.no0,type="taxa",max.dist=0.5)
+plot_network(ps.clean.pre.set,ps.clean.pre)
+
+#most simple
+plot_net(ps.clean,color="year",shape="site")
+
+ps.clean.pre <- subset_samples(ps.clean.fam,year=="Pre")
+plot_net(ps.clean.pre,color="zone",shape="zone")
+
+ps.clean.irm <- subset_samples(ps.clean,year=="Irma")
+plot_net(ps.clean.irm,color="zone",shape="zone")
+
+ps.clean.pos <- subset_samples(ps.clean,year=="Post")
+plot_net(ps.clean.pos,color="zone",shape="zone")
+
+#fam networks by site
+ps.clean.fam.pre <- subset_samples(ps.clean.fam,year=="Pre")
+ps.clean.fam.pre.lk1 <- subset_samples(ps.clean.fam.pre,site=="LK1")
+ps.clean.fam.pre.lk1 <- prune_taxa(taxa_sums(ps.clean.fam.pre.lk1)>0,ps.clean.fam.pre.lk1)
+
+ps.clean.fam.irm <- subset_samples(ps.clean.fam,year=="Irma")
+ps.clean.fam.irm.lk1 <- subset_samples(ps.clean.fam.irm,site=="LK1")
+ps.clean.fam.irm.lk1 <- prune_taxa(taxa_sums(ps.clean.fam.irm.lk1)>0,ps.clean.fam.irm.lk1)
+
+ps.clean.fam.pos <- subset_samples(ps.clean.fam,year=="Post")
+ps.clean.fam.pos.lk1 <- subset_samples(ps.clean.fam.pos,site=="LK1")
+ps.clean.fam.pos.lk1 <- prune_taxa(taxa_sums(ps.clean.fam.pos.lk1)>0,ps.clean.fam.pos.lk1)
+
+net.pre.lk1 <- plot_net(ps.clean.fam.pre.lk1,color="zone",shape="zone")+
+  ggtitle("A. Pre")
+net.pre.lk1
+net.irm.lk1 <- plot_net(ps.clean.fam.irm.lk1,color="zone",shape="zone")+
+  ggtitle("B. Irma")
+net.pos.lk1 <- plot_net(ps.clean.fam.pos.lk1,color="zone",shape="zone")+
+  ggtitle("C. Post")
+
+ggarrange(net.pre.lk1,net.irm.lk1,net.pos.lk1,common.legend=TRUE,nrow=1,legend.position="right")
+ggsave("gg.nets.new.fam.pdf",width=10)
+
+net.pre.lk1 <- plot_net(ps.clean.fam.pre.lk1,color="zone",shape="zone")+
+  ggtitle("A. Pre")
+net.pre.lk1
+net.irm.lk1 <- plot_net(ps.clean.fam.irm.lk1,color="zone",shape="zone")+
+  ggtitle("B. Irma")
+net.pos.lk1 <- plot_net(ps.clean.fam.pos.lk1,color="zone",shape="zone")+
+  ggtitle("C. Post")
+
+ggarrange(net.pre.lk1,net.irm.lk1,net.pos.lk1,common.legend=TRUE,nrow=1,legend.position="right")
+ggsave("gg.nets.new.fam.pdf",width=10)
+
+net.pre.lk1 <- plot_net(ps.clean.fam.pre.lk1,type="taxa",color="Phylum")+
+  ggtitle("A. Pre")
+net.pre.lk1
+net.irm.lk1 <- plot_net(ps.clean.fam.irm.lk1,type="taxa",color="Phylum")+
+  ggtitle("B. Irma")
+net.pos.lk1 <- plot_net(ps.clean.fam.pos.lk1,type="taxa",color="Phylum")+
+  ggtitle("C. Post")
+
+ggarrange(net.pre.lk1,net.irm.lk1,net.pos.lk1,nrow=1)
+
+ps.clean.fam.pre.lk1.in <- subset_samples(ps.clean.fam.pre.lk1,zone=="Inshore")
+ps.clean.fam.pre.lk1.off <- subset_samples(ps.clean.fam.pre.lk1,zone=="Offshore")
+
+ps.clean.fam.irm.lk1.in <- subset_samples(ps.clean.fam.irm.lk1,zone=="Inshore")
+ps.clean.fam.irm.lk1.off <- subset_samples(ps.clean.fam.irm.lk1,zone=="Offshore")
+
+ps.clean.fam.pos.lk1.in <- subset_samples(ps.clean.fam.pos.lk1,zone=="Inshore")
+ps.clean.fam.pos.lk1.off <- subset_samples(ps.clean.fam.pos.lk1,zone=="Offshore")
+
+# ps.clean.fam.pre.lk1.in.set <- make_network(ps.clean.fam.pre.lk1.in,type="taxa",max.dist=0.5)
+# plot_network(ps.clean.fam.pre.lk1.in.set,ps.clean.fam.pre.lk1.in,point_label="Family")
+
+net.pre.lk1.in <- plot_net(ps.clean.fam.pre.lk1.in,type="taxa",color="Phylum")+
+  ggtitle("A. Pre - Inshore")
+net.pre.lk1.in
+net.pre.lk1.off <- plot_net(ps.clean.fam.pre.lk1.off,type="taxa",color="Phylum")+
+  ggtitle("A. Pre - Offshore")
+net.pre.lk1.off
+
+net.irm.lk1.in <- plot_net(ps.clean.fam.irm.lk1.in,type="taxa",color="Phylum")+
+  ggtitle("A. Irma - Inshore")
+net.irm.lk1.in
+net.irm.lk1.off <- plot_net(ps.clean.fam.irm.lk1.off,type="taxa",color="Phylum")+
+  ggtitle("A. Irma - Offshore")
+net.irm.lk1.off
+
+net.pos.lk1.in <- plot_net(ps.clean.fam.pos.lk1.in,type="taxa",color="Phylum")+
+  ggtitle("A. Post - Inshore")
+net.pos.lk1.in
+net.pos.lk1.off <- plot_net(ps.clean.fam.pos.lk1.off,type="taxa",color="Phylum")+
+  ggtitle("A. Post - Offshore")
+net.pos.lk1.off
+
+ggarrange(net.pre.lk1.in,net.pre.lk1.off,net.irm.lk1.in,net.irm.lk1.off,net.pos.lk1.in,net.pos.lk1.off,nrow=2,ncol=3,common.legend=FALSE)
+
+net.irm.lk1 <- plot_net(ps.clean.fam.irm.lk1,color="zone",shape="zone")+
+  ggtitle("B. Irma")
+net.pos.lk1 <- plot_net(ps.clean.fam.pos.lk1,color="zone",shape="zone")+
+  ggtitle("C. Post")
+```
+
+Stats
+
+Help on adonis (here)[https://thebiobucket.blogspot.com/2011/04/assumptions-for-permanova-with-adonis.html#more]
+
+```{r stats site rare}
+seq.rare <- data.frame(otu_table(ps.rare.trim))
+
+dist.rare <- vegdist(seq.rare)
+samdf.rare <- data.frame(sample_data(ps.rare.trim))
+row.names(samdf.rare)==row.names(seq.rare)
+
+bet.all <- betadisper(dist.rare,samdf.rare$zone)
+anova(bet.all)
+plot(bet.all) #very much overlap, not sig
+
+bet.all <- betadisper(dist.rare,samdf.rare$site)
+anova(bet.all)
+plot(bet.all) #very much overlap, not sig
+
+adonis(seq.rare ~ site, data=samdf.rare, permutations=999)
+adonis(seq.rare ~ site/zone, data=samdf.rare, permutations=999)
+adonis(seq.rare ~ zone, strata=samdf.rare$site,data=samdf.rare, permutations=999)
+
+pairwise.adonis(seq.rare, factors = samdf.rare$site, permutations = 999)
+#all significantly different
+```
+
+### Relative abundance
+
+```{r sites rel abun}
+ps.trim.rel <- transform_sample_counts(ps.trim, function(x) x / sum(x))
+ord.rel <- ordinate(ps.trim.rel, "PCoA", "bray")
+gg.pcoa.site <- plot_ordination(ps.trim.rel, ord.rel,color="site", shape="site")+
+  stat_ellipse()+
+  theme_cowplot()+
+  scale_color_manual(name="Site",values=c("darkslategray3","darkslategray4","#000004"))+
+  scale_shape_manual(name="Site",values=c(8,4,9))+
+  xlab("Axis 1 (44.1%)")+
+  ylab("Axis 2 (23%)")+
+  ggtitle("Relative abundance")
+gg.pcoa.site
+```
+
+Stats
+
+```{r stats site rel}
+seq.trim <- data.frame(otu_table(ps.trim.rel))
+
+dist.trim <- vegdist(seq.trim)
+samdf.trim <- data.frame(sample_data(ps.trim))
+row.names(samdf.trim)==row.names(seq.trim)
+
+bet.all <- betadisper(dist.trim,samdf.trim$zone)
+anova(bet.all)
+#permutest(bet.all, pairwise = FALSE, permutations = 999)
+plot(bet.all) #very much overlap, not sig
+
+bet.all <- betadisper(dist.trim,samdf.trim$site)
+anova(bet.all)
+plot(bet.all) #very much overlap, not sig
+
+adonis(seq.trim ~ site, data=samdf.trim, permutations=999)
+adonis(seq.trim ~ site/zone, data=samdf.trim, permutations=999)
+adonis(seq.trim ~ zone, strata=samdf.trim$site,data=samdf.trim, permutations=999)
+
+pairwise.adonis(seq.trim, factors = samdf.trim$site, permutations = 999)
+#all significantly different
+```
+
+### Plot - both
+
+They look super similar
+
+```{r ggarrange pcoas}
+ggarrange(gg.pcoa.site.rare,gg.pcoa.site,labels="AUTO",common.legend=TRUE,legend="right")
+```
+
+## Plots - reef zones{.tabset} 
+
+```{r subset data}
+ps.mnw.rel <- subset_samples(ps.trim.rel,site=="MNW")
+ps.mnw <- subset_samples(ps.rare.trim,site=="MNW")
+
+ps.mse.rel <- subset_samples(ps.trim.rel,site=="MSE")
+ps.mse <- subset_samples(ps.rare.trim,site=="MSE")
+
+ps.tnw.rel <- subset_samples(ps.trim.rel,site=="TNW")
+ps.tnw <- subset_samples(ps.rare.trim,site=="TNW")
+```
+
+### Mo'orea NW
+
+Relative abundance - appears total overlap
+
+```{r mnw rel}
+ord.mnw.rel <- ordinate(ps.mnw.rel, "PCoA", "bray")
+gg.mnw.rel <- plot_ordination(ps.mnw.rel, ord.mnw.rel,color="zone", shape="zone")+
+  geom_point(size=2)+
+  stat_ellipse()+
+  theme_cowplot()+
+  scale_shape_manual(values=c(16,15),labels=c("Back reef","Fore reef"))+
+  scale_color_manual(values=c("#ED7953FF","#8405A7FF"),labels=c("Back reef","Fore reef"))+
+  guides(color=guide_legend(title="Reef zone"),shape=guide_legend(title="Reef zone"))+
+  ggtitle("Mo'orea NW")+
+  xlab("Axis 1 (38.8%)")+
+  ylab("Axis 2 (29.8%)")+
+  theme(axis.text=element_text(size=10))
+gg.mnw.rel
+```
+
+Stats
+
+```{r stats mnw rel}
+seq.mnw.rel <- data.frame(otu_table(ps.mnw.rel))
+samdf.mnw.rel <- data.frame(sample_data(ps.mnw.rel))
+row.names(samdf.mnw.rel)==row.names(seq.mnw.rel)
+
+dist.mnw.rel <- vegdist(seq.mnw.rel)
+bet.mnw.rel <- betadisper(dist.mnw.rel,samdf.mnw.rel$zone,bias.adjust = TRUE,type="median")
+anova(bet.mnw.rel) #not sig
+#permutest(bet.mnw.rel, pairwise = FALSE, permutations = 999) #says the same thing
+plot(bet.mnw.rel)
+
+adonis(seq.mnw.rel ~ zone, data=samdf.mnw.rel, permutations=999) #not sig
+```
+
+Rarefied
+
+Slightly less overlap - but maybe still non-significant? 
+
+```{r mnw rare}
+ord.mnw <- ordinate(ps.mnw, "PCoA", "bray")
+gg.mnw <- plot_ordination(ps.mnw, ord.mnw,color="zone", shape="zone")+
+  geom_point(size=2)+
+  stat_ellipse()+
+  theme_cowplot()+
+  scale_shape_manual(values=c(16,15),labels=c("BR","FR"))+
+  scale_color_manual(values=c("#ED7953FF","#8405A7FF"),labels=c("BR","FR"))+
+  guides(color=guide_legend(title="Reef zone"),shape=guide_legend(title="Reef zone"))+
+  ggtitle("Mo'orea NW")+
+  xlab("Axis 1 (38.9%)")+
+  ylab("Axis 2 (30.4%)")+
+  theme(axis.text=element_text(size=10))
+gg.mnw
+```
+
+Stats
+
+```{r stats mnw rare}
+seq.mnw.rare <- data.frame(otu_table(ps.mnw))
+samdf.mnw.rare <- data.frame(sample_data(ps.mnw))
+row.names(samdf.mnw.rare)==row.names(seq.mnw.rare)
+
+dist.mnw.rare <- vegdist(seq.mnw.rare)
+bet.mnw.rare <- betadisper(dist.mnw.rare,samdf.mnw.rare$zone,bias.adjust = TRUE,type="median")
+anova(bet.mnw.rare) #not sig
+#permutest(bet.mnw.rare, pairwise = FALSE, permutations = 999) #says the same thing
+plot(bet.mnw.rare)
+
+adonis(seq.mnw.rare ~ zone, data=samdf.mnw.rare, permutations=999) #not sig
+```
+
+### Mo'orea SE
+
+Relative abundance - appears to separate more than MNW
+
+```{r mse rel}
+ord.mse.rel <- ordinate(ps.mse.rel, "PCoA", "bray")
+gg.mse.rel <- plot_ordination(ps.mse.rel, ord.mse.rel,color="zone", shape="zone")+
+  geom_point(size=2)+
+  stat_ellipse()+
+  theme_cowplot()+
+  scale_shape_manual(values=c(16,15),labels=c("BR","FR"))+
+  scale_color_manual(values=c("#ED7953FF","#8405A7FF"),labels=c("BR","FR"))+
+  guides(color=guide_legend(title="Reef zone"),shape=guide_legend(title="Reef zone"))+
+  ggtitle("Mo'orea SE")+
+  xlab("Axis 1 (39.6%)")+
+  ylab("Axis 2 (27.2%)")+
+  theme(axis.text=element_text(size=10))
+gg.mse.rel
+```
+
+Stats
+
+```{r stats mse rel}
+seq.mse.rel <- data.frame(otu_table(ps.mse.rel))
+samdf.mse.rel <- data.frame(sample_data(ps.mse.rel))
+row.names(samdf.mse.rel)==row.names(seq.mse.rel)
+
+dist.mse.rel <- vegdist(seq.mse.rel)
+bet.mse.rel <- betadisper(dist.mse.rel,samdf.mse.rel$zone,bias.adjust = TRUE,type="median")
+anova(bet.mse.rel) #not sig
+#permutest(bet.mse.rel, pairwise = FALSE, permutations = 999) #says the same thing
+plot(bet.mse.rel)
+
+adonis(seq.mse.rel ~ zone, data=samdf.mse.rel, permutations=999) #p < 0.01**
+```
+
+Rarefied
+
+Equivalent
+
+```{r mse rare}
+ord.mse <- ordinate(ps.mse, "PCoA", "bray")
+gg.mse <- plot_ordination(ps.mse, ord.mse,color="zone", shape="zone")+
+  geom_point(size=2)+
+  stat_ellipse()+
+  theme_cowplot()+
+  scale_shape_manual(values=c(16,15),labels=c("BR","FR"))+
+  scale_color_manual(values=c("#ED7953FF","#8405A7FF"),labels=c("BR","FR"))+
+  guides(color=guide_legend(title="Reef zone"),shape=guide_legend(title="Reef zone"))+
+  ggtitle("Mo'orea SE")+
+  xlab("Axis 1 (38.1%)")+
+  ylab("Axis 2 (27.8%)")+
+  theme(axis.text=element_text(size=10))
+gg.mse
+```
+
+Stats
+
+Same story
+
+```{r stats mse rare}
+seq.mse.rare <- data.frame(otu_table(ps.mse))
+samdf.mse.rare <- data.frame(sample_data(ps.mse))
+row.names(samdf.mse.rare)==row.names(seq.mse.rare)
+
+dist.mse.rare <- vegdist(seq.mse.rare)
+bet.mse.rare <- betadisper(dist.mse.rare,samdf.mse.rare$zone,bias.adjust = TRUE,type="median")
+anova(bet.mse.rare) #not sig
+#permutest(bet.mse.rare, pairwise = FALSE, permutations = 999) #says the same thing
+plot(bet.mse.rare)
+
+adonis(seq.mse.rare ~ zone, data=samdf.mse.rare, permutations=999) #p < 0.01**
+```
+
+### Tahiti NW
+
+Relative abundance - looks very silly
+
+```{r tnw rel}
+ord.tnw.rel <- ordinate(ps.tnw.rel, "PCoA", "bray")
+gg.tnw.rel <- plot_ordination(ps.tnw.rel, ord.tnw.rel,color="zone", shape="zone")+
+  geom_point(size=2)+
+  stat_ellipse()+
+  theme_cowplot()+
+  scale_shape_manual(values=c(16,15),labels=c("Back reef","Fore reef"))+
+  scale_color_manual(values=c("#ED7953FF","#8405A7FF"),labels=c("Back reef","Fore reef"))+
+  guides(color=guide_legend(title="Reef zone"),shape=guide_legend(title="Reef zone"))+
+  ggtitle("Tahiti NW")+
+  #xlab("Axis 1 (60.2%)")+
+  #ylab("Axis 2 (9.7%)")+
+  theme(axis.text=element_text(size=10))
+gg.tnw.rel
+```
+
+Stats
+
+```{r stats tnw rel}
+seq.tnw.rel <- data.frame(otu_table(ps.tnw.rel))
+samdf.tnw.rel <- data.frame(sample_data(ps.tnw.rel))
+row.names(samdf.tnw.rel)==row.names(seq.tnw.rel)
+
+dist.tnw.rel <- vegdist(seq.tnw.rel)
+bet.tnw.rel <- betadisper(dist.tnw.rel,samdf.tnw.rel$zone,bias.adjust = TRUE,type="median")
+anova(bet.tnw.rel) #p < 0.05*
+#permutest(bet.tnw.rel, pairwise = FALSE, permutations = 999) #says the same thing
+plot(bet.tnw.rel)
+
+adonis(seq.tnw.rel ~ zone, data=samdf.tnw.rel, permutations=999) #p < 0.01**
+```
+
+Rarefied
+
+Equivalent
+
+```{r tnw rare}
+ord.tnw <- ordinate(ps.tnw, "PCoA", "bray")
+gg.tnw <- plot_ordination(ps.tnw, ord.tnw,color="zone", shape="zone")+
+  geom_point(size=2)+
+  stat_ellipse()+
+  theme_cowplot()+
+  scale_shape_manual(values=c(16,15),labels=c("BR","FR"))+
+  scale_color_manual(values=c("#ED7953FF","#8405A7FF"),labels=c("BR","FR"))+
+  guides(color=guide_legend(title="Reef zone"),shape=guide_legend(title="Reef zone"))+
+  ggtitle("Tahiti NW")+
+  xlab("Axis 1 (59.4%)")+
+  ylab("Axis 2 (10.8%)")+
+  theme(axis.text=element_text(size=10))
+gg.tnw
+```
+
+Stats
+
+```{r stats tnw rare}
+seq.tnw.rare <- data.frame(otu_table(ps.tnw))
+samdf.tnw.rare <- data.frame(sample_data(ps.tnw))
+row.names(samdf.tnw.rare)==row.names(seq.tnw.rare)
+
+dist.tnw.rare <- vegdist(seq.tnw.rare)
+bet.tnw.rare <- betadisper(dist.tnw.rare,samdf.tnw.rare$zone,bias.adjust = TRUE,type="median")
+anova(bet.tnw.rare) #p < 0.01**
+permutest(bet.tnw.rare, pairwise = FALSE, permutations = 999) #says the same thing
+plot(bet.tnw.rare)
+
+adonis(seq.tnw.rare ~ zone, data=samdf.tnw.rare, permutations=999) #p < 0.01**
+```
+
+## Summary
+
+- No differences in results between relative abundance & rarefied plots/stats
+- Pairwise adonis significant between all three sites
+- Adonis significant across reef zones at TNW & MSE, but not MNW
+- Beta dispersion not significantly different except between TNW F & B (can definitely see it)
+
+Relative abundance
+
+```{r panels rel}
+ggarrange(gg.mnw.rel,gg.mse.rel,gg.tnw.rel,nrow=1,common.legend=TRUE,legend="right",labels="AUTO")
+```
+
+Rarefied
+
+```{r panels rare}
+ggarrange(gg.mnw,gg.mse,gg.tnw,nrow=1,common.legend=TRUE,legend="right",labels=c("(a)","(b)","(c)"))
+#ggsave("16s.pcoa.pdf",height=2.5,width=8)
+```
+
+# ANCOM
+
+Tutorial [here](https://github.com/FrederickHuangLin/ANCOM)
+
+## Setup
+
+```{r ancom packages}
+library(readr)
+library(tidyverse)
+#library(dplyr)
+library(nlme)
+#install.packages('compositions')
+library(compositions)
+source("/Volumes/GoogleDrive/My Drive/Moorea_revisions/mr16s_revised/analysis/scripts/ancom_v2.1.R")
+
+setwd("/Volumes/GoogleDrive/My Drive/Moorea_revisions/mr16s_revised/analysis/03.community_comp")
+```
+
+```{r ancom all, eval=FALSE}
+otu_data_unt <- data.frame(ps.trim@otu_table)
+otu_data<- data.frame(t(otu_data_unt))
+#might need to make the sample names an actual row yet, not sure
+
+meta_data = data.frame(ps.trim@sam_data)
+meta_data = meta_data %>% rename(Sample.ID = id)
+
+# Step 1: Data preprocessing
+
+feature_table = otu_data; sample_var = "Sample.ID"; group_var = NULL
+out_cut = 0.05; zero_cut = 0.90; lib_cut = 1000; neg_lb = FALSE
+prepro = feature_table_pre_process(feature_table, meta_data, sample_var, group_var, 
+                                   out_cut, zero_cut, lib_cut, neg_lb)
+feature_table = prepro$feature_table # Preprocessed feature table
+meta_data = prepro$meta_data # Preprocessed metadata
+struc_zero = prepro$structure_zeros # Structural zero info
+
+# Step 2: ANCOM
+
+main_var = "zone"; p_adj_method = "BH"; alpha = 0.05
+adj_formula = NULL; rand_formula = "~ 1 | site"
+
+res.all = ANCOM(feature_table, meta_data, struc_zero, main_var, p_adj_method, 
+            alpha, adj_formula, rand_formula)
+
+#saveRDS(res.mnw,file="ancom.res.mnw.RDS")
+
+# Step 3: Volcano Plot
+
+# Number of taxa except structural zeros
+n_taxa = ifelse(is.null(struc_zero), nrow(feature_table), sum(apply(struc_zero, 1, sum) == 0))
+# Cutoff values for declaring differentially abundant taxa
+cut_off = c(0.9 * (n_taxa -1), 0.8 * (n_taxa -1), 0.7 * (n_taxa -1), 0.6 * (n_taxa -1))
+names(cut_off) = c("detected_0.9", "detected_0.8", "detected_0.7", "detected_0.6")
+
+# Annotation data
+dat_ann = data.frame(x = min(res.all$fig$data$x), y = cut_off["detected_0.7"], label = "W[0.7]")
+
+fig = res.all$fig +  
+  geom_hline(yintercept = cut_off["detected_0.7"], linetype = "dashed") + 
+  geom_text(data = dat_ann, aes(x = x, y = y, label = label), 
+            size = 4, vjust = -0.5, hjust = 0, color = "orange", parse = TRUE)
+fig  
+```
+
+## ANCOM by site{.tabset}
+
+Note: shouldn't be done on rarefied according to authors
+
+Ran these three chunks once, then loading in data below
+
+### MNW
+
+```{r ancom mnw, eval=FALSE}
+ps.mnw <- subset_samples(ps.trim,site=="MNW")
+
+otu_data_unt <- data.frame(ps.mnw@otu_table)
+otu_data<- data.frame(t(otu_data_unt))
+#might need to make the sample names an actual row yet, not sure
+
+meta_data = data.frame(ps.mnw@sam_data)
+meta_data = meta_data %>% rename(Sample.ID = id)
+
+# Step 1: Data preprocessing
+
+feature_table = otu_data; sample_var = "Sample.ID"; group_var = NULL
+out_cut = 0.05; zero_cut = 0.90; lib_cut = 1000; neg_lb = FALSE
+prepro = feature_table_pre_process(feature_table, meta_data, sample_var, group_var, 
+                                   out_cut, zero_cut, lib_cut, neg_lb)
+feature_table = prepro$feature_table # Preprocessed feature table
+meta_data = prepro$meta_data # Preprocessed metadata
+struc_zero = prepro$structure_zeros # Structural zero info
+
+# Step 2: ANCOM
+
+main_var = "zone"; p_adj_method = "BH"; alpha = 0.05
+adj_formula = NULL; rand_formula = NULL
+
+res.mnw = ANCOM(feature_table, meta_data, struc_zero, main_var, p_adj_method, 
+            alpha, adj_formula, rand_formula)
+
+#saveRDS(res.mnw,file="ancom.res.mnw.RDS")
+
+# Step 3: Volcano Plot
+
+# Number of taxa except structural zeros
+n_taxa = ifelse(is.null(struc_zero), nrow(feature_table), sum(apply(struc_zero, 1, sum) == 0))
+# Cutoff values for declaring differentially abundant taxa
+cut_off = c(0.9 * (n_taxa -1), 0.8 * (n_taxa -1), 0.7 * (n_taxa -1), 0.6 * (n_taxa -1))
+names(cut_off) = c("detected_0.9", "detected_0.8", "detected_0.7", "detected_0.6")
+
+# Annotation data
+dat_ann = data.frame(x = min(res.mnw$fig$data$x), y = cut_off["detected_0.7"], label = "W[0.7]")
+
+fig = res.mnw$fig +  
+  geom_hline(yintercept = cut_off["detected_0.7"], linetype = "dashed") + 
+  geom_text(data = dat_ann, aes(x = x, y = y, label = label), 
+            size = 4, vjust = -0.5, hjust = 0, color = "orange", parse = TRUE)
+fig  
+```
+
+### MSE
+
+```{r ancom mse, eval=FALSE}
+ps.mse <- subset_samples(ps.trim,site=="MSE")
+
+otu_data_unt <- data.frame(ps.mse@otu_table)
+otu_data<- data.frame(t(otu_data_unt))
+#might need to make the sample names an actual row yet, not sure
+
+meta_data = data.frame(ps.mse@sam_data)
+meta_data = meta_data %>% rename(Sample.ID = id)
+
+# Step 1: Data preprocessing
+
+feature_table = otu_data; sample_var = "Sample.ID"; group_var = NULL
+out_cut = 0.05; zero_cut = 0.90; lib_cut = 1000; neg_lb = FALSE
+prepro = feature_table_pre_process(feature_table, meta_data, sample_var, group_var, 
+                                   out_cut, zero_cut, lib_cut, neg_lb)
+feature_table = prepro$feature_table # Preprocessed feature table
+meta_data = prepro$meta_data # Preprocessed metadata
+struc_zero = prepro$structure_zeros # Structural zero info
+
+# Step 2: ANCOM
+
+main_var = "zone"; p_adj_method = "BH"; alpha = 0.05
+adj_formula = NULL; rand_formula = NULL
+
+res.mse = ANCOM(feature_table, meta_data, struc_zero, main_var, p_adj_method, 
+            alpha, adj_formula, rand_formula)
+
+#saveRDS(res.mse,file="ancom.res.mse.RDS")
+
+# Step 3: Volcano Plot
+
+# Number of taxa except structural zeros
+n_taxa = ifelse(is.null(struc_zero), nrow(feature_table), sum(apply(struc_zero, 1, sum) == 0))
+# Cutoff values for declaring differentially abundant taxa
+cut_off = c(0.9 * (n_taxa -1), 0.8 * (n_taxa -1), 0.7 * (n_taxa -1), 0.6 * (n_taxa -1))
+names(cut_off) = c("detected_0.9", "detected_0.8", "detected_0.7", "detected_0.6")
+
+# Annotation data
+dat_ann = data.frame(x = min(res.mse$fig$data$x), y = cut_off["detected_0.7"], label = "W[0.7]")
+
+fig = res.mse$fig +  
+  geom_hline(yintercept = cut_off["detected_0.7"], linetype = "dashed") + 
+  geom_text(data = dat_ann, aes(x = x, y = y, label = label), 
+            size = 4, vjust = -0.5, hjust = 0, color = "orange", parse = TRUE)
+fig  
+```
+
+### TNW
+
+```{r ancom tnw, eval=FALSE}
+ps.tnw <- subset_samples(ps.trim,site=="TNW")
+
+otu_data_unt <- data.frame(ps.tnw@otu_table)
+otu_data<- data.frame(t(otu_data_unt))
+#might need to make the sample names an actual row yet, not sure
+
+meta_data = data.frame(ps.tnw@sam_data)
+meta_data = meta_data %>% rename(Sample.ID = id)
+
+# Step 1: Data preprocessing
+
+feature_table = otu_data; sample_var = "Sample.ID"; group_var = NULL
+out_cut = 0.05; zero_cut = 0.90; lib_cut = 1000; neg_lb = FALSE
+prepro = feature_table_pre_process(feature_table, meta_data, sample_var, group_var, 
+                                   out_cut, zero_cut, lib_cut, neg_lb)
+feature_table = prepro$feature_table # Preprocessed feature table
+meta_data = prepro$meta_data # Preprocessed metadata
+struc_zero = prepro$structure_zeros # Structural zero info
+
+# Step 2: ANCOM
+
+main_var = "zone"; p_adj_method = "BH"; alpha = 0.05
+adj_formula = NULL; rand_formula = NULL
+
+res.tnw = ANCOM(feature_table, meta_data, struc_zero, main_var, p_adj_method, 
+            alpha, adj_formula, rand_formula)
+
+#saveRDS(res.tnw,file="ancom.res.tnw.RDS")
+
+# Step 3: Volcano Plot
+
+# Number of taxa except structural zeros
+n_taxa = ifelse(is.null(struc_zero), nrow(feature_table), sum(apply(struc_zero, 1, sum) == 0))
+# Cutoff values for declaring differentially abundant taxa
+cut_off = c(0.9 * (n_taxa -1), 0.8 * (n_taxa -1), 0.7 * (n_taxa -1), 0.6 * (n_taxa -1))
+names(cut_off) = c("detected_0.9", "detected_0.8", "detected_0.7", "detected_0.6")
+
+# Annotation data
+dat_ann = data.frame(x = min(res.tnw$fig$data$x), y = cut_off["detected_0.7"], label = "W[0.7]")
+
+fig = res.tnw$fig +  
+  geom_hline(yintercept = cut_off["detected_0.7"], linetype = "dashed") + 
+  geom_text(data = dat_ann, aes(x = x, y = y, label = label), 
+            size = 4, vjust = -0.5, hjust = 0, color = "orange", parse = TRUE)
+fig  
+```
+
+## Synthesizing ANCOM results
+
+Re-read in data
+
+```{r load ancom results}
+res.mnw <- readRDS("ancom.res.mnw.RDS")
+res.mse <- readRDS("ancom.res.mse.RDS")
+res.tnw <- readRDS("ancom.res.tnw.RDS")
+```
+
+Which ones are 'significant'
+
+```{r subset out files}
+mnw.out <- res.mnw$out
+mnw.out.sig <- mnw.out[mnw.out$detected_0.6==TRUE,]
+#1
+
+mse.out <- res.mse$out
+mse.out.sig <- mse.out[mse.out$detected_0.6==TRUE,]
+#8
+
+tnw.out <- res.tnw$out
+tnw.out.sig <- tnw.out[tnw.out$detected_0.6==TRUE,]
+#4
+```
+
+Subset the sig ones in phyloseq
+
+```{r}
+want.mnw <- c(mnw.out.sig$taxa_id)
+want.mse <- c(mse.out.sig$taxa_id)
+want.tnw <- c(tnw.out.sig$taxa_id)
+
+want <- c(want.mnw,want.mse,want.tnw)
+
+ps.sig.taxa <- subset_taxa(ps.rare.trim,row.names(ps.trim@tax_table) %in% want)
+#37 & 13 are in there twice
+
+#looks so cool!
+plot_bar(ps.sig.taxa,x="site_zone",y="Abundance",fill="Genus")+
+  facet_wrap(~Genus,scales="free")
+
+#ggsave("sig.genus.abun.pdf",width=11)
+```
+
+Heat map attempts
+
+```{r}
+library("microbiomeutilities")
+library("viridis")
+
+ps.sig.mnw <- subset_samples(ps.sig.taxa,site=="MNW")
+
+ps.sig.mnw.sz <- merge_samples(ps.sig.mnw,"site_zone")
+
+ps.sig.mnw.sz@sam_data$zone <- c("A","B")
+
+heat.sig.mnw <- plot_taxa_heatmap(ps.sig.mnw.sz,
+  subset.top=14,                               
+  VariableA = "zone",
+  heatcolors=colorRampPalette(colors=c(viridis_pal(direction=-1,option="D")(32)))(30),
+  #heatcolors = colorRampPalette(rev(brewer.pal(n = 7, name = "RdYlBu")))(100),
+  transformation = "log10",
+  cluster_cols=F,
+  cluster_rows=F
+)
+#pdf: 3 x 4 in
+
+ps.sig.mse <- subset_samples(ps.sig.taxa,site=="MSE")
+
+ps.sig.mse.sz <- merge_samples(ps.sig.mse,"site_zone")
+
+ps.sig.mse.sz@sam_data$zone <- c("A","B")
+
+heat.sig.mse <- plot_taxa_heatmap(ps.sig.mse.sz,
+  subset.top=14,                               
+  VariableA = "zone",
+  heatcolors=colorRampPalette(colors=c(viridis_pal(direction=-1,option="D")(32)))(30),
+  #heatcolors = colorRampPalette(rev(brewer.pal(n = 7, name = "RdYlBu")))(100),
+  transformation = "log10",
+  cluster_cols=F,
+  cluster_rows=F
+)
+
+ps.sig.tnw <- subset_samples(ps.sig.taxa,site=="TNW")
+
+ps.sig.tnw.sz <- merge_samples(ps.sig.tnw,"site_zone")
+
+ps.sig.tnw.sz@sam_data$zone <- c("A","B")
+
+heat.sig.tnw <- plot_taxa_heatmap(ps.sig.tnw.sz,
+  subset.top=14,                               
+  VariableA = "zone",
+  heatcolors=colorRampPalette(colors=c(viridis_pal(direction=-1,option="D")(32)))(30),
+  #heatcolors = colorRampPalette(rev(brewer.pal(n = 7, name = "RdYlBu")))(100),
+  transformation = "log10",
+  cluster_cols=F,
+  cluster_rows=F
+)
+```
+
+```{r messy crap, eval=FALSE}
+
+
+
+
+heat.sig <- plot_taxa_heatmap(ps.sig.taxa,
+  subset.top=14,                               
+  VariableA = "zone",
+  heatcolors = colorRampPalette(rev(brewer.pal(n = 7, name = "RdYlBu")))(100),
+  transformation = "log10",
+  cluster_cols=T
+)
+
+ps.sz <- merge_samples(ps.rare.trim, "site_zone")
+
+ps.sig.taxa.sz <- subset_taxa(ps.sz,row.names(ps.sz@tax_table) %in% want)
+#37 & 13 are in there twice
+
+ps.sig.taxa.sz@sam_data$zone <- c("A","B","A","B","A","B")
+
+heat.sig <- plot_taxa_heatmap(ps.sig.taxa.sz,
+  subset.top=14,                               
+  VariableA = "zone",
+  heatcolors = colorRampPalette(rev(brewer.pal(n = 7, name = "RdYlBu")))(100),
+  transformation = "Z-OTU",
+  cluster_cols=F
+)
+
+```
+
+# Heat maps!
+
+```{r}
+#evtools::install_github("microsud/microbiomeutilities")
+library("microbiomeutilities")
+
+#package doesn't like the sq level
+taxa.tab <- as.data.frame(ps.trim@tax_table)
+taxa.tab.nosq <- as.matrix(taxa.tab[,1:7])
+seq.trim.tab <- as.data.frame(ps.trim@otu_table)
+
+rownames(samdf) <- samdf$id
+
+ps.trim.nosq <- phyloseq(otu_table(seq.trim.tab, taxa_are_rows=FALSE), 
+                         sample_data(samdf), 
+                         tax_table(taxa.tab.nosq))
+
+
+
+library(RColorBrewer)
+
+heat.sample <- plot_taxa_heatmap(ps.trim.nosq,
+  subset.top=223,                               
+  VariableA = "site",
+  heatcolors = colorRampPalette(rev(brewer.pal(n = 7, name = "RdYlBu")))(100),
+  transformation = "log10",
+  cluster_cols=T
+)
+
+ps.trim.nosq.mnw <- subset_samples(ps.trim.nosq,site=="MNW")
+
+heat.mnw <- plot_taxa_heatmap(ps.trim.nosq.mnw,
+  subset.top = 20,
+  VariableA = "zone",
+  heatcolors = colorRampPalette(rev(brewer.pal(n = 7, name = "RdYlBu")))(100),
+  transformation = "log10",
+  cluster_cols=T
+)
+
+ps.trim.nosq.mse <- subset_samples(ps.trim.nosq,site=="MSE")
+
+heat.mse <- plot_taxa_heatmap(ps.trim.nosq.mse,
+  subset.top = 20,
+  VariableA = "zone",
+  heatcolors=colorRampPalette(colors=c(viridis_pal(direction=-1,option="D")(32)))(30),
+  #heatcolors = colorRampPalette(brewer.pal(n = 7, name = "Purples"))(100),#took out rev() here
+  transformation = "log10",
+  cluster_cols=T
+)
+
+ps.sz <- merge_samples(ps.rare.trim, "site_zone")
+
+ps.sz@sam_data$zone <- c("A","B","A","B","A","B")
+
+heat.all.sz <- plot_taxa_heatmap(ps.sz,
+  subset.top=20,                               
+  VariableA = "zone",
+  heatcolors = colorRampPalette(rev(brewer.pal(n = 7, name = "RdYlBu")))(100),
+  transformation = "Z-OTU",
+  cluster_cols=F
+)
+```
+
+
+
+
+
+

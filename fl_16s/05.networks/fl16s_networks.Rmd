@@ -1,0 +1,636 @@
+---
+title: "fl16s_networks"
+author: "Nicola Kriefall"
+date: "06/03/2022"
+output: html_document
+---
+
+# Setup
+
+## Load libraries
+
+```{r libraries}
+library("devtools")
+library("stringr")
+#install_github("zdk123/SpiecEasi")
+#library(SpiecEasi)
+#library(igraph)
+#library(vegan)
+#library(Matrix)
+#library(reshape2)
+#library(plyr)
+library(dplyr)
+library(gridExtra)
+library(grid)
+#library(microbiome)
+
+setwd("~/nicfall@bu.edu - Google Drive/My Drive/Flirma/flirma_networks_master/fl_16s/05.networks")
+```
+
+### Extra function
+
+```{r extra 'not in' function}
+#extra function
+# load in the following function
+'%!in%' <- function(x,y) {
+!('%in%'(x,y))
+}
+# END
+```
+
+## Read in & process data
+
+```{r}
+ps.cleaner <- readRDS("../01.generate_asv_table/fl16s.ps.cleaner.rd3.rds")
+
+tax <- as.data.frame(ps.cleaner@tax_table@.Data)
+
+tax.clean <- data.frame(row.names = row.names(tax),
+                        Kingdom = str_replace(tax[,1], "D_0__",""),
+                        Phylum = str_replace(tax[,2], "D_1__",""),
+                        Class = str_replace(tax[,3], "D_2__",""),
+                        Order = str_replace(tax[,4], "D_3__",""),
+                        Family = str_replace(tax[,5], "D_4__",""),
+                        Genus = str_replace(tax[,6], "D_5__",""),
+                        Species = str_replace(tax[,7], "D_6__",""),
+                        stringsAsFactors = FALSE)
+tax.clean[is.na(tax.clean)] <- ""
+
+for (i in 1:7){ tax.clean[,i] <- as.character(tax.clean[,i])}
+####### Fill holes in the tax table
+tax.clean[is.na(tax.clean)] <- ""
+for (i in 1:nrow(tax.clean)){
+  if (tax.clean[i,2] == ""){
+    kingdom <- paste("Kingdom_", tax.clean[i,1], sep = "")
+    tax.clean[i, 2:7] <- kingdom
+  } else if (tax.clean[i,3] == ""){
+    phylum <- paste("Phylum_", tax.clean[i,2], sep = "")
+    tax.clean[i, 3:7] <- phylum
+  } else if (tax.clean[i,4] == ""){
+    class <- paste("Class_", tax.clean[i,3], sep = "")
+    tax.clean[i, 4:7] <- class
+  } else if (tax.clean[i,5] == ""){
+    order <- paste("Order_", tax.clean[i,4], sep = "")
+    tax.clean[i, 5:7] <- order
+  } else if (tax.clean[i,6] == ""){
+    family <- paste("Family_", tax.clean[i,5], sep = "")
+    tax.clean[i, 6:7] <- family
+  } else if (tax.clean[i,7] == ""){
+    tax.clean$Species[i] <- paste("Genus",tax.clean$Genus[i], sep = "_")
+  }
+}
+
+tax_table(ps.cleaner) <- as.matrix(tax.clean)
+
+#ps.clean.gen <- tax_glom(ps.clean,"Genus")
+#ps.otu.gen <- data.frame(ps.clean.gen@otu_table)
+
+#family
+ps.clean.fam <- tax_glom(ps.cleaner,"Family")
+
+ps.clean.fam.sid <- subset_samples(ps.clean.fam,spp=="ssid")
+ps.clean.fam.rad <- subset_samples(ps.clean.fam,spp=="srad")
+
+ps.clean.fam.sid.no0 <- prune_taxa(taxa_sums(ps.clean.fam.sid) > 0, ps.clean.fam.sid) 
+# otu_table()   OTU Table:         [ 489 taxa and 201 samples ]
+# sample_data() Sample Data:       [ 201 samples by 9 sample variables ]
+# tax_table()   Taxonomy Table:    [ 489 taxa by 7 taxonomic ranks ]
+ps.clean.fam.rad.no0 <- prune_taxa(taxa_sums(ps.clean.fam.rad) > 0, ps.clean.fam.rad) 
+# otu_table()   OTU Table:         [ 486 taxa and 155 samples ]
+# sample_data() Sample Data:       [ 155 samples by 9 sample variables ]
+# tax_table()   Taxonomy Table:    [ 486 taxa by 7 taxonomic ranks ]
+```
+
+## Subset for sites/years{.tabset}
+
+### S. siderea
+
+```{r}
+seq.sid <- data.frame(ps.clean.fam.sid.no0@otu_table)
+df.sid <- data.frame(ps.clean.fam.sid.no0@sam_data)
+row.names(df.sid)==row.names(seq.sid)
+
+#LK1 in & off
+df.sid.lk1i <- subset(df.sid,site_zone=="LK1-I")
+df.sid.lk1o <- subset(df.sid,site_zone=="LK1-O")
+
+names.lk1i <- c(row.names(df.sid.lk1i))
+names.lk1o <- c(row.names(df.sid.lk1o))
+
+seq.sid.lk1i <- seq.sid[c(names.lk1i),]
+seq.sid.lk1o <- seq.sid[c(names.lk1o),]
+
+#subset for years
+df.sid.lk1i.18 <- subset(df.sid.lk1i,year=="2018")
+df.sid.lk1i.17 <- subset(df.sid.lk1i,year=="2017")
+df.sid.lk1i.15 <- subset(df.sid.lk1i,year=="2016")
+
+df.sid.lk1o.18 <- subset(df.sid.lk1o,year=="2018")
+df.sid.lk1o.17 <- subset(df.sid.lk1o,year=="2017")
+df.sid.lk1o.15 <- subset(df.sid.lk1o,year=="2015")
+
+names.lk1i.18 <- c(row.names(df.sid.lk1i.18))
+names.lk1i.17 <- c(row.names(df.sid.lk1i.17))
+names.lk1i.15 <- c(row.names(df.sid.lk1i.15))
+
+names.lk1o.18 <- c(row.names(df.sid.lk1o.18))
+names.lk1o.17 <- c(row.names(df.sid.lk1o.17))
+names.lk1o.15 <- c(row.names(df.sid.lk1o.15))
+
+seq.sid.lk1i.18 <- seq.sid[c(names.lk1i.18),]
+seq.sid.lk1i.17 <- seq.sid[c(names.lk1i.17),]
+seq.sid.lk1i.15 <- seq.sid[c(names.lk1i.15),]
+
+seq.sid.lk1o.18 <- seq.sid[c(names.lk1o.18),]
+seq.sid.lk1o.17 <- seq.sid[c(names.lk1o.17),]
+seq.sid.lk1o.15 <- seq.sid[c(names.lk1o.15),]
+```
+
+#### Cleaning lower reads
+
+Some data cleaning: authors recommend removing samples with less than an average of 2 reads per column. 
+
+```{r}
+seq.sid.lk1i.18.no2 <- seq.sid.lk1i.18[,-which(colMeans(seq.sid.lk1i.18) <= 2)]
+seq.sid.lk1i.17.no2 <- seq.sid.lk1i.17[,-which(colMeans(seq.sid.lk1i.17) <= 2)]
+seq.sid.lk1i.15.no2 <- seq.sid.lk1i.15[,-which(colMeans(seq.sid.lk1i.15) <= 2)]
+
+seq.sid.lk1o.18.no2 <- seq.sid.lk1o.18[,-which(colMeans(seq.sid.lk1o.18) <= 2)]
+seq.sid.lk1o.17.no2 <- seq.sid.lk1o.17[,-which(colMeans(seq.sid.lk1o.17) <= 2)]
+seq.sid.lk1o.15.no2 <- seq.sid.lk1o.15[,-which(colMeans(seq.sid.lk1o.15) <= 2)]
+
+# otu.lk1i.18.no0 <- otu.lk1i.18[,c(colSums(otu.lk1i.18)>0)]
+# otu.lk1i.17.no0 <- otu.lk1i.18[,c(colSums(otu.lk1i.17)>0)]
+# otu.lk1i.15.no0 <- otu.lk1i.18[,c(colSums(otu.lk1i.15)>0)]
+# 
+# otu.lk1o.18.no0 <- otu.lk1o.18[,c(colSums(otu.lk1o.18)>0)]
+# otu.lk1o.17.no0 <- otu.lk1o.18[,c(colSums(otu.lk1o.17)>0)]
+# otu.lk1o.15.no0 <- otu.lk1o.18[,c(colSums(otu.lk1o.15)>0)]
+
+#otu.lk1o.15.no0.m <- as.matrix(otu.lk1o.15.no0)
+```
+
+### S. radians
+
+```{r}
+```
+
+# Networks
+
+## Setup
+
+Begin by installing & loading necessary packages.
+
+(Overall pipeline & scripts followed is sourced from [here; Layeghifard *et al*., 2018, *Methods in Molecular Biology*](https://www-ncbi-nlm-nih-gov.ezproxy.bu.edu/pubmed/30298259))
+
+```{r packages, message=FALSE}
+# Install Required packages 
+#install.packages("igraph") 
+library("igraph")
+#install.packages("qgraph") 
+library("qgraph")
+#install.packages("MCL")
+library("MCL")
+#install.packages("vegan")
+library("vegan")
+# Install SpiecEasi package 
+#install.packages("devtools") 
+library("devtools") 
+#install_github("zdk123/SpiecEasi")
+library("SpiecEasi")
+library("ggplot2")
+library("ggpubr")
+#devtools::install_github("briatte/ggnet")
+library(ggnet)
+```
+
+## Building adjacency matrix & network
+
+Building an adjacency matrix of correlations of the abundances of bacterial families, one per sampling year. 
+
+```{r build network}
+# SparCC network
+sparcc.matrix_sid.lk1i.18 <- sparcc(seq.sid.lk1i.18.no2)
+sparcc.matrix_sid.lk1o.18 <- sparcc(seq.sid.lk1o.18.no2)
+
+sparcc.matrix_sid.lk1i.17 <- sparcc(seq.sid.lk1i.17.no2)
+sparcc.matrix_sid.lk1o.17 <- sparcc(seq.sid.lk1o.17.no2)
+
+sparcc.matrix_sid.lk1i.15 <- sparcc(seq.sid.lk1i.15.no2)
+sparcc.matrix_sid.lk1o.15 <- sparcc(seq.sid.lk1o.15.no2)
+
+sparcc.cutoff <- 0.7
+
+sparcc.adj_sid.lk1i.15 <- ifelse(abs(sparcc.matrix_sid.lk1i.15$Cor) >= sparcc.cutoff, 1, 0)
+sparcc.adj_sid.lk1o.15 <- ifelse(abs(sparcc.matrix_sid.lk1o.15$Cor) >= sparcc.cutoff, 1, 0)
+
+sparcc.adj_sid.lk1i.17 <- ifelse(abs(sparcc.matrix_sid.lk1i.17$Cor) >= sparcc.cutoff, 1, 0)
+sparcc.adj_sid.lk1o.17 <- ifelse(abs(sparcc.matrix_sid.lk1o.17$Cor) >= sparcc.cutoff, 1, 0)
+
+sparcc.adj_sid.lk1i.18 <- ifelse(abs(sparcc.matrix_sid.lk1i.18$Cor) >= sparcc.cutoff, 1, 0)
+sparcc.adj_sid.lk1o.18 <- ifelse(abs(sparcc.matrix_sid.lk1o.18$Cor) >= sparcc.cutoff, 1, 0)
+
+# Add names to rows and columns
+rownames(sparcc.adj_sid.lk1i.15) <- colnames(seq.sid.lk1i.15.no2)
+colnames(sparcc.adj_sid.lk1i.15) <- colnames(seq.sid.lk1i.15.no2) 
+
+rownames(sparcc.adj_sid.lk1o.15) <- colnames(seq.sid.lk1o.15.no2)
+colnames(sparcc.adj_sid.lk1o.15) <- colnames(seq.sid.lk1o.15.no2) 
+
+rownames(sparcc.adj_sid.lk1i.17) <- colnames(seq.sid.lk1i.17.no2)
+colnames(sparcc.adj_sid.lk1i.17) <- colnames(seq.sid.lk1i.17.no2) 
+
+rownames(sparcc.adj_sid.lk1o.17) <- colnames(seq.sid.lk1o.17.no2)
+colnames(sparcc.adj_sid.lk1o.17) <- colnames(seq.sid.lk1o.17.no2) 
+
+rownames(sparcc.adj_sid.lk1i.18) <- colnames(seq.sid.lk1i.18.no2)
+colnames(sparcc.adj_sid.lk1i.18) <- colnames(seq.sid.lk1i.18.no2) 
+
+rownames(sparcc.adj_sid.lk1o.18) <- colnames(seq.sid.lk1o.18.no2)
+colnames(sparcc.adj_sid.lk1o.18) <- colnames(seq.sid.lk1o.18.no2) 
+```
+
+## Visualizing network from adjacency matrix
+
+```{r plot net from adj matrix}
+"#781C6D" #purple
+"#F8850F" #orange
+"#AE305C" #burgundy
+
+"#ED7953FF"
+"#8405A7FF"
+
+# show_col(viridis_pal(option="A")(3))
+# show_col(viridis_pal(option="B")(3))
+# show_col(viridis_pal(option="C")(3))
+# show_col(viridis_pal(option="D")(3))
+# show_col(viridis_pal(option="E")(3))
+# show_col(viridis_pal(option="F")(3))
+# show_col(viridis_pal(option="G")(3))
+# show_col(viridis_pal(option="H")(3))
+
+net.sid.lk1i.15 <- ggnet2(sparcc.adj_sid.lk1i.15,size="degree",size.cut=TRUE,alpha=0.5,color="#ED7953FF",size.min=1)+
+  ggtitle('LK inshore baseline')
+net.sid.lk1o.15 <- ggnet2(sparcc.adj_sid.lk1o.15,size="degree",size.cut=TRUE,alpha=0.5,color="#8405A7FF",size.min=1)+
+  ggtitle('LK offshore baseline')
+
+ggarrange(net.sid.lk1i.15,net.sid.lk1o.15)
+
+net.sid.lk1i.17 <- ggnet2(sparcc.adj_sid.lk1i.17,size="degree",size.cut=TRUE,alpha=0.5,color="#ED7953FF",size.min=1)+
+  ggtitle('LK inshore disturbance')
+net.sid.lk1o.17 <- ggnet2(sparcc.adj_sid.lk1o.17,size="degree",size.cut=TRUE,alpha=0.5,color="#8405A7FF",size.min=1)+
+  ggtitle('LK offshore disturbance')
+
+ggarrange(net.sid.lk1i.17,net.sid.lk1o.17)
+
+net.sid.lk1i.18 <- ggnet2(sparcc.adj_sid.lk1i.18,size="degree",size.cut=TRUE,alpha=0.5,color="#ED7953FF",size.min=1)+
+  ggtitle('LK inshore post')
+net.sid.lk1o.18 <- ggnet2(sparcc.adj_sid.lk1o.18,size="degree",size.cut=TRUE,alpha=0.5,color="#8405A7FF",size.min=1)+
+  ggtitle('LK offshore post')
+
+ggarrange(net.sid.lk1i.18,net.sid.lk1o.18)
+```
+
+## All together now
+
+```{r}
+ggarrange(net.sid.lk1i.15,net.sid.lk1o.15,net.sid.lk1i.17,net.sid.lk1o.17,net.sid.lk1i.18,net.sid.lk1o.18,ncol=2,nrow=3)
+```
+
+## Metrics
+
+```{r}
+# Build network from adjacency
+net_sid.lk1i.15 <- graph.adjacency(sparcc.adj_sid.lk1i.15, mode = "undirected", diag = FALSE)
+net_sid.lk1o.15 <- graph.adjacency(sparcc.adj_sid.lk1o.15, mode = "undirected", diag = FALSE)
+
+net_sid.lk1i.17 <- graph.adjacency(sparcc.adj_sid.lk1i.17, mode = "undirected", diag = FALSE)
+net_sid.lk1o.17 <- graph.adjacency(sparcc.adj_sid.lk1o.17, mode = "undirected", diag = FALSE)
+
+net_sid.lk1i.18 <- graph.adjacency(sparcc.adj_sid.lk1i.18, mode = "undirected", diag = FALSE)
+net_sid.lk1o.18 <- graph.adjacency(sparcc.adj_sid.lk1o.18, mode = "undirected", diag = FALSE)
+```
+
+### Network metrics - centrality
+
+```{r}
+cen.sid.lk1i.15 <- eigen_centrality(net_sid.lk1i.15)$vector
+cen.sid.lk1i.15.sorted <- sort(cen.sid.lk1i.15,decreasing=TRUE)
+cen.sid.lk1i.15.top10 <- cen.sid.lk1i.15.sorted[1:10]
+
+cen.sid.lk1i.15.top10.df <- data.frame(cen.sid.lk1i.15.top10)
+cen.sid.lk1i.15.top10.df$sqs <- row.names(cen.sid.lk1i.15.top10.df)
+
+bar.cen.sid.lk1i.15 <- ggplot(cen.sid.lk1i.15.top10.df,aes(x=sqs,y=cen.sid.lk1i.15.top10))+
+  geom_bar(stat="identity")+
+  theme_cowplot()
+
+cen.sid.lk1o.15 <- eigen_centrality(net_sid.lk1o.15)$vector
+cen.sid.lk1o.15.sorted <- sort(cen.sid.lk1o.15,decreasing=TRUE)
+cen.sid.lk1o.15.top10 <- cen.sid.lk1o.15.sorted[1:10]
+
+cen.sid.lk1o.15.top10.df <- data.frame(cen.sid.lk1o.15.top10)
+cen.sid.lk1o.15.top10.df$sqs <- row.names(cen.sid.lk1o.15.top10.df)
+
+bar.cen.sid.lk1o.15 <- ggplot(cen.sid.lk1o.15.top10.df,aes(x=sqs,y=cen.sid.lk1o.15.top10))+
+  geom_bar(stat="identity")+
+  theme_cowplot()
+
+cen.sid.lk1o.17 <- eigen_centrality(net_sid.lk1o.17)$vector
+cen.sid.lk1o.17.sorted <- sort(cen.sid.lk1o.17,decreasing=TRUE)
+cen.sid.lk1o.17.top10 <- cen.sid.lk1o.17.sorted[1:10]
+
+cen.sid.lk1o.17.top10.df <- data.frame(cen.sid.lk1o.17.top10)
+cen.sid.lk1o.17.top10.df$sqs <- row.names(cen.sid.lk1o.17.top10.df)
+
+bar.cen.sid.lk1o.17 <- ggplot(cen.sid.lk1o.17.top10.df,aes(x=sqs,y=cen.sid.lk1o.17.top10))+
+  geom_bar(stat="identity")+
+  theme_cowplot()
+
+cen.sid.lk1i.17 <- eigen_centrality(net_sid.lk1i.17)$vector
+cen.sid.lk1i.17.sorted <- sort(cen.sid.lk1i.17,decreasing=TRUE)
+cen.sid.lk1i.17.top10 <- cen.sid.lk1i.17.sorted[1:10]
+
+cen.sid.lk1i.17.top10.df <- data.frame(cen.sid.lk1i.17.top10)
+cen.sid.lk1i.17.top10.df$sqs <- row.names(cen.sid.lk1i.17.top10.df)
+
+bar.cen.sid.lk1i.17 <- ggplot(cen.sid.lk1i.17.top10.df,aes(x=sqs,y=cen.sid.lk1i.17.top10))+
+  geom_bar(stat="identity")+
+  theme_cowplot()
+
+cen.sid.lk1o.18 <- eigen_centrality(net_sid.lk1o.18)$vector
+cen.sid.lk1o.18.sorted <- sort(cen.sid.lk1o.18,decreasing=TRUE)
+cen.sid.lk1o.18.top10 <- cen.sid.lk1o.18.sorted[1:10]
+
+cen.sid.lk1o.18.top10.df <- data.frame(cen.sid.lk1o.18.top10)
+cen.sid.lk1o.18.top10.df$sqs <- row.names(cen.sid.lk1o.18.top10.df)
+
+bar.cen.sid.lk1o.18 <- ggplot(cen.sid.lk1o.18.top10.df,aes(x=sqs,y=cen.sid.lk1o.18.top10))+
+  geom_bar(stat="identity")+
+  theme_cowplot()
+
+cen.sid.lk1i.18 <- eigen_centrality(net_sid.lk1i.18)$vector
+cen.sid.lk1i.18.sorted <- sort(cen.sid.lk1i.18,decreasing=TRUE)
+cen.sid.lk1i.18.top10 <- cen.sid.lk1i.18.sorted[1:10]
+
+cen.sid.lk1i.18.top10.df <- data.frame(cen.sid.lk1i.18.top10)
+cen.sid.lk1i.18.top10.df$sqs <- row.names(cen.sid.lk1i.18.top10.df)
+
+bar.cen.sid.lk1i.18 <- ggplot(cen.sid.lk1i.18.top10.df,aes(x=sqs,y=cen.sid.lk1i.18.top10))+
+  geom_bar(stat="identity")+
+  theme_cowplot()
+
+ggarrange(bar.cen.sid.lk1i.15,bar.cen.sid.lk1o.15,bar.cen.sid.lk1i.17,bar.cen.sid.lk1o.17,bar.cen.sid.lk1i.18,bar.cen.sid.lk1o.18,ncol=2,nrow=3)
+```
+
+## Degree distribution
+
+```{r}
+# Degree distribution
+deg.dist <- degree_distribution(net_sid.lk1i.15, mode = "all", cumulative = T) # Plot degree distribution
+num <- (1:length(deg.dist))
+treat <- rep("sid.lk1i.15",length(deg.dist))
+deg.dist.sid.lk1i.15.df <- data.frame(deg.dist,num,treat)
+
+deg.dist <- degree_distribution(net_sid.lk1o.15, mode = "all", cumulative = T) # Plot degree distribution
+num <- (1:length(deg.dist))
+treat <- rep("sid.lk1o.15",length(deg.dist))
+deg.dist.sid.lk1o.15.df <- data.frame(deg.dist,num,treat)
+
+deg.sid.lk1.15 <- rbind(deg.dist.sid.lk1i.15.df,deg.dist.sid.lk1o.15.df)
+
+ggplot(deg.sid.lk1.15,aes(x=num,y=deg.dist,color=treat))+
+  geom_point()
+```
+
+```{r}
+btn.sid.lk1i.15 <- igraph::betweenness(net_sid.lk1i.15)
+btn.sid.lk1i.15.sorted <- sort(btn.sid.lk1i.15,decreasing=TRUE)
+btn.sid.lk1i.15.top10 <- btn.sid.lk1i.15.sorted[1:10]
+
+btn.sid.lk1o.15 <- igraph::betweenness(net_sid.lk1o.15)
+btn.sid.lk1o.15.sorted <- sort(btn.sid.lk1o.15,decreasing=TRUE)
+btn.sid.lk1o.15.top10 <- btn.sid.lk1o.15.sorted[1:10]
+
+names(btn.sid.lk1i.15.top10) %in% names(btn.sid.lk1o.15.top10)
+
+btn.sid.lk1i.17 <- igraph::betweenness(net_sid.lk1i.17)
+btn.sid.lk1i.17.sorted <- sort(btn.sid.lk1i.17,decreasing=TRUE)
+btn.sid.lk1i.17.top10 <- btn.sid.lk1i.17.sorted[1:10]
+
+btn.sid.lk1o.17 <- igraph::betweenness(net_sid.lk1o.17)
+btn.sid.lk1o.17.sorted <- sort(btn.sid.lk1o.17,decreasing=TRUE)
+btn.sid.lk1o.17.top10 <- btn.sid.lk1o.17.sorted[1:10]
+
+names(btn.sid.lk1i.17.top10) %in% names(btn.sid.lk1o.17.top10)
+
+btn.sid.lk1i.18 <- igraph::betweenness(net_sid.lk1i.18)
+btn.sid.lk1i.18.sorted <- sort(btn.sid.lk1i.18,decreasing=TRUE)
+btn.sid.lk1i.18.top10 <- btn.sid.lk1i.18.sorted[1:10]
+
+btn.sid.lk1o.18 <- igraph::betweenness(net_sid.lk1o.18)
+btn.sid.lk1o.18.sorted <- sort(btn.sid.lk1o.18,decreasing=TRUE)
+btn.sid.lk1o.18.top10 <- btn.sid.lk1o.18.sorted[1:10]
+
+names(btn.sid.lk1i.18.top10) %in% names(btn.sid.lk1o.18.top10)
+
+#17 v 18
+names(btn.sid.lk1i.18.top10) %in% names(btn.sid.lk1i.17.top10)
+
+#18 v 15
+names(btn.sid.lk1i.18.top10) %in% names(btn.sid.lk1i.15.top10)
+
+#17 v 15
+names(btn.sid.lk1i.17.top10) %in% names(btn.sid.lk1i.15.top10)
+
+btn.sid.lk1i.17.top10.df <- data.frame(btn.sid.lk1i.17.top10)
+btn.sid.lk1i.17.top10.df$sqs <- row.names(btn.sid.lk1i.17.top10.df)
+
+btn.sid.lk1i.15.top10.df <- data.frame(btn.sid.lk1i.15.top10)
+btn.sid.lk1i.15.top10.df$sqs <- row.names(btn.sid.lk1i.15.top10.df)
+
+ggplot(btn.sid.lk1i.15.top10.df,aes(x=sqs,y=btn.sid.lk1i.15.top10))+
+  geom_bar(stat="identity")
+
+ggplot(btn.sid.lk1i.17.top10.df,aes(x=sqs,y=btn.sid.lk1i.17.top10))+
+  geom_bar(stat="identity")
+
+ggplot(btn.sid.lk1i.17.top10.df,aes(x=sqs,y=btn.sid.lk1i.17.top10))+
+  geom_bar(stat="identity")
+ggplot(btn.sid.lk1i.15.top10.df,aes(x=sqs,y=btn.sid.lk1i.17.top10))+
+  geom_bar(stat="identity")
+
+ggplot(btn.sid.lk1i.17.top10.df,aes(x=row.names,y=vector))+
+  geom_bar(stat="identity")+
+  theme(axis.text.x=element_text(angle=90,hjust=1))+
+  ylab("Eigenvector centrality")+
+  xlab("Bacterial sequence")+
+  ggtitle("2015 & 2016 (pre-Irma)")+
+  geom_hline(yintercept=0.7885872,color="#781C6D")
+
+
+btwn.15.tosort$vector <- btwn.15.tosort$betweenness.net_15.
+btwn.15.sorted <- btwn.15.tosort[order(-btwn.15.tosort$vector),]
+btwn.15.sorted$sqs <- rownames(btwn.15.sorted)
+btwn.15.top10 <- btwn.15.sorted[1:10,]
+sqs_order <- btwn.15.top10$sqs
+btwn.15.top10$sqs <- factor(btwn.15.top10$sqs,levels=sqs_order)
+
+
+
+plot(deg.dist, xlab = "Nodes degree", ylab = "Probability") 
+lines(deg.dist)
+# qgraph method
+centralityPlot(net_sid.lk1i.15)
+```
+
+```{r older}
+# Hub detection
+#net_15.cn <- closeness(net_15)
+#net_15.bn <- betweenness(net_15) 
+#net_15.pr <- page_rank(net_15)$vector 
+net_sid.lk1i.15.hs <- hub_score(net_sid.lk1i.15)$vector
+net_sid.lk1i.15.hs.sort <- sort(net_sid.lk1i.15.hs, decreasing = TRUE)
+net_sid.lk1i.15.hs.top5 <- head(net_sid.lk1i.15.hs.sort, n = 5)
+net_sid.lk1i.15.hs.top5
+
+net_17.cn <- closeness(net_17)
+net_17.bn <- betweenness(net_17) 
+net_17.pr <- page_rank(net_17)$vector
+net_17.hs <- hub_score(net_17)$vector
+net_17.hs.sort <- sort(net_17.hs, decreasing = TRUE)
+net_17.hs.top5 <- head(net_17.hs.sort, n = 5)
+
+net_18.cn <- closeness(net_18)
+net_18.bn <- betweenness(net_18) 
+net_18.pr <- page_rank(net_18)$vector 
+net_18.hs <- hub_score(net_18)$vector
+net_18.hs.sort <- sort(net_18.hs, decreasing = TRUE)
+net_18.hs.top5 <- head(net_18.hs.sort, n = 5)
+```
+
+### Eigenvector centrality
+
+```{r network metrics 1}
+eigen.15 <- eigen_centrality(net_15)
+eigen.15.tosort <- data.frame(eigen.15[["vector"]])
+eigen.15.tosort$vector <- eigen.15.tosort$eigen.15...vector...
+eigen.15.sorted <- eigen.15.tosort[order(-eigen.15.tosort$vector),]
+eigen.15.sorted$sqs <- rownames(eigen.15.sorted)
+eigen.15.top10 <- eigen.15.sorted[1:10,]
+sqs_order <- eigen.15.top10$sqs
+eigen.15.top10$sqs <- factor(eigen.15.top10$sqs,levels=sqs_order)
+
+eigen.17 <- eigen_centrality(net_17)
+eigen.17.tosort <- data.frame(eigen.17[["vector"]])
+eigen.17.tosort$vector <- eigen.17.tosort$eigen.17...vector...
+eigen.17.sorted <- eigen.17.tosort[order(-eigen.17.tosort$vector),]
+eigen.17.sorted$sqs <- rownames(eigen.17.sorted)
+eigen.17.top10 <- eigen.17.sorted[1:10,]
+sqs_order <- eigen.17.top10$sqs
+eigen.17.top10$sqs <- factor(eigen.17.top10$sqs,levels=sqs_order)
+
+eigen.18 <- eigen_centrality(net_18)
+eigen.18.tosort <- data.frame(eigen.18[["vector"]])
+eigen.18.tosort$vector <- eigen.18.tosort$eigen.18...vector...
+eigen.18.sorted <- eigen.18.tosort[order(-eigen.18.tosort$vector),]
+eigen.18.sorted$sqs <- rownames(eigen.18.sorted)
+eigen.18.top10 <- eigen.18.sorted[1:10,]
+sqs_order <- eigen.18.top10$sqs
+eigen.18.top10$sqs <- factor(eigen.18.top10$sqs,levels=sqs_order)
+
+ggplot(eigen.15.top10,aes(x=sqs,y=vector))+
+  geom_bar(stat="identity")+
+  theme(axis.text.x=element_text(angle=90,hjust=1))+
+  ylab("Eigenvector centrality")+
+  xlab("Bacterial sequence")+
+  ggtitle("2015 & 2016 (pre-Irma)")+
+  geom_hline(yintercept=0.7885872,color="#781C6D")
+
+ggplot(eigen.17.top10,aes(x=sqs,y=vector))+
+  geom_bar(stat="identity")+
+  theme(axis.text.x=element_text(angle=90,hjust=1))+
+  ylab("Eigenvector centrality")+
+  xlab("Bacterial sequence")+
+  ggtitle("2017 (Irma)")+
+  geom_hline(yintercept=0.7885872,color="#781C6D")+
+  geom_hline(yintercept=0.7140983,color="#AE305C")
+
+ggplot(eigen.18.top10,aes(x=sqs,y=vector))+
+  geom_bar(stat="identity")+
+  theme(axis.text.x=element_text(angle=90,hjust=1))+
+  ylab("Eigenvector centrality")+
+  xlab("Bacterial sequence")+
+  ggtitle("2018 (post-Irma)")+
+  geom_hline(yintercept=0.7140983,color="#AE305C")
+```
+
+### Betweenness centrality
+
+```{r network networks 2}
+btwn.15.tosort <- data.frame(betweenness(net_15))
+btwn.15.tosort$vector <- btwn.15.tosort$betweenness.net_15.
+btwn.15.sorted <- btwn.15.tosort[order(-btwn.15.tosort$vector),]
+btwn.15.sorted$sqs <- rownames(btwn.15.sorted)
+btwn.15.top10 <- btwn.15.sorted[1:10,]
+sqs_order <- btwn.15.top10$sqs
+btwn.15.top10$sqs <- factor(btwn.15.top10$sqs,levels=sqs_order)
+
+btwn.17.tosort <- data.frame(betweenness(net_17))
+btwn.17.tosort$vector <- btwn.17.tosort$betweenness.net_17.
+btwn.17.sorted <- btwn.17.tosort[order(-btwn.17.tosort$vector),]
+btwn.17.sorted$sqs <- rownames(btwn.17.sorted)
+btwn.17.top10 <- btwn.17.sorted[1:10,]
+sqs_order <- btwn.17.top10$sqs
+btwn.17.top10$sqs <- factor(btwn.17.top10$sqs,levels=sqs_order)
+
+btwn.18.tosort <- data.frame(betweenness(net_18))
+btwn.18.tosort$vector <- btwn.18.tosort$betweenness.net_18.
+btwn.18.sorted <- btwn.18.tosort[order(-btwn.18.tosort$vector),]
+btwn.18.sorted$sqs <- rownames(btwn.18.sorted)
+btwn.18.top10 <- btwn.18.sorted[1:10,]
+sqs_order <- btwn.18.top10$sqs
+btwn.18.top10$sqs <- factor(btwn.18.top10$sqs,levels=sqs_order)
+
+ggplot(btwn.15.top10,aes(x=sqs,y=vector))+
+  geom_bar(stat="identity")+
+  theme(axis.text.x=element_text(angle=90,hjust=1))+
+  ylab("Betweenness centrality")+
+  xlab("Bacterial sequence")+
+  ggtitle("2015 & 2016 (pre-Irma)")
+
+ggplot(btwn.17.top10,aes(x=sqs,y=vector))+
+  geom_bar(stat="identity")+
+  theme(axis.text.x=element_text(angle=90,hjust=1))+
+  ylab("Betweenness centrality")+
+  xlab("Bacterial sequence")+
+  ggtitle("2017 (Irma)")
+
+ggplot(btwn.18.top10,aes(x=sqs,y=vector))+
+  geom_bar(stat="identity")+
+  theme(axis.text.x=element_text(angle=90,hjust=1))+
+  ylab("Betweenness centrality")+
+  xlab("Bacterial sequence")+
+  ggtitle("2018 (post-Irma)")
+```
+
+# Script archive
+
+```{r}
+spieceasi.net <- spiec.easi(otu.lk1o.15.no0, method = 'mb',lambda.min.ratio
+= 1e-2, nlambda = 20, icov.select.params = list(rep.num = 50))
+```
+
+```{r}
+otu.sids <- data.frame(ps.sid@otu_table)
+otu.rads <- data.frame(ps.rad@otu_table)
+
+# Cuts OTUs with <0.01% of reads total:
+# seq.sid.keep <- which(colSums(otu.sids)*100/(sum(colSums(otu.sids))) > 0.01)
+# seq.sid <- otu.sids[,c(seq.sid.keep)]
+# tail(colSums(seq.sid)) #around minimum ~730 reads/otu left, 687 taxa
+# 
+# seq.rad.keep <- which(colSums(otu.rads)*100/(sum(colSums(otu.rads))) > 0.01)
+# seq.rad <- otu.rads[,c(seq.rad.keep)] #around >660 reads/otu left, 1379 taxa
+# tail(colSums(seq.rad))
+```

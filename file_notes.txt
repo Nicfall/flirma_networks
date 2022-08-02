@@ -1,0 +1,30 @@
+FL scripts/data
+===============
+
+01. generate ASV table
+----------------------
+Master script files:
+- fl_16s.Rmd
+- fl_16s.html
+CSV files:
+- fl16s.readstats.csv = read statistics
+- fl_sample_info - 16s_all_newvars [new vars = renaming some stuff]
+R data frames:
+- fl16s.seqtab.rds = raw counts total
+- fl16s.seqtab.nochim.rds = raw counts, chimeras removed
+- fl16s.rd3.seqtab.nochim.newids.rds = raw, no chimeras, with 'sq' names
+- fl16s.rd3.trim0005.fasta = fasta file of sequences trimmed to 85 reads
+- fl16s.rd3.taxa.newids.rds = trimmed to 85 reads, taxa with 'sq' names
+- fl16s.ps.cleaner.rd3_newvars.rds = cleaned from neg controls & dada2 taxa assignments
+
+## make cleanest with NCBI checks ##
+
+Need to redo:
+- fl16s.ps.cleaner.clr.rd3.rds = clr transformation of cleaned data 
+- ps.clean.fam.rds = just the cleaned data, summed by family
+- fl16s.ps.cleaner.rd3.trim.rds = trimmed low OTU outliers
+- ps.trim.fam.rds = OTU outliers removed, summed by family
+- ps.rare.rds.6500.rds = rarefied down to 6500 reads
+
+02. diversity
+-------------
