@@ -88,7 +88,7 @@ library("vegan")
 ```
 
 ```{r working directory, include=FALSE}
-setwd("~/Google Drive (nicfall@bu.edu)/Flirma/flirma_networks_master/fl_its2")
+setwd("~/Google Drive (nicfall@bu.edu)/Flirma/flirma_networks/fl_its2")
 ```
 
 ## Checking for no read samples
@@ -173,32 +173,49 @@ ps <- readRDS("ps.its2.RDS")
 ## Bar plots - sids {.tabset}
 
 ```{r}
-# ps.sid <- subset_samples(ps,spp=="ssid")
-# 
-# ps.sid.pre <- subset_samples(ps.sid,time=="Pre")
-# ps.sid.irm <- subset_samples(ps.sid,time=="Irma")
-# ps.sid.pos <- subset_samples(ps.sid,time=="Post")
-# 
-# ps.sid.pre.lk1 <- subset_samples(ps.sid.pre,site=="LK1")
-# ps.sid.pre.uk1 <- subset_samples(ps.sid.pre,site=="UK1")
-# ps.sid.pre.uk2 <- subset_samples(ps.sid.pre,site=="UK2")
-# 
-# ps.sid.irm.lk1 <- subset_samples(ps.sid.irm,site=="LK1")
-# ps.sid.irm.uk1 <- subset_samples(ps.sid.irm,site=="UK1")
-# ps.sid.irm.uk2 <- subset_samples(ps.sid.irm,site=="UK2")
-# 
-# ps.sid.pos.lk1 <- subset_samples(ps.sid.pos,site=="LK1")
-# ps.sid.pos.uk1 <- subset_samples(ps.sid.pos,site=="UK1")
-# ps.sid.pos.uk2 <- subset_samples(ps.sid.pos,site=="UK2")
+ps.sid <- subset_samples(ps,spp=="ssid")
 
+ps.sid.pre <- subset_samples(ps.sid,time=="Pre")
+ps.sid.irm <- subset_samples(ps.sid,time=="Irma")
+ps.sid.pos <- subset_samples(ps.sid,time=="Post")
+
+ps.sid.pre.lk1 <- subset_samples(ps.sid.pre,site=="LK1")
+ps.sid.pre.uk1 <- subset_samples(ps.sid.pre,site=="UK1")
+ps.sid.pre.uk2 <- subset_samples(ps.sid.pre,site=="UK2")
+
+ps.sid.irm.lk1 <- subset_samples(ps.sid.irm,site=="LK1")
+ps.sid.irm.uk1 <- subset_samples(ps.sid.irm,site=="UK1")
+ps.sid.irm.uk2 <- subset_samples(ps.sid.irm,site=="UK2")
+
+ps.sid.pos.lk1 <- subset_samples(ps.sid.pos,site=="LK1")
+ps.sid.pos.uk1 <- subset_samples(ps.sid.pos,site=="UK1")
+ps.sid.pos.uk2 <- subset_samples(ps.sid.pos,site=="UK2")
+
+# ps.sid.pre.lk1.rel <- transform_sample_counts(ps.sid.pre.lk1, function(x) x / sum(x))
+# ps.sid.pre.lk1.rel.zone <- merge_samples(ps.sid.pre.lk1.rel, "zone")
+# ps.sid.pre.lk1.rel.zone <- transform_sample_counts(ps.sid.pre.lk1.rel.zone, function(x) x / sum(x))
+# 
+# plot_bar(ps.sid.pre.lk1.rel.zone, fill="Clade")
+```
+
+
+```{r summed by genus}
 ps.gen <- tax_glom(ps,"Clade")
 ntaxa(ps); ntaxa(ps.gen)
 
+#sideraea
 ps.sid.gen <- subset_samples(ps.gen,spp=="ssid")
 
 ps.sid.gen.pre <- subset_samples(ps.sid.gen,time=="Pre")
 ps.sid.gen.irm <- subset_samples(ps.sid.gen,time=="Irma")
 ps.sid.gen.pos <- subset_samples(ps.sid.gen,time=="Post")
+
+#radians
+ps.rad.gen <- subset_samples(ps.gen,spp=="srad")
+
+ps.rad.gen.pre <- subset_samples(ps.rad.gen,time=="Pre")
+ps.rad.gen.irm <- subset_samples(ps.rad.gen,time=="Irma")
+ps.rad.gen.pos <- subset_samples(ps.rad.gen,time=="Post")
 ```
 
 ### Reef zone
@@ -246,17 +263,122 @@ gg.bar.pos <- plot_bar(ps.sid.gen.pos.rel.sz, fill="Clade")+
 
 gg.bar.clade <- ggarrange(gg.bar.pre,gg.bar.irm,gg.bar.pos,ncol=3,common.legend=T,legend="right")
 gg.bar.clade
-ggsave("bar.clade_horizontal.pdf",width=9,height=4)
+#ggsave("bar.clade_horizontal.pdf",width=9,height=4)
 ```
 
-### By genera
+```{r radians plot by genera}
+# ps.rad.pre.lk1.rel <- transform_sample_counts(ps.rad.pre.lk1, function(x) x / sum(x))
+# ps.rad.pre.lk1.rel.zone <- merge_samples(ps.rad.pre.lk1.rel, "zone")
+# ps.rad.pre.lk1.rel.zone <- transform_sample_counts(ps.rad.pre.lk1.rel.zone, function(x) x / sum(x))
+# 
+# plot_bar(ps.rad.pre.lk1.rel.zone, fill="Clade")
 
-```{r}
+#remove uk3
+ps.rad.gen.pre <- subset_samples(ps.rad.gen.pre,site!="UK3")
 
+ps.rad.gen.pre.rel <- transform_sample_counts(ps.rad.gen.pre, function(x) x / sum(x))
+ps.rad.gen.pre.rel.sz <- merge_samples(ps.rad.gen.pre.rel, "site_zone")
+ps.rad.gen.pre.rel.sz <- transform_sample_counts(ps.rad.gen.pre.rel.sz, function(x) x / sum(x))
+
+gg.bar.pre <- plot_bar(ps.rad.gen.pre.rel.sz, fill="Clade")+
+    ggtitle("Pre")+
+    theme_cowplot()+
+    theme(axis.text.x=element_text(angle=90,hjust=1))+
+    xlab("")
+gg.bar.pre
+
+ps.rad.gen.irm.rel <- transform_sample_counts(ps.rad.gen.irm, function(x) x / sum(x))
+ps.rad.gen.irm.rel.sz <- merge_samples(ps.rad.gen.irm.rel, "site_zone")
+ps.rad.gen.irm.rel.sz <- transform_sample_counts(ps.rad.gen.irm.rel.sz, function(x) x / sum(x))
+
+gg.bar.irm <- plot_bar(ps.rad.gen.irm.rel.sz, fill="Clade")+
+    ggtitle("Irma")+
+    theme_cowplot()+
+    theme(axis.text.x=element_text(angle=90,hjust=1))+
+    xlab("")
+
+ps.rad.gen.pos.rel <- transform_sample_counts(ps.rad.gen.pos, function(x) x / sum(x))
+ps.rad.gen.pos.rel.sz <- merge_samples(ps.rad.gen.pos.rel, "site_zone")
+ps.rad.gen.pos.rel.sz <- transform_sample_counts(ps.rad.gen.pos.rel.sz, function(x) x / sum(x))
+
+gg.bar.pos <- plot_bar(ps.rad.gen.pos.rel.sz, fill="Clade")+
+    ggtitle("Post")+
+    theme_cowplot()+
+    theme(axis.text.x=element_text(angle=90,hjust=1))+
+    xlab("")
+
+gg.bar.clade <- ggarrange(gg.bar.pre,gg.bar.irm,gg.bar.pos,ncol=3,common.legend=T,legend="right")
+gg.bar.clade
+#ggsave("bar.clade.radians.pdf",width=9,height=4)
+```
+
+```{r sids by samples}
+# ps.sid.pre.lk1.rel <- transform_sample_counts(ps.sid.pre.lk1, function(x) x / sum(x))
+# ps.sid.pre.lk1.rel.zone <- merge_samples(ps.sid.pre.lk1.rel, "zone")
+# ps.sid.pre.lk1.rel.zone <- transform_sample_counts(ps.sid.pre.lk1.rel.zone, function(x) x / sum(x))
+# 
+# plot_bar(ps.sid.pre.lk1.rel.zone, fill="Clade")
+
+#remove uk3
+ps.sid.pre <- subset_samples(ps.sid.pre,site!="UK3")
+
+ps.sid.pre.rel <- transform_sample_counts(ps.sid.pre, function(x) x / sum(x))
+ps.sid.pre.rel.sz <- merge_samples(ps.sid.pre.rel, "site_zone")
+ps.sid.pre.rel.sz <- transform_sample_counts(ps.sid.pre.rel.sz, function(x) x / sum(x))
+
+gg.bar.pre <- plot_bar(ps.sid.pre.rel.sz, fill="Majority_ITS2_sequence")+
+    ggtitle("Pre")+
+    theme_cowplot()+
+    theme(axis.text.x=element_text(angle=90,hjust=1))+
+    xlab("")
+gg.bar.pre
+
+ps.sid.irm.rel <- transform_sample_counts(ps.sid.irm, function(x) x / sum(x))
+ps.sid.irm.rel.sz <- merge_samples(ps.sid.irm.rel, "site_zone")
+ps.sid.irm.rel.sz <- transform_sample_counts(ps.sid.irm.rel.sz, function(x) x / sum(x))
+
+gg.bar.irm <- plot_bar(ps.sid.irm.rel.sz, fill="Majority_ITS2_sequence")+
+    ggtitle("Irma")+
+    theme_cowplot()+
+    theme(axis.text.x=element_text(angle=90,hjust=1))+
+    xlab("")
+
+ps.sid.pos.rel <- transform_sample_counts(ps.sid.pos, function(x) x / sum(x))
+ps.sid.pos.rel.sz <- merge_samples(ps.sid.pos.rel, "site_zone")
+ps.sid.pos.rel.sz <- transform_sample_counts(ps.sid.pos.rel.sz, function(x) x / sum(x))
+
+gg.bar.pos <- plot_bar(ps.sid.pos.rel.sz, fill="Majority_ITS2_sequence3")+
+    ggtitle("Post")+
+    theme_cowplot()+
+    theme(axis.text.x=element_text(angle=90,hjust=1))+
+    xlab("")
+gg.bar.pos
+
+gg.bar.its2 <- ggarrange(gg.bar.pre,gg.bar.irm,gg.bar.pos,ncol=3,common.legend=T,legend="right")
+gg.bar.its2
+ggsave("bar.its2.sids.pdf",width=9,height=4)
 ```
 
 ```{r}
+#by sample
+ps.sid.pre.rel <- transform_sample_counts(ps.sid.pre, function(x) x / sum(x))
 
+plot_bar(ps.sid.pre.rel, fill="Majority_ITS2_sequence")+
+    ggtitle("Pre")+
+    theme_cowplot()+
+    theme(axis.text.x=element_text(angle=90,hjust=1))+
+    xlab("")
+
+```
+
+
+
+
+
+
+Mo'orea stuff to update/delete
+
+```{r}
 ### Type profile by sample
 #all samples
 #plot_bar(ps,"sample_full")
