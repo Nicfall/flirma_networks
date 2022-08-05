@@ -95,117 +95,117 @@ sample_num,full_site,site,zone,site_zone,sample,spp,year,time,season,seq_run
 148,Basin Hill,UK2,Inshore,UK2-I,UK2-I_148,srad,2015,Pre,Spring,run1
 149,Basin Hill,UK2,Inshore,UK2-I,UK2-I_149,srad,2015,Pre,Spring,run1
 150,Basin Hill,UK2,Inshore,UK2-I,UK2-I_150,srad,2015,Pre,Spring,run1
-701,Cheeca Rocks,UK1,Inshore,UK1-I,UK1-I_701,ssid,2017,Irma,Fall,run1
-702,Cheeca Rocks,UK1,Inshore,UK1-I,UK1-I_702,ssid,2017,Irma,Fall,run1
-703,Cheeca Rocks,UK1,Inshore,UK1-I,UK1-I_703,ssid,2017,Irma,Fall,run1
-704,Cheeca Rocks,UK1,Inshore,UK1-I,UK1-I_704,ssid,2017,Irma,Fall,run1
-705,Cheeca Rocks,UK1,Inshore,UK1-I,UK1-I_705,ssid,2017,Irma,Fall,run1
-706,Cheeca Rocks,UK1,Inshore,UK1-I,UK1-I_706,ssid,2017,Irma,Fall,run1
-707,Cheeca Rocks,UK1,Inshore,UK1-I,UK1-I_707,ssid,2017,Irma,Fall,run1
-708,Cheeca Rocks,UK1,Inshore,UK1-I,UK1-I_708,ssid,2017,Irma,Fall,run1
-709,Cheeca Rocks,UK1,Inshore,UK1-I,UK1-I_709,ssid,2017,Irma,Fall,run1
-710,Cheeca Rocks,UK1,Inshore,UK1-I,UK1-I_710,ssid,2017,Irma,Fall,run1
-711,Cheeca Rocks,UK1,Inshore,UK1-I,UK1-I_711,ssid,2017,Irma,Fall,run1
-725,Cheeca Rocks,UK1,Inshore,UK1-I,UK1-I_725,ssid,2017,Irma,Fall,run1
-726,Cheeca Rocks,UK1,Inshore,UK1-I,UK1-I_726,srad,2017,Irma,Fall,run1
-727,Cheeca Rocks,UK1,Inshore,UK1-I,UK1-I_727,srad,2017,Irma,Fall,run1
-729,Cheeca Rocks,UK1,Inshore,UK1-I,UK1-I_729,srad,2017,Irma,Fall,run1
-731,Cheeca Rocks,UK1,Inshore,UK1-I,UK1-I_731,srad,2017,Irma,Fall,run1
-732,Cheeca Rocks,UK1,Inshore,UK1-I,UK1-I_732,srad,2017,Irma,Fall,run1
-733,Cheeca Rocks,UK1,Inshore,UK1-I,UK1-I_733,srad,2017,Irma,Fall,run1
-735,Cheeca Rocks,UK1,Inshore,UK1-I,UK1-I_735,srad,2017,Irma,Fall,run1
-761,Rocky Top,UK1,Offshore,UK1-O,UK1-O_761,ssid,2017,Irma,Fall,run1
-762,Rocky Top,UK1,Offshore,UK1-O,UK1-O_762,ssid,2017,Irma,Fall,run1
-763,Rocky Top,UK1,Offshore,UK1-O,UK1-O_763,ssid,2017,Irma,Fall,run1
-764,Rocky Top,UK1,Offshore,UK1-O,UK1-O_764,ssid,2017,Irma,Fall,run1
-765,Rocky Top,UK1,Offshore,UK1-O,UK1-O_765,ssid,2017,Irma,Fall,run1
-766,Rocky Top,UK1,Offshore,UK1-O,UK1-O_766,ssid,2017,Irma,Fall,run1
-767,Rocky Top,UK1,Offshore,UK1-O,UK1-O_767,ssid,2017,Irma,Fall,run1
-768,Rocky Top,UK1,Offshore,UK1-O,UK1-O_768,ssid,2017,Irma,Fall,run1
-769,Rocky Top,UK1,Offshore,UK1-O,UK1-O_769,ssid,2017,Irma,Fall,run1
-770,Rocky Top,UK1,Offshore,UK1-O,UK1-O_770,ssid,2017,Irma,Fall,run1
-771,Rocky Top,UK1,Offshore,UK1-O,UK1-O_771,ssid,2017,Irma,Fall,run1
-772,Rocky Top,UK1,Offshore,UK1-O,UK1-O_772,ssid,2017,Irma,Fall,run1
-798,Carysfort,UK2,Offshore,UK2-O,UK2-O_798,ssid,2017,Irma,Fall,run1
-800,Carysfort,UK2,Offshore,UK2-O,UK2-O_800,ssid,2017,Irma,Fall,run1
-801,Basin Hill,UK2,Inshore,UK2-I,UK2-I_801,ssid,2017,Irma,Fall,run1
-808,Basin Hill,UK2,Inshore,UK2-I,UK2-I_808,ssid,2017,Irma,Fall,run1
-809,Basin Hill,UK2,Inshore,UK2-I,UK2-I_809,ssid,2017,Irma,Fall,run1
-820,Carysfort,UK2,Offshore,UK2-O,UK2-O_820,ssid,2017,Irma,Fall,run1
-821,Basin Hill,UK2,Inshore,UK2-I,UK2-I_821,ssid,2017,Irma,Fall,run1
-822,Basin Hill,UK2,Inshore,UK2-I,UK2-I_822,ssid,2017,Irma,Fall,run1
-823,Basin Hill,UK2,Inshore,UK2-I,UK2-I_823,ssid,2017,Irma,Fall,run1
-824,Basin Hill,UK2,Inshore,UK2-I,UK2-I_824,ssid,2017,Irma,Fall,run1
-825,Basin Hill,UK2,Inshore,UK2-I,UK2-I_825,ssid,2017,Irma,Fall,run1
-826,Basin Hill,UK2,Inshore,UK2-I,UK2-I_826,ssid,2017,Irma,Fall,run1
-827,Basin Hill,UK2,Inshore,UK2-I,UK2-I_827,ssid,2017,Irma,Fall,run1
-829,Basin Hill,UK2,Inshore,UK2-I,UK2-I_829,ssid,2017,Irma,Fall,run1
-830,Basin Hill,UK2,Inshore,UK2-I,UK2-I_830,ssid,2017,Irma,Fall,run1
-846,Basin Hill,UK2,Inshore,UK2-I,UK2-I_846,srad,2017,Irma,Fall,run1
-847,Basin Hill,UK2,Inshore,UK2-I,UK2-I_847,srad,2017,Irma,Fall,run1
-848,Basin Hill,UK2,Inshore,UK2-I,UK2-I_848,srad,2017,Irma,Fall,run1
-850,Basin Hill,UK2,Inshore,UK2-I,UK2-I_850,srad,2017,Irma,Fall,run1
-851,Basin Hill,UK2,Inshore,UK2-I,UK2-I_851,srad,2017,Irma,Fall,run1
-852,Basin Hill,UK2,Inshore,UK2-I,UK2-I_852,srad,2017,Irma,Fall,run1
-853,Basin Hill,UK2,Inshore,UK2-I,UK2-I_853,srad,2017,Irma,Fall,run1
-854,Basin Hill,UK2,Inshore,UK2-I,UK2-I_854,srad,2017,Irma,Fall,run1
-855,Basin Hill,UK2,Inshore,UK2-I,UK2-I_855,srad,2017,Irma,Fall,run1
-883,Carysfort,UK2,Offshore,UK2-O,UK2-O_883,ssid,2017,Irma,Fall,run1
-884,Carysfort,UK2,Offshore,UK2-O,UK2-O_884,ssid,2017,Irma,Fall,run1
-885,Carysfort,UK2,Offshore,UK2-O,UK2-O_885,ssid,2017,Irma,Fall,run1
-886,Carysfort,UK2,Offshore,UK2-O,UK2-O_886,ssid,2017,Irma,Fall,run1
-887,Carysfort,UK2,Offshore,UK2-O,UK2-O_887,ssid,2017,Irma,Fall,run1
-888,Carysfort,UK2,Offshore,UK2-O,UK2-O_888,ssid,2017,Irma,Fall,run1
-889,Carysfort,UK2,Offshore,UK2-O,UK2-O_889,ssid,2017,Irma,Fall,run1
-890,Carysfort,UK2,Offshore,UK2-O,UK2-O_890,ssid,2017,Irma,Fall,run1
-906,Carysfort,UK2,Offshore,UK2-O,UK2-O_906,srad,2017,Irma,Fall,run1
-907,Carysfort,UK2,Offshore,UK2-O,UK2-O_907,srad,2017,Irma,Fall,run1
-908,Carysfort,UK2,Offshore,UK2-O,UK2-O_908,srad,2017,Irma,Fall,run1
-909,Carysfort,UK2,Offshore,UK2-O,UK2-O_909,srad,2017,Irma,Fall,run1
-910,Carysfort,UK2,Offshore,UK2-O,UK2-O_910,srad,2017,Irma,Fall,run1
-912,Carysfort,UK2,Offshore,UK2-O,UK2-O_912,srad,2017,Irma,Fall,run1
-913,Carysfort,UK2,Offshore,UK2-O,UK2-O_913,srad,2017,Irma,Fall,run1
-914,Carysfort,UK2,Offshore,UK2-O,UK2-O_914,srad,2017,Irma,Fall,run1
-915,Carysfort,UK2,Offshore,UK2-O,UK2-O_915,srad,2017,Irma,Fall,run1
-916,E Sambo,LK1,Offshore,LK1-O,LK1-O_916,ssid,2017,Irma,Fall,run1
-917,E Sambo,LK1,Offshore,LK1-O,LK1-O_917,ssid,2017,Irma,Fall,run1
-918,E Sambo,LK1,Offshore,LK1-O,LK1-O_918,ssid,2017,Irma,Fall,run1
-919,E Sambo,LK1,Offshore,LK1-O,LK1-O_919,ssid,2017,Irma,Fall,run1
-921,E Sambo,LK1,Offshore,LK1-O,LK1-O_921,ssid,2017,Irma,Fall,run1
-922,E Sambo,LK1,Offshore,LK1-O,LK1-O_922,ssid,2017,Irma,Fall,run1
-923,E Sambo,LK1,Offshore,LK1-O,LK1-O_923,ssid,2017,Irma,Fall,run1
-924,E Sambo,LK1,Offshore,LK1-O,LK1-O_924,ssid,2017,Irma,Fall,run1
-925,E Sambo,LK1,Offshore,LK1-O,LK1-O_925,ssid,2017,Irma,Fall,run1
-926,E Sambo,LK1,Offshore,LK1-O,LK1-O_926,srad,2017,Irma,Fall,run1
-927,E Sambo,LK1,Offshore,LK1-O,LK1-O_927,srad,2017,Irma,Fall,run1
-928,E Sambo,LK1,Offshore,LK1-O,LK1-O_928,srad,2017,Irma,Fall,run1
-929,E Sambo,LK1,Offshore,LK1-O,LK1-O_929,srad,2017,Irma,Fall,run1
-930,E Sambo,LK1,Offshore,LK1-O,LK1-O_930,srad,2017,Irma,Fall,run1
-931,E Sambo,LK1,Offshore,LK1-O,LK1-O_931,srad,2017,Irma,Fall,run1
-932,E Sambo,LK1,Offshore,LK1-O,LK1-O_932,srad,2017,Irma,Fall,run1
-933,E Sambo,LK1,Offshore,LK1-O,LK1-O_933,srad,2017,Irma,Fall,run1
-934,E Sambo,LK1,Offshore,LK1-O,LK1-O_934,srad,2017,Irma,Fall,run1
-935,E Sambo,LK1,Offshore,LK1-O,LK1-O_935,srad,2017,Irma,Fall,run1
-943,E Sambo,LK1,Offshore,LK1-O,LK1-O_943,ssid,2017,Irma,Fall,run1
-947,W Washer,LK1,Inshore,LK1-I,LK1-I_947,ssid,2017,Irma,Fall,run1
-948,W Washer,LK1,Inshore,LK1-I,LK1-I_948,ssid,2017,Irma,Fall,run1
-949,W Washer,LK1,Inshore,LK1-I,LK1-I_949,ssid,2017,Irma,Fall,run1
-950,W Washer,LK1,Inshore,LK1-I,LK1-I_950,ssid,2017,Irma,Fall,run1
-951,W Washer,LK1,Inshore,LK1-I,LK1-I_951,ssid,2017,Irma,Fall,run1
-952,W Washer,LK1,Inshore,LK1-I,LK1-I_952,ssid,2017,Irma,Fall,run1
-953,W Washer,LK1,Inshore,LK1-I,LK1-I_953,ssid,2017,Irma,Fall,run1
-955,W Washer,LK1,Inshore,LK1-I,LK1-I_955,ssid,2017,Irma,Fall,run1
-956,W Washer,LK1,Inshore,LK1-I,LK1-I_956,srad,2017,Irma,Fall,run1
-957,W Washer,LK1,Inshore,LK1-I,LK1-I_957,srad,2017,Irma,Fall,run1
-958,W Washer,LK1,Inshore,LK1-I,LK1-I_958,srad,2017,Irma,Fall,run1
-959,W Washer,LK1,Inshore,LK1-I,LK1-I_959,srad,2017,Irma,Fall,run1
-960,W Washer,LK1,Inshore,LK1-I,LK1-I_960,srad,2017,Irma,Fall,run1
-961,W Washer,LK1,Inshore,LK1-I,LK1-I_961,srad,2017,Irma,Fall,run1
-962,W Washer,LK1,Inshore,LK1-I,LK1-I_962,srad,2017,Irma,Fall,run1
-963,W Washer,LK1,Inshore,LK1-I,LK1-I_963,srad,2017,Irma,Fall,run1
-964,W Washer,LK1,Inshore,LK1-I,LK1-I_964,srad,2017,Irma,Fall,run1
-965,W Washer,LK1,Inshore,LK1-I,LK1-I_965,ssid,2017,Irma,Fall,run1
-976,W Washer,LK1,Inshore,LK1-I,LK1-I_976,srad,2017,Irma,Fall,run1
+701,Cheeca Rocks,UK1,Inshore,UK1-I,UK1-I_701,ssid,2017,Disturbance,Fall,run1
+702,Cheeca Rocks,UK1,Inshore,UK1-I,UK1-I_702,ssid,2017,Disturbance,Fall,run1
+703,Cheeca Rocks,UK1,Inshore,UK1-I,UK1-I_703,ssid,2017,Disturbance,Fall,run1
+704,Cheeca Rocks,UK1,Inshore,UK1-I,UK1-I_704,ssid,2017,Disturbance,Fall,run1
+705,Cheeca Rocks,UK1,Inshore,UK1-I,UK1-I_705,ssid,2017,Disturbance,Fall,run1
+706,Cheeca Rocks,UK1,Inshore,UK1-I,UK1-I_706,ssid,2017,Disturbance,Fall,run1
+707,Cheeca Rocks,UK1,Inshore,UK1-I,UK1-I_707,ssid,2017,Disturbance,Fall,run1
+708,Cheeca Rocks,UK1,Inshore,UK1-I,UK1-I_708,ssid,2017,Disturbance,Fall,run1
+709,Cheeca Rocks,UK1,Inshore,UK1-I,UK1-I_709,ssid,2017,Disturbance,Fall,run1
+710,Cheeca Rocks,UK1,Inshore,UK1-I,UK1-I_710,ssid,2017,Disturbance,Fall,run1
+711,Cheeca Rocks,UK1,Inshore,UK1-I,UK1-I_711,ssid,2017,Disturbance,Fall,run1
+725,Cheeca Rocks,UK1,Inshore,UK1-I,UK1-I_725,ssid,2017,Disturbance,Fall,run1
+726,Cheeca Rocks,UK1,Inshore,UK1-I,UK1-I_726,srad,2017,Disturbance,Fall,run1
+727,Cheeca Rocks,UK1,Inshore,UK1-I,UK1-I_727,srad,2017,Disturbance,Fall,run1
+729,Cheeca Rocks,UK1,Inshore,UK1-I,UK1-I_729,srad,2017,Disturbance,Fall,run1
+731,Cheeca Rocks,UK1,Inshore,UK1-I,UK1-I_731,srad,2017,Disturbance,Fall,run1
+732,Cheeca Rocks,UK1,Inshore,UK1-I,UK1-I_732,srad,2017,Disturbance,Fall,run1
+733,Cheeca Rocks,UK1,Inshore,UK1-I,UK1-I_733,srad,2017,Disturbance,Fall,run1
+735,Cheeca Rocks,UK1,Inshore,UK1-I,UK1-I_735,srad,2017,Disturbance,Fall,run1
+761,Rocky Top,UK1,Offshore,UK1-O,UK1-O_761,ssid,2017,Disturbance,Fall,run1
+762,Rocky Top,UK1,Offshore,UK1-O,UK1-O_762,ssid,2017,Disturbance,Fall,run1
+763,Rocky Top,UK1,Offshore,UK1-O,UK1-O_763,ssid,2017,Disturbance,Fall,run1
+764,Rocky Top,UK1,Offshore,UK1-O,UK1-O_764,ssid,2017,Disturbance,Fall,run1
+765,Rocky Top,UK1,Offshore,UK1-O,UK1-O_765,ssid,2017,Disturbance,Fall,run1
+766,Rocky Top,UK1,Offshore,UK1-O,UK1-O_766,ssid,2017,Disturbance,Fall,run1
+767,Rocky Top,UK1,Offshore,UK1-O,UK1-O_767,ssid,2017,Disturbance,Fall,run1
+768,Rocky Top,UK1,Offshore,UK1-O,UK1-O_768,ssid,2017,Disturbance,Fall,run1
+769,Rocky Top,UK1,Offshore,UK1-O,UK1-O_769,ssid,2017,Disturbance,Fall,run1
+770,Rocky Top,UK1,Offshore,UK1-O,UK1-O_770,ssid,2017,Disturbance,Fall,run1
+771,Rocky Top,UK1,Offshore,UK1-O,UK1-O_771,ssid,2017,Disturbance,Fall,run1
+772,Rocky Top,UK1,Offshore,UK1-O,UK1-O_772,ssid,2017,Disturbance,Fall,run1
+798,Carysfort,UK2,Offshore,UK2-O,UK2-O_798,ssid,2017,Disturbance,Fall,run1
+800,Carysfort,UK2,Offshore,UK2-O,UK2-O_800,ssid,2017,Disturbance,Fall,run1
+801,Basin Hill,UK2,Inshore,UK2-I,UK2-I_801,ssid,2017,Disturbance,Fall,run1
+808,Basin Hill,UK2,Inshore,UK2-I,UK2-I_808,ssid,2017,Disturbance,Fall,run1
+809,Basin Hill,UK2,Inshore,UK2-I,UK2-I_809,ssid,2017,Disturbance,Fall,run1
+820,Carysfort,UK2,Offshore,UK2-O,UK2-O_820,ssid,2017,Disturbance,Fall,run1
+821,Basin Hill,UK2,Inshore,UK2-I,UK2-I_821,ssid,2017,Disturbance,Fall,run1
+822,Basin Hill,UK2,Inshore,UK2-I,UK2-I_822,ssid,2017,Disturbance,Fall,run1
+823,Basin Hill,UK2,Inshore,UK2-I,UK2-I_823,ssid,2017,Disturbance,Fall,run1
+824,Basin Hill,UK2,Inshore,UK2-I,UK2-I_824,ssid,2017,Disturbance,Fall,run1
+825,Basin Hill,UK2,Inshore,UK2-I,UK2-I_825,ssid,2017,Disturbance,Fall,run1
+826,Basin Hill,UK2,Inshore,UK2-I,UK2-I_826,ssid,2017,Disturbance,Fall,run1
+827,Basin Hill,UK2,Inshore,UK2-I,UK2-I_827,ssid,2017,Disturbance,Fall,run1
+829,Basin Hill,UK2,Inshore,UK2-I,UK2-I_829,ssid,2017,Disturbance,Fall,run1
+830,Basin Hill,UK2,Inshore,UK2-I,UK2-I_830,ssid,2017,Disturbance,Fall,run1
+846,Basin Hill,UK2,Inshore,UK2-I,UK2-I_846,srad,2017,Disturbance,Fall,run1
+847,Basin Hill,UK2,Inshore,UK2-I,UK2-I_847,srad,2017,Disturbance,Fall,run1
+848,Basin Hill,UK2,Inshore,UK2-I,UK2-I_848,srad,2017,Disturbance,Fall,run1
+850,Basin Hill,UK2,Inshore,UK2-I,UK2-I_850,srad,2017,Disturbance,Fall,run1
+851,Basin Hill,UK2,Inshore,UK2-I,UK2-I_851,srad,2017,Disturbance,Fall,run1
+852,Basin Hill,UK2,Inshore,UK2-I,UK2-I_852,srad,2017,Disturbance,Fall,run1
+853,Basin Hill,UK2,Inshore,UK2-I,UK2-I_853,srad,2017,Disturbance,Fall,run1
+854,Basin Hill,UK2,Inshore,UK2-I,UK2-I_854,srad,2017,Disturbance,Fall,run1
+855,Basin Hill,UK2,Inshore,UK2-I,UK2-I_855,srad,2017,Disturbance,Fall,run1
+883,Carysfort,UK2,Offshore,UK2-O,UK2-O_883,ssid,2017,Disturbance,Fall,run1
+884,Carysfort,UK2,Offshore,UK2-O,UK2-O_884,ssid,2017,Disturbance,Fall,run1
+885,Carysfort,UK2,Offshore,UK2-O,UK2-O_885,ssid,2017,Disturbance,Fall,run1
+886,Carysfort,UK2,Offshore,UK2-O,UK2-O_886,ssid,2017,Disturbance,Fall,run1
+887,Carysfort,UK2,Offshore,UK2-O,UK2-O_887,ssid,2017,Disturbance,Fall,run1
+888,Carysfort,UK2,Offshore,UK2-O,UK2-O_888,ssid,2017,Disturbance,Fall,run1
+889,Carysfort,UK2,Offshore,UK2-O,UK2-O_889,ssid,2017,Disturbance,Fall,run1
+890,Carysfort,UK2,Offshore,UK2-O,UK2-O_890,ssid,2017,Disturbance,Fall,run1
+906,Carysfort,UK2,Offshore,UK2-O,UK2-O_906,srad,2017,Disturbance,Fall,run1
+907,Carysfort,UK2,Offshore,UK2-O,UK2-O_907,srad,2017,Disturbance,Fall,run1
+908,Carysfort,UK2,Offshore,UK2-O,UK2-O_908,srad,2017,Disturbance,Fall,run1
+909,Carysfort,UK2,Offshore,UK2-O,UK2-O_909,srad,2017,Disturbance,Fall,run1
+910,Carysfort,UK2,Offshore,UK2-O,UK2-O_910,srad,2017,Disturbance,Fall,run1
+912,Carysfort,UK2,Offshore,UK2-O,UK2-O_912,srad,2017,Disturbance,Fall,run1
+913,Carysfort,UK2,Offshore,UK2-O,UK2-O_913,srad,2017,Disturbance,Fall,run1
+914,Carysfort,UK2,Offshore,UK2-O,UK2-O_914,srad,2017,Disturbance,Fall,run1
+915,Carysfort,UK2,Offshore,UK2-O,UK2-O_915,srad,2017,Disturbance,Fall,run1
+916,E Sambo,LK1,Offshore,LK1-O,LK1-O_916,ssid,2017,Disturbance,Fall,run1
+917,E Sambo,LK1,Offshore,LK1-O,LK1-O_917,ssid,2017,Disturbance,Fall,run1
+918,E Sambo,LK1,Offshore,LK1-O,LK1-O_918,ssid,2017,Disturbance,Fall,run1
+919,E Sambo,LK1,Offshore,LK1-O,LK1-O_919,ssid,2017,Disturbance,Fall,run1
+921,E Sambo,LK1,Offshore,LK1-O,LK1-O_921,ssid,2017,Disturbance,Fall,run1
+922,E Sambo,LK1,Offshore,LK1-O,LK1-O_922,ssid,2017,Disturbance,Fall,run1
+923,E Sambo,LK1,Offshore,LK1-O,LK1-O_923,ssid,2017,Disturbance,Fall,run1
+924,E Sambo,LK1,Offshore,LK1-O,LK1-O_924,ssid,2017,Disturbance,Fall,run1
+925,E Sambo,LK1,Offshore,LK1-O,LK1-O_925,ssid,2017,Disturbance,Fall,run1
+926,E Sambo,LK1,Offshore,LK1-O,LK1-O_926,srad,2017,Disturbance,Fall,run1
+927,E Sambo,LK1,Offshore,LK1-O,LK1-O_927,srad,2017,Disturbance,Fall,run1
+928,E Sambo,LK1,Offshore,LK1-O,LK1-O_928,srad,2017,Disturbance,Fall,run1
+929,E Sambo,LK1,Offshore,LK1-O,LK1-O_929,srad,2017,Disturbance,Fall,run1
+930,E Sambo,LK1,Offshore,LK1-O,LK1-O_930,srad,2017,Disturbance,Fall,run1
+931,E Sambo,LK1,Offshore,LK1-O,LK1-O_931,srad,2017,Disturbance,Fall,run1
+932,E Sambo,LK1,Offshore,LK1-O,LK1-O_932,srad,2017,Disturbance,Fall,run1
+933,E Sambo,LK1,Offshore,LK1-O,LK1-O_933,srad,2017,Disturbance,Fall,run1
+934,E Sambo,LK1,Offshore,LK1-O,LK1-O_934,srad,2017,Disturbance,Fall,run1
+935,E Sambo,LK1,Offshore,LK1-O,LK1-O_935,srad,2017,Disturbance,Fall,run1
+943,E Sambo,LK1,Offshore,LK1-O,LK1-O_943,ssid,2017,Disturbance,Fall,run1
+947,W Washer,LK1,Inshore,LK1-I,LK1-I_947,ssid,2017,Disturbance,Fall,run1
+948,W Washer,LK1,Inshore,LK1-I,LK1-I_948,ssid,2017,Disturbance,Fall,run1
+949,W Washer,LK1,Inshore,LK1-I,LK1-I_949,ssid,2017,Disturbance,Fall,run1
+950,W Washer,LK1,Inshore,LK1-I,LK1-I_950,ssid,2017,Disturbance,Fall,run1
+951,W Washer,LK1,Inshore,LK1-I,LK1-I_951,ssid,2017,Disturbance,Fall,run1
+952,W Washer,LK1,Inshore,LK1-I,LK1-I_952,ssid,2017,Disturbance,Fall,run1
+953,W Washer,LK1,Inshore,LK1-I,LK1-I_953,ssid,2017,Disturbance,Fall,run1
+955,W Washer,LK1,Inshore,LK1-I,LK1-I_955,ssid,2017,Disturbance,Fall,run1
+956,W Washer,LK1,Inshore,LK1-I,LK1-I_956,srad,2017,Disturbance,Fall,run1
+957,W Washer,LK1,Inshore,LK1-I,LK1-I_957,srad,2017,Disturbance,Fall,run1
+958,W Washer,LK1,Inshore,LK1-I,LK1-I_958,srad,2017,Disturbance,Fall,run1
+959,W Washer,LK1,Inshore,LK1-I,LK1-I_959,srad,2017,Disturbance,Fall,run1
+960,W Washer,LK1,Inshore,LK1-I,LK1-I_960,srad,2017,Disturbance,Fall,run1
+961,W Washer,LK1,Inshore,LK1-I,LK1-I_961,srad,2017,Disturbance,Fall,run1
+962,W Washer,LK1,Inshore,LK1-I,LK1-I_962,srad,2017,Disturbance,Fall,run1
+963,W Washer,LK1,Inshore,LK1-I,LK1-I_963,srad,2017,Disturbance,Fall,run1
+964,W Washer,LK1,Inshore,LK1-I,LK1-I_964,srad,2017,Disturbance,Fall,run1
+965,W Washer,LK1,Inshore,LK1-I,LK1-I_965,ssid,2017,Disturbance,Fall,run1
+976,W Washer,LK1,Inshore,LK1-I,LK1-I_976,srad,2017,Disturbance,Fall,run1
 977,W Washer,LK1,Inshore,LK1-I,LK1-I_977,ssid,2016,Pre,Spring,run1
 978,W Washer,LK1,Inshore,LK1-I,LK1-I_978,ssid,2016,Pre,Spring,run1
 979,W Washer,LK1,Inshore,LK1-I,LK1-I_979,ssid,2016,Pre,Spring,run1
