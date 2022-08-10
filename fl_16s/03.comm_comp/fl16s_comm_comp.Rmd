@@ -30,14 +30,15 @@ library(vegan)
 library(cowplot)
 library(ggplot2)
 library(tidyverse)
+library(phyloseq)
 ```
 
 Read in data
 
 ```{r read in data}
-setwd("~/nicfall@bu.edu - Google Drive/My Drive/Flirma/flirma_networks_master/fl_16s/03.comm_comp")
+setwd("/Volumes/GoogleDrive/My Drive/Flirma/flirma_networks/fl_16s/03.comm_comp")
 
-#ps.clean <- readRDS("../01.generate_asv_table/fl16s.ps.cleaner.rd3_newvars.rds")
+ps.clean <- readRDS("../01.generate_asv_table/ps.cleanest.trim.rds")
 
 #made these below:
 ps.fam <- readRDS("ps.asvsnamed.fam.RDS")
@@ -50,10 +51,7 @@ Rename ASVs to be more informative
 (ran once then skip)
 
 ```{r rename ASVs}
-#tax <- as.data.frame(ps.rare@tax_table@.Data)
-#tax <- as.data.frame(ps.rare@tax_table@.Data)
 tax <- as.data.frame(ps.clean@tax_table@.Data)
-#tax <- as.data.frame(ps.norm@tax_table@.Data)
 
 tax.clean <- data.frame(row.names = row.names(tax),
                         Kingdom = str_replace(tax[,1], "D_0__",""),
@@ -92,34 +90,23 @@ for (i in 1:nrow(tax.clean)){
 
 tax_table(ps.clean) <- as.matrix(tax.clean)
 
-#ps.clean.gen <- tax_glom(ps.clean,"Genus")
-#ps.otu.gen <- data.frame(ps.clean.gen@otu_table)
-#sum(colSums(ps.otu.gen))
+#sum by genus
+ps.clean.gen <- tax_glom(ps.clean,"Genus")
 
-#ps.clean.gen.wayless <- prune_taxa(taxa_sums(ps.clean.gen) < 72605, ps.clean.gen) 
-
-#family
+#sum by family
 ps.clean.fam <- tax_glom(ps.clean,"Family")
-ps.clean.fam.no0 <- prune_taxa(taxa_sums(ps.clean.fam) > 0, ps.clean.fam) 
 
-#class
+#sum by class
 ps.clean.cla <- tax_glom(ps.clean,"Class")
-ps.clean.cla.no0 <- prune_taxa(taxa_sums(ps.clean.cla) > 0, ps.clean.cla) 
-
-#ps.otu.fam <- data.frame(ps.clean.fam@otu_table)
-#sum(colSums(ps.otu.gen))
-
-#ps.clean.gen.wayless <- prune_taxa(taxa_sums(ps.clean.gen) < 72605, ps.clean.gen) 
-# sum(colSums(ps.otu))
-# ps.clean.less <- prune_taxa(taxa_sums(ps.clean) > 64914, ps.clean) 
 ```
 
 Saving
 
 ```{r save renamed files, eval=FALSE}
-# saveRDS(ps.clean.fam.no0,"ps.asvsnamed.fam.RDS")
-# saveRDS(ps.clean.cla.no0,"ps.asvsnamed.cla.RDS")
-# saveRDS(ps.clean,"ps.asvsnamed.clean.RDS")
+saveRDS(ps.clean.gen,"ps.asvsnamed.gen.RDS")
+saveRDS(ps.clean.fam,"ps.asvsnamed.fam.RDS")
+saveRDS(ps.clean.cla,"ps.asvsnamed.cla.RDS")
+saveRDS(ps.clean,"ps.asvsnamed.clean.RDS")
 ```
 
 # Pcoa {.tabset}
@@ -187,7 +174,9 @@ ord.clean.sid <- ordinate(ps.clean.sid, "PCoA", "euclidean")
 
 gg.clean.sid <- plot_ordination(ps.clean.sid, ord.clean.sid,color="time",shape="zone",axes=c(1,2))+
   stat_ellipse()+
-  theme_cowplot()
+  scale_color_manual(values=c("#3B0F70","#FA7F53","#A8327D"))+
+  theme_cowplot()+
+  scale_alpha_manual(breaks=c("Inshore","Offshore"),values=c(0.45,0.75),name="Reef zone")
   #scale_color_manual(name="Site",values=c("darkslategray3","darkslategray4","#000004"))+
   #scale_shape_manual(name="Site",values=c(8,4,9))+
   #xlab("Axis 1 (44.1%)")+
@@ -195,6 +184,45 @@ gg.clean.sid <- plot_ordination(ps.clean.sid, ord.clean.sid,color="time",shape="
   #ggtitle("S. siderea")+
   #facet_wrap(time~site)
 gg.clean.sid
+
+gg.clean.sid <- plot_ordination(ps.clean.sid, ord.clean.sid,axes=c(1,2),color="time",shape="zone",)+
+  stat_ellipse()+
+  scale_color_manual(values=c("#3B0F70","#FA7F53","#A8327D"))+
+  theme_cowplot()
+
+df.gg.clean.sid <- data.frame(gg.clean.sid["data"])
+
+<<<<<<< HEAD
+ggplot(df.gg.clean.sid,aes(x=data.Axis.1,y=data.Axis.2,shape=data.site))+
+  stat_ellipse(aes(linetype=data.site,color=data.time))+
+  scale_color_manual(values=c("#3B0F70","#FA7F53","#A8327D"))+
+  #facet_wrap(~data.time)+  
+  geom_point(aes(color=data.zone,fill=data.time))+
+  ylab("Shannon index")+
+  xlab("Time point")+
+  theme_cowplot()+
+  #scale_color_manual(values=c("white","grey"))+
+  #scale_shape_manual(name="Site",values=c(21,22,23))+
+  scale_color_manual(values=c("blue","green"))+
+  #scale_color_manual(values=c("black","grey","white"))+
+  #scale_shape_manual(values=c(22,24,25))+
+=======
+ggplot(df.gg.clean.sid,aes(x=data.Axis.1,y=data.Axis.2,color=data.time,shape=data.site))+
+  stat_ellipse()+
+  #facet_wrap(~data.time)+  
+  geom_point()+
+  ylab("Shannon index")+
+  xlab("Time point")+
+  theme_cowplot()+
+  #scale_shape_manual(name="Site",values=c(21,22,23))+
+  #scale_color_manual(values=c("blue","green"))+
+  #scale_color_manual(values=c("black","grey","white"))+
+  scale_shape_manual(values=c(8,4,9))+
+>>>>>>> bf0c95b70c7746c04ef9d691117cf00e17bf6411
+  theme(plot.title=element_text(face = "italic"))+
+  ggtitle("S. siderea")#+
+  guides(fill="none",color="none")
+
 ```
 
 #### LK1
@@ -258,6 +286,20 @@ gg.clean.sid.pos.lk1
 
 gg.sid <- ggarrange(gg.clean.sid.pre.lk1,gg.clean.sid.irm.lk1,gg.clean.sid.pos.lk1,nrow=1,common.legend=T,legend="right")
 annotate_figure(gg.sid, fig.lab="S. siderea - CLR transformed",fig.lab.face = "bold")
+```
+
+```{r}
+seq.clean.sid.pre.lk1 <- data.frame(otu_table(ps.clean.sid.pre.lk1))
+samdf.clean.sid.pre.lk1 <- data.frame(sample_data(ps.clean.sid.pre.lk1))
+row.names(seq.clean.sid.pre.lk1)==row.names(samdf.clean.sid.pre.lk1)
+
+dist.clean.sid.pre.lk1 <- vegdist(seq.clean.sid.pre.lk1)
+beta.clean.sid.pre.lk1 <- betadisper(dist.clean.sid.pre.lk1,samdf.clean.sid.pre.lk1$zone,bias.adjust = TRUE,type="median")
+anova(beta.clean.sid.pre.lk1) #not sig
+#permutest(beta.clean.sid.pre.lk1, pairwise = FALSE, permutations = 999) #says the same thing
+plot(beta.clean.sid.pre.lk1)
+
+adonis(seq.clean.sid.pre.lk1 ~ zone, data=samdf.clean.sid.pre.lk1, permutations=999) #not sig
 ```
 
 ### Rads

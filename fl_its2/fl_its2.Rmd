@@ -88,7 +88,8 @@ library("vegan")
 ```
 
 ```{r working directory, include=FALSE}
-setwd("~/Google Drive (nicfall@bu.edu)/Flirma/flirma_networks/fl_its2")
+#setwd("~/Google Drive (nicfall@bu.edu)/Flirma/flirma_networks/fl_its2")
+setwd("/Volumes/GoogleDrive-104519233854090018057/My Drive/Flirma/flirma_networks/fl_its2")
 ```
 
 ## Checking for no read samples
@@ -97,7 +98,7 @@ setwd("~/Google Drive (nicfall@bu.edu)/Flirma/flirma_networks/fl_its2")
 counts <- read.csv('flits_symportal_profile_counts.csv',header=TRUE,row.names=1,check.names=FALSE)
 #325 samples, 75 type profiles
 
-plot(sort(rowSums(counts))) 
+sort(rowSums(counts))
 counts.no0 <- counts[rowSums(counts)>0,]
 #2 that are 0, removing them now: LK1-I_1199_srad_2018, UK2-O_1105_srad_2018
 ```
@@ -140,27 +141,27 @@ ps
 Ran once then saved to re-read in later
 
 ```{r phyloseq object type profiles}
-counts.all <- read.csv("symportal_allcounts.csv",header=T,row.names=1)
-
-plot(rowSums(counts.all)) 
-#3 that are 0, removing them now: (513, 87, 76)
-counts.all.no0 <- counts.all[1:93,]
-
-# # import taxa info - haven't done this with the full suite of types yet
-# taxa <- read.csv("symportal_taxa.csv",header=TRUE)
-# rownames(taxa) <- as.factor(taxa$ITS2_type_profile)
-# mtaxa <- as.matrix(taxa)
-
-# import counts (absolute abundance from its2 type profiles)
-mcounts.all <- as.matrix(counts.all.no0)
-
-# Construct phyloseq object 
-ps.all <- phyloseq(otu_table(mcounts.all, taxa_are_rows=FALSE),
-               sample_data(samdf))
-
-ps.all
-
-#saveRDS(ps.all,"ps.all.its2.RDS")
+# counts.all <- read.csv("symportal_allcounts.csv",header=T,row.names=1)
+# 
+# plot(rowSums(counts.all)) 
+# #3 that are 0, removing them now: (513, 87, 76)
+# counts.all.no0 <- counts.all[1:93,]
+# 
+# # # import taxa info - haven't done this with the full suite of types yet
+# # taxa <- read.csv("symportal_taxa.csv",header=TRUE)
+# # rownames(taxa) <- as.factor(taxa$ITS2_type_profile)
+# # mtaxa <- as.matrix(taxa)
+# 
+# # import counts (absolute abundance from its2 type profiles)
+# mcounts.all <- as.matrix(counts.all.no0)
+# 
+# # Construct phyloseq object 
+# ps.all <- phyloseq(otu_table(mcounts.all, taxa_are_rows=FALSE),
+#                sample_data(samdf))
+# 
+# ps.all
+# 
+# #saveRDS(ps.all,"ps.all.its2.RDS")
 ```
 
 ## Re-read in data - all types
@@ -170,9 +171,11 @@ ps <- readRDS("ps.its2.RDS")
 #ps.all <- readRDS("ps.all.its2.RDS")
 ```
 
-## Bar plots - sids {.tabset}
+## Subset data for bar plots
 
 ```{r}
+ps <- subset_samples(ps,site!="UK3")
+
 ps.sid <- subset_samples(ps,spp=="ssid")
 
 ps.sid.pre <- subset_samples(ps.sid,time=="Pre")
@@ -191,15 +194,6 @@ ps.sid.pos.lk1 <- subset_samples(ps.sid.pos,site=="LK1")
 ps.sid.pos.uk1 <- subset_samples(ps.sid.pos,site=="UK1")
 ps.sid.pos.uk2 <- subset_samples(ps.sid.pos,site=="UK2")
 
-# ps.sid.pre.lk1.rel <- transform_sample_counts(ps.sid.pre.lk1, function(x) x / sum(x))
-# ps.sid.pre.lk1.rel.zone <- merge_samples(ps.sid.pre.lk1.rel, "zone")
-# ps.sid.pre.lk1.rel.zone <- transform_sample_counts(ps.sid.pre.lk1.rel.zone, function(x) x / sum(x))
-# 
-# plot_bar(ps.sid.pre.lk1.rel.zone, fill="Clade")
-```
-
-
-```{r summed by genus}
 ps.gen <- tax_glom(ps,"Clade")
 ntaxa(ps); ntaxa(ps.gen)
 
@@ -218,18 +212,11 @@ ps.rad.gen.irm <- subset_samples(ps.rad.gen,time=="Irma")
 ps.rad.gen.pos <- subset_samples(ps.rad.gen,time=="Post")
 ```
 
-### Reef zone
+## Bar plots by genus {.tabset}
+
+### S. siderea
 
 ```{r}
-# ps.sid.pre.lk1.rel <- transform_sample_counts(ps.sid.pre.lk1, function(x) x / sum(x))
-# ps.sid.pre.lk1.rel.zone <- merge_samples(ps.sid.pre.lk1.rel, "zone")
-# ps.sid.pre.lk1.rel.zone <- transform_sample_counts(ps.sid.pre.lk1.rel.zone, function(x) x / sum(x))
-# 
-# plot_bar(ps.sid.pre.lk1.rel.zone, fill="Clade")
-
-#remove uk3
-ps.sid.gen.pre <- subset_samples(ps.sid.gen.pre,site!="UK3")
-
 ps.sid.gen.pre.rel <- transform_sample_counts(ps.sid.gen.pre, function(x) x / sum(x))
 ps.sid.gen.pre.rel.sz <- merge_samples(ps.sid.gen.pre.rel, "site_zone")
 ps.sid.gen.pre.rel.sz <- transform_sample_counts(ps.sid.gen.pre.rel.sz, function(x) x / sum(x))
@@ -266,16 +253,9 @@ gg.bar.clade
 #ggsave("bar.clade_horizontal.pdf",width=9,height=4)
 ```
 
-```{r radians plot by genera}
-# ps.rad.pre.lk1.rel <- transform_sample_counts(ps.rad.pre.lk1, function(x) x / sum(x))
-# ps.rad.pre.lk1.rel.zone <- merge_samples(ps.rad.pre.lk1.rel, "zone")
-# ps.rad.pre.lk1.rel.zone <- transform_sample_counts(ps.rad.pre.lk1.rel.zone, function(x) x / sum(x))
-# 
-# plot_bar(ps.rad.pre.lk1.rel.zone, fill="Clade")
+### S. radians
 
-#remove uk3
-ps.rad.gen.pre <- subset_samples(ps.rad.gen.pre,site!="UK3")
-
+```{r}
 ps.rad.gen.pre.rel <- transform_sample_counts(ps.rad.gen.pre, function(x) x / sum(x))
 ps.rad.gen.pre.rel.sz <- merge_samples(ps.rad.gen.pre.rel, "site_zone")
 ps.rad.gen.pre.rel.sz <- transform_sample_counts(ps.rad.gen.pre.rel.sz, function(x) x / sum(x))
@@ -310,6 +290,32 @@ gg.bar.pos <- plot_bar(ps.rad.gen.pos.rel.sz, fill="Clade")+
 gg.bar.clade <- ggarrange(gg.bar.pre,gg.bar.irm,gg.bar.pos,ncol=3,common.legend=T,legend="right")
 gg.bar.clade
 #ggsave("bar.clade.radians.pdf",width=9,height=4)
+```
+
+### Reef zone
+
+```{r}
+# ps.sid.pre.lk1.rel <- transform_sample_counts(ps.sid.pre.lk1, function(x) x / sum(x))
+# ps.sid.pre.lk1.rel.zone <- merge_samples(ps.sid.pre.lk1.rel, "zone")
+# ps.sid.pre.lk1.rel.zone <- transform_sample_counts(ps.sid.pre.lk1.rel.zone, function(x) x / sum(x))
+# 
+# plot_bar(ps.sid.pre.lk1.rel.zone, fill="Clade")
+
+#remove uk3
+
+```
+
+```{r radians plot by genera}
+# ps.rad.pre.lk1.rel <- transform_sample_counts(ps.rad.pre.lk1, function(x) x / sum(x))
+# ps.rad.pre.lk1.rel.zone <- merge_samples(ps.rad.pre.lk1.rel, "zone")
+# ps.rad.pre.lk1.rel.zone <- transform_sample_counts(ps.rad.pre.lk1.rel.zone, function(x) x / sum(x))
+# 
+# plot_bar(ps.rad.pre.lk1.rel.zone, fill="Clade")
+
+#remove uk3
+ps.rad.gen.pre <- subset_samples(ps.rad.gen.pre,site!="UK3")
+
+
 ```
 
 ```{r sids by samples}
