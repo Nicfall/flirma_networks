@@ -197,7 +197,7 @@ ps.sid.pos.uk2 <- subset_samples(ps.sid.pos,site=="UK2")
 ps.gen <- tax_glom(ps,"Clade")
 ntaxa(ps); ntaxa(ps.gen)
 
-#sideraea
+#siderea
 ps.sid.gen <- subset_samples(ps.gen,spp=="ssid")
 
 ps.sid.gen.pre <- subset_samples(ps.sid.gen,time=="Pre")
@@ -219,36 +219,38 @@ ps.rad.gen.pos <- subset_samples(ps.rad.gen,time=="Post")
 ```{r}
 ps.sid.gen.pre.rel <- transform_sample_counts(ps.sid.gen.pre, function(x) x / sum(x))
 ps.sid.gen.pre.rel.sz <- merge_samples(ps.sid.gen.pre.rel, "site_zone")
-ps.sid.gen.pre.rel.sz <- transform_sample_counts(ps.sid.gen.pre.rel.sz, function(x) x / sum(x))
+ps.sid.gen.pre.rel.sz.rel <- transform_sample_counts(ps.sid.gen.pre.rel.sz, function(x) x / sum(x))
 
-gg.bar.pre <- plot_bar(ps.sid.gen.pre.rel.sz, fill="Clade")+
+bar.sid.gen.pre.sz <- plot_bar(ps.sid.gen.pre.rel.sz.rel, fill="Clade")+
     ggtitle("Pre")+
     theme_cowplot()+
     theme(axis.text.x=element_text(angle=90,hjust=1))+
     xlab("")
-gg.bar.pre
+bar.sid.gen.pre.sz
 
 ps.sid.gen.irm.rel <- transform_sample_counts(ps.sid.gen.irm, function(x) x / sum(x))
 ps.sid.gen.irm.rel.sz <- merge_samples(ps.sid.gen.irm.rel, "site_zone")
-ps.sid.gen.irm.rel.sz <- transform_sample_counts(ps.sid.gen.irm.rel.sz, function(x) x / sum(x))
+ps.sid.gen.irm.rel.sz.rel <- transform_sample_counts(ps.sid.gen.irm.rel.sz, function(x) x / sum(x))
 
-gg.bar.irm <- plot_bar(ps.sid.gen.irm.rel.sz, fill="Clade")+
-    ggtitle("Irma")+
+bar.sid.gen.irm.sz <- plot_bar(ps.sid.gen.irm.rel.sz.rel, fill="Clade")+
+    ggtitle("irm")+
     theme_cowplot()+
     theme(axis.text.x=element_text(angle=90,hjust=1))+
     xlab("")
+bar.sid.gen.irm.sz
 
 ps.sid.gen.pos.rel <- transform_sample_counts(ps.sid.gen.pos, function(x) x / sum(x))
 ps.sid.gen.pos.rel.sz <- merge_samples(ps.sid.gen.pos.rel, "site_zone")
-ps.sid.gen.pos.rel.sz <- transform_sample_counts(ps.sid.gen.pos.rel.sz, function(x) x / sum(x))
+ps.sid.gen.pos.rel.sz.rel <- transform_sample_counts(ps.sid.gen.pos.rel.sz, function(x) x / sum(x))
 
-gg.bar.pos <- plot_bar(ps.sid.gen.pos.rel.sz, fill="Clade")+
-    ggtitle("Post")+
+bar.sid.gen.pos.sz <- plot_bar(ps.sid.gen.pos.rel.sz.rel, fill="Clade")+
+    ggtitle("pos")+
     theme_cowplot()+
     theme(axis.text.x=element_text(angle=90,hjust=1))+
     xlab("")
+bar.sid.gen.pos.sz
 
-gg.bar.clade <- ggarrange(gg.bar.pre,gg.bar.irm,gg.bar.pos,ncol=3,common.legend=T,legend="right")
+gg.bar.clade <- ggarrange(bar.sid.gen.pre.sz,bar.sid.gen.irm.sz,bar.sid.gen.pos.sz,ncol=3,common.legend=T,legend="right")
 gg.bar.clade
 #ggsave("bar.clade_horizontal.pdf",width=9,height=4)
 ```
@@ -292,42 +294,7 @@ gg.bar.clade
 #ggsave("bar.clade.radians.pdf",width=9,height=4)
 ```
 
-### Reef zone
-
-```{r}
-# ps.sid.pre.lk1.rel <- transform_sample_counts(ps.sid.pre.lk1, function(x) x / sum(x))
-# ps.sid.pre.lk1.rel.zone <- merge_samples(ps.sid.pre.lk1.rel, "zone")
-# ps.sid.pre.lk1.rel.zone <- transform_sample_counts(ps.sid.pre.lk1.rel.zone, function(x) x / sum(x))
-# 
-# plot_bar(ps.sid.pre.lk1.rel.zone, fill="Clade")
-
-#remove uk3
-
-```
-
-```{r radians plot by genera}
-# ps.rad.pre.lk1.rel <- transform_sample_counts(ps.rad.pre.lk1, function(x) x / sum(x))
-# ps.rad.pre.lk1.rel.zone <- merge_samples(ps.rad.pre.lk1.rel, "zone")
-# ps.rad.pre.lk1.rel.zone <- transform_sample_counts(ps.rad.pre.lk1.rel.zone, function(x) x / sum(x))
-# 
-# plot_bar(ps.rad.pre.lk1.rel.zone, fill="Clade")
-
-#remove uk3
-ps.rad.gen.pre <- subset_samples(ps.rad.gen.pre,site!="UK3")
-
-
-```
-
 ```{r sids by samples}
-# ps.sid.pre.lk1.rel <- transform_sample_counts(ps.sid.pre.lk1, function(x) x / sum(x))
-# ps.sid.pre.lk1.rel.zone <- merge_samples(ps.sid.pre.lk1.rel, "zone")
-# ps.sid.pre.lk1.rel.zone <- transform_sample_counts(ps.sid.pre.lk1.rel.zone, function(x) x / sum(x))
-# 
-# plot_bar(ps.sid.pre.lk1.rel.zone, fill="Clade")
-
-#remove uk3
-ps.sid.pre <- subset_samples(ps.sid.pre,site!="UK3")
-
 ps.sid.pre.rel <- transform_sample_counts(ps.sid.pre, function(x) x / sum(x))
 ps.sid.pre.rel.sz <- merge_samples(ps.sid.pre.rel, "site_zone")
 ps.sid.pre.rel.sz <- transform_sample_counts(ps.sid.pre.rel.sz, function(x) x / sum(x))
@@ -730,6 +697,41 @@ ps.norm.all.ord <- ordinate(ps.norm.all,"PCoA",distance="bray")
 plot_ordination(ps.norm.all, ps.norm.all.ord, color ="site")+
   geom_point(alpha=0.5)+
   stat_ellipse()
+```
+
+# Collapsing type profiles via phylogeny tree
+
+Started with file: "188_20211214_03_DBV_20211215T030311.seqs.fasta" in the post-med seqs folder. Also started with the taxa info 'Majority_ITS2_sequence", removed the slashes between types, & removed duplicates. That left 24 unique ITS2 types, put these in 'names.txt'. Want to extract the relevant sequences from the fasta file now
+
+```{bash, eval=F}
+for word in $(cat names.txt); do echo $word; grep -w -A 1 $word postmedseqs.fasta >> output.fasta; done
+```
+
+*Important notes:* produced a fasta file with '--' in between some desired entries, removed that manually, but I'm sure there's a better way than that. It also gave me an unwanted one (A4.3), took that out manually. Easy to do with 24 types, but would be harder with more than that.. processed file was named _output_types_cleaned.fasta_
+
+Then went to ngphylogeny.fr to plot.
+
+More notes: 
+- A is fine, the majority sequences are pretty disparate. 
+- The Bs are a total mess, will plot below
+- Cs are fine
+- Ds are fine
+
+## Clade B plotted
+
+```{r}
+
+
+p <- ggtree(higher_tree)
+dd <- data.frame(taxa = c("Acroporidae","Pocilloporidae","Astrocoeniidae","Merulinidae","Dendrophylliidae","Caryophylliidae","Agariciidae","Gorgoniidae","Coralliidae"),
+                 strategy = c("mixed","brood",rep("broadcast",2),"brood","broadcast",rep("brood",3)),
+                 prop = c(9,8,1,4,3,1,1,1,2))
+p <- p %<+% dd + geom_tiplab(aes(x=x+6,color=strategy)) +
+  geom_tippoint(aes(x=x+3.2,size=prop,color=strategy),alpha=0.25)+
+  scale_color_manual(values=colorz,name="Spawning mode",labels=c("Broadcasting","Brooding","Mixed"))+
+  theme(legend.position="right")+
+  guides(size=guide_legend("Number of studies"))
+p + ggplot2::xlim(0,90)+geom_treescale()
 ```
 
 # Stats
