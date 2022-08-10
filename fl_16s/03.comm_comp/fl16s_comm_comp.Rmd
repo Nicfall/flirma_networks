@@ -192,6 +192,7 @@ gg.clean.sid <- plot_ordination(ps.clean.sid, ord.clean.sid,axes=c(1,2),color="t
 
 df.gg.clean.sid <- data.frame(gg.clean.sid["data"])
 
+<<<<<<< HEAD
 ggplot(df.gg.clean.sid,aes(x=data.Axis.1,y=data.Axis.2,shape=data.site))+
   stat_ellipse(aes(linetype=data.site,color=data.time))+
   scale_color_manual(values=c("#3B0F70","#FA7F53","#A8327D"))+
@@ -205,6 +206,19 @@ ggplot(df.gg.clean.sid,aes(x=data.Axis.1,y=data.Axis.2,shape=data.site))+
   scale_color_manual(values=c("blue","green"))+
   #scale_color_manual(values=c("black","grey","white"))+
   #scale_shape_manual(values=c(22,24,25))+
+=======
+ggplot(df.gg.clean.sid,aes(x=data.Axis.1,y=data.Axis.2,color=data.time,shape=data.site))+
+  stat_ellipse()+
+  #facet_wrap(~data.time)+  
+  geom_point()+
+  ylab("Shannon index")+
+  xlab("Time point")+
+  theme_cowplot()+
+  #scale_shape_manual(name="Site",values=c(21,22,23))+
+  #scale_color_manual(values=c("blue","green"))+
+  #scale_color_manual(values=c("black","grey","white"))+
+  scale_shape_manual(values=c(8,4,9))+
+>>>>>>> bf0c95b70c7746c04ef9d691117cf00e17bf6411
   theme(plot.title=element_text(face = "italic"))+
   ggtitle("S. siderea")#+
   guides(fill="none",color="none")
