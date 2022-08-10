@@ -438,7 +438,7 @@ library(cowplot)
 library(ShortRead)
 
 #### Read in previously saved datafiles ####
-setwd("/Volumes/GoogleDrive/My Drive/Flirma/flirma_networks/fl_16s/01.generate_asv_table")
+setwd("~/nicfall@bu.edu - Google Drive/My Drive/Flirma/flirma_networks_master/fl_16s/01.generate_asv_table")
 ```
 
 ### Remove chloroplasts etc. 
@@ -521,10 +521,66 @@ ps.clean1 <- prune_taxa(!contamdf.prev$contaminant,ps.clean)
 ps.cleaner <- subset_samples(ps.clean1,(full_site!="neg"))
 
 ps.cleaner #12108 taxa left, 356 samples
-#saveRDS(ps.cleaner,file="fl16s.ps.cleaner.rd3_newvars.rds")
+saveRDS(ps.cleaner,file="fl16s.ps.cleaner.rd3_newvars.rds")
 ```
 
 ### NCBI checks
+
+Trying plast instead of blast
+
+```{bash, eval=F}
+#went to scratch on BU's scc:
+cd $TMPDIR
+nano fake.sh
+#[in file:]
+echo 'fake' > fake.txt
+#[exit]
+qsub fake.sh
+qstat -u nicfall
+##the job info says this under the 'queue' column:
+#budge@scc-ja1.scc.bu.edu
+cd /net/scc-ja1/scratch #change middle part to the middle part from above^
+#my stuff is here!
+
+nano ncbi.sh #text below
+```
+
+```
+#!/bin/bash -l
+#$ -l h_rt=12:00:00
+#$ -cwd # start job in submission directory
+#$ -N ncbi.sh # job name, anything you want
+#$ -M thenicolakriefall@gmail.com
+#$ -m be
+
+wget 'ftp://ftp.ncbi.nlm.nih.gov/blast/db/FASTA/nt.gz*'
+gunzip *.gz
+```
+
+Exit & save
+
+```{bash, eval=F}
+qsub -pe omp 28 ncbi.sh
+#when job is done:
+nano plast.sh
+```
+
+Text within:
+
+```
+#!/bin/bash -l
+#$ -l h_rt=24:00:00
+#$ -cwd # start job in submission directory
+#$ -N plast.sh # job name, anything you want
+#$ -M thenicolakriefall@gmail.com
+#$ -m be
+
+plast -p plastn -d nt.gz -i fl16s_split.00001 -max-hit-per-query 3 -max-hsp-per-hit 1 -o plast_out.tab
+```
+
+```{bash, eval=F}
+qsub -pe omp 28 plast.sh
+```
 
 Blast asvs to NCBI to see if any eukaryotes got through. Used 'fl16s.rd3.trim0005.fasta' made above. Split these up by 2500 ASVs so that it would be done overnight.... will need to repeat this 5 times since there are 12k+ ASVs.
 
@@ -578,71 +634,34 @@ qsub -pe omp 28 blast_taxid.sh
 # #command taxonkit should work now
 
 ##extracting taxa ids from blast output for taxonkit:
-#1-2500
-awk -F " " '{print $13}' fl16s_taxids1.out > ids
+awk -F " " '{print $13}' mr16s_taxids.out > ids
 taxonkit lineage ids > ids.tax
-cut -f1 fl16s_taxids1.out > ids.seq; paste ids.seq ids.tax > ids.seq.tax
-grep "Eukaryota" ids.seq.tax | cut -f1 | sort | uniq > euk.contam.asvs1
-
-#2501-5001
-awk -F " " '{print $13}' fl16s_taxids2501.out > ids
-taxonkit lineage ids > ids.tax
-cut -f1 fl16s_taxids2501.out > ids.seq; paste ids.seq ids.tax > ids.seq.tax
-grep "Eukaryota" ids.seq.tax | cut -f1 | sort | uniq >> euk.contam.asvs1
-
-#5001-7500
-awk -F " " '{print $13}' fl16s_taxids5001.out > ids
-taxonkit lineage ids > ids.tax
-cut -f1 fl16s_taxids5001.out > ids.seq; paste ids.seq ids.tax > ids.seq.tax
-grep "Eukaryota" ids.seq.tax | cut -f1 | sort | uniq >> euk.contam.asvs1
-
-#7501-10000
-awk -F " " '{print $13}' fl16s_taxids7501.out > ids
-taxonkit lineage ids > ids.tax
-cut -f1 fl16s_taxids7501.out > ids.seq; paste ids.seq ids.tax > ids.seq.tax
-grep "Eukaryota" ids.seq.tax | cut -f1 | sort | uniq >> euk.contam.asvs1
-
-#10001-12500
-awk -F " " '{print $13}' fl16s_taxids10001.out > ids
-taxonkit lineage ids > ids.tax
-cut -f1 fl16s_taxids10001.out > ids.seq; paste ids.seq ids.tax > ids.seq.tax
-grep "Eukaryota" ids.seq.tax | cut -f1 | sort | uniq >> euk.contam.asvs1
-
-#12501-12836
-awk -F " " '{print $13}' fl16s_taxids12501.out > ids
-taxonkit lineage ids > ids.tax
-cut -f1 fl16s_taxids12501.out > ids.seq; paste ids.seq ids.tax > ids.seq.tax
-grep "Eukaryota" ids.seq.tax | cut -f1 | sort | uniq >> euk.contam.asvs1
-
-#last few that didn't work the first time
-awk -F " " '{print $13}' fl16s_lastfew.out > ids
-taxonkit lineage ids > ids.tax
-cut -f1 fl16s_lastfew.out > ids.seq; paste ids.seq ids.tax > ids.seq.tax
-grep "Eukaryota" ids.seq.tax | cut -f1 | sort | uniq >> euk.contam.asvs1
+cut -f1 mr16s_taxids.out > ids.seq; paste ids.seq ids.tax > ids.seq.tax
+grep "Eukaryota" ids.seq.tax | cut -f1 | sort | uniq > euk.contam.asvs
 ```
 
-Copied euk.contam.asvs1 into an excel/csv file, will remove from ps.cleaner. Should be *392* to remove.
+Transferred euk.contam.asvs back here, remove from ps.cleaner. Should be X to remove
+*****
 
-```{r}
-library("phyloseq")
-setwd("/Volumes/GoogleDrive/My Drive/Flirma/flirma_networks/fl_16s/01.generate_asv_table")
-ps.cleaner <- readRDS("fl16s.ps.cleaner.rd3_newvars.rds")
-euks <- read.csv("fl16s_euk.contam.asvs.csv",header=FALSE)
-
+euks <- read.csv("euk.contam.asvs.csv",header=FALSE)
 euks_names <- euks$V1
-alltaxa <- taxa_names(ps.cleaner) #should be 12108
-keepers <- alltaxa[!(alltaxa %in% euks_names)] #only 77 got through from above
+alltaxa <- taxa_names(ps.cleaner) #should be 2355
+keepers <- alltaxa[(alltaxa %in% euks_names)] #keepers = 2346, so that means only 9 euks got through above
 ps.cleanest <- prune_taxa(keepers, ps.cleaner) 
-ps.cleanest
-#12031 in ps.cleanest
+#2346 in ps.cleanest
 
 seqtab.cleanest <- data.frame(otu_table(ps.cleanest))
+#write.csv(seqtab.cleanest,file="mr16s_seqtab.rev.cleanest.csv")
+seqtab.cleanest <- read.csv("mr16s_seqtab.rev.cleanest.csv",row.names=1)
 
 ##re-read in cleaned phyloseq object
-#saveRDS(ps.cleanest,file="ps.cleanest.rds")
+#saveRDS(ps.cleanest,file="phyloseq.cleanest.rds")
+
+```{r}
+
 ```
 
-# Checking out the data
+# Batch effect
 
 Read in data & packages
 
@@ -651,10 +670,11 @@ library(ggplot2)
 library(vegan)
 library(phyloseq)
 
-setwd("/Volumes/GoogleDrive/My Drive/Flirma/flirma_networks/fl_16s/01.generate_asv_table")
-ps.cleanest <- readRDS("ps.cleanest.rds")
+setwd("~/Google Drive (nicfall@bu.edu)/Flirma/flirma_networks_master/fl_16s/01.generate_asv_table")
+#ps.cleaner <- readRDS("fl16s.ps.cleaner.rd3.rds")
+ps.cleaner <- readRDS("fl16s.ps.cleaner.rd3_newvars.rds")
 taxa <- readRDS("fl16s.rd3.taxa.newids.rds")
-samdf <- read.csv("fl_sample_info - 16s_all_newvars.csv")
+samdf <- read.csv("fl_sample_info - 16s_all.csv")
 row.names(samdf) <- samdf$sample_num
 ```
 
@@ -665,9 +685,9 @@ row.names(samdf) <- samdf$sample_num
 Clear 2018 separation
 
 ```{r raw data}
-ps.cleanest.ord <- ordinate(ps.cleanest, method="PCoA",distance="bray")
-plot_ordination(ps.cleanest,ps.cleanest.ord,color="year")
-plot_ordination(ps.cleanest,ps.cleanest.ord,color="lib_size")
+ps.cleaner.ord <- ordinate(ps.cleaner, method="PCoA",distance="bray")
+plot_ordination(ps.cleaner,ps.cleaner.ord,color="year")
+plot_ordination(ps.cleaner,ps.cleaner.ord,color="lib_size")
 ```
 
 ### Relative abundance
@@ -675,27 +695,26 @@ plot_ordination(ps.cleanest,ps.cleanest.ord,color="lib_size")
 Doesn't change much
 
 ```{r rel abun raw}
-ps.cleanest.rel = transform_sample_counts(ps.cleanest, function(x) x / sum(x))
+ps.cleaner.rel = transform_sample_counts(ps.cleaner, function(x) x / sum(x))
 
-ps.cleanest.rel.ord <- ordinate(ps.cleanest.rel, method="PCoA",distance="bray")
-plot_ordination(ps.cleanest.rel,ps.cleanest.rel.ord,color="year")
+ps.cleaner.rel.ord <- ordinate(ps.cleaner.rel, method="PCoA",distance="bray")
+plot_ordination(ps.cleaner.rel,ps.cleaner.rel.ord,color="year")
 ```
 
 ### Rarefy
 
 ```{r rarefy raw - do once then save & run again, eval=FALSE}
-seqtab.cleanest <- data.frame(ps.cleanest@otu_table)
+seqtab.cleaner <- data.frame(ps.cleaner@otu_table)
 
-rarecurve(seqtab.cleanest,step=500,label=FALSE) #after removing contaminants
+rarecurve(seqtab.cleaner,step=500,label=FALSE) #after removing contaminants
 
-total <- rowSums(seqtab.cleanest)
-fewer <- subset(total, total <6500)
-#21 samples to remove, that's ~95% of samples which seems good
-fewer
+total <- rowSums(seqtab.cleaner)
+subset(total, total <6500)
+#20 samples to remove, that's exactly 95% of samples which seems good
 
-row.names.remove <- c("1196","1200","1206","1207","1222","1236","1238","1143","1145","1146","1149","703","1171","1176","1071","1075","1086","1088","827","850","1119")
-seqtab.less <- seqtab.cleanest[!(row.names(seqtab.cleanest) %in% row.names.remove),]
-#335 left
+row.names.remove <- c("1196","1200","1206","1207","1236","1238","1143","1145","1146","1149","703","1171","1176","1071","1075","1086","1088","827","850","1119")
+seqtab.less <- seqtab.cleaner[!(row.names(seqtab.cleaner) %in% row.names.remove),]
+#336 samples left being strict
 
 seqtab.rare <- rrarefy(seqtab.less,sample=6500)
 rarecurve(seqtab.rare,step=500,label=FALSE)
@@ -708,31 +727,17 @@ ps.rare
 
 #removing missing taxa - lost after rarefying
 ps.rare <- prune_taxa(taxa_sums(ps.rare) > 0, ps.rare)
-ps.rare #11978
+ps.rare #12057
 
-#saveRDS(ps.rare,file="ps.cleanest.rare6500.rds")
-
-#remove samples from cleanest that were removed in rarefaction
-ps.less <- phyloseq(otu_table(seqtab.less, taxa_are_rows=FALSE), 
-                    sample_data(samdf), 
-                    tax_table(taxa))
-ps.less
-
-#removing missing taxa - lost after removing samples
-ps.less <- prune_taxa(taxa_sums(ps.less) > 0, ps.less)
-ps.less #11980
-
-#saveRDS(ps.less,file="ps.cleanest.less.rds")
+#saveRDS(ps.rare,file="ps.rare.rd3.6500.rds")
 ```
-
-*Note:* Using these two phyloseq objects (ps.less, ps.rare) in alpha diversity, because authors say not to use trimmed objects in alpha diversity (trimming below)
 
 #### Plot rarefied
 
 Worse?
 
 ```{r rare}
-ps.rare <- readRDS("ps.cleanest.rare6500.rds")
+ps.rare <- readRDS("ps.rare.rd3.6500.rds")
 ps.rare.ord <- ordinate(ps.rare, method="PCoA",distance="bray")
 plot_ordination(ps.rare,ps.rare.ord,color="year")
 ```
@@ -748,86 +753,7 @@ ps.rare.rel.ord <- ordinate(ps.rare.rel, method="PCoA",distance="bray")
 plot_ordination(ps.rare.rel,ps.rare.rel.ord,color="year")
 ```
 
-# OTU singletons trimmed
-
-```{r}
-ps.less <- readRDS("ps.cleanest.less.rds")
-#ps.rare <- readRDS("ps.cleanest.rare6500.rds")
-```
-
-```{r trim outliers, eval=FALSE}
-library(MCMC.OTU)
-
-ps.otu <- data.frame(ps.less@otu_table)
-
-#formatting the table for mcmc.otu - requires one first column that's 1 through whatever
-#& has "X" as column name
-nums <- 1:nrow(ps.otu) 
-samples <- rownames(ps.otu)
-
-int <- cbind(sample = 0, ps.otu)
-seq.formcmc <- cbind(X = 0, int)
-
-seq.formcmc$X <- nums
-seq.formcmc$sample <- samples
-
-seq.trim.allinfo <- purgeOutliers(seq.formcmc,count.columns=3:11982,sampleZcut=-2.5,otu.cut=0,zero.cut=0.00597)
-# [1] "samples with counts below z-score -2.5 :"
-# character(0)
-# [1] "zscores:"
-# named numeric(0)
-# [1] "OTUs with counts in 0.00597 of samples:"
-# 
-# FALSE  TRUE 
-#  1267 10713 
-
-#remove sample info
-seq.trim <- seq.trim.allinfo[,3:10715]
-
-ps.trim <- phyloseq(otu_table(seq.trim, taxa_are_rows=FALSE), 
-                    sample_data(samdf), 
-                    tax_table(taxa))
-ps.trim
-# phyloseq-class experiment-level object
-# otu_table()   OTU Table:         [ 10713 taxa and 335 samples ]
-# sample_data() Sample Data:       [ 335 samples by 11 sample variables ]
-# tax_table()   Taxonomy Table:    [ 10713 taxa by 8 taxonomic ranks ]
-
-#saveRDS(ps.trim,file="ps.cleanest.trim.rds")
-```
-
-Trimmed & rarefied for checks
-
-Ran once then just reading in file next time
-
-```{r, eval=F}
-seqtab.rare2 <- rrarefy(seq.trim,sample=6500)
-#rarecurve(seqtab.rare2,step=500,label=FALSE)
-
-#phyloseq object but rarefied
-ps.trim.rare <- phyloseq(otu_table(seqtab.rare2, taxa_are_rows=FALSE), 
-                    sample_data(samdf), 
-                    tax_table(taxa))
-ps.trim.rare
-
-#removing missing taxa - lost after rarefying
-ps.trim.rare <- prune_taxa(taxa_sums(ps.trim.rare) > 0, ps.trim.rare)
-ps.trim.rare #10711 taxa
-
-#saveRDS(ps.trim.rare,file="ps.cleanest.trim.rare.rds")
-```
-
-Plot trimmed
-
-```{r plot trimmed}
-ps.trim <- readRDS(file="ps.cleanest.trim.rds")
-ps.trim.ord <- ordinate(ps.trim,"NMDS","bray")
-
-plot_ordination(ps.trim,ps.trim.ord,color="year")+
-  stat_ellipse()
-```
-
-# Other normalizations
+### Other normalizations
 
 Text from [microbiomeMarker](https://rdrr.io/github/yiluheihei/microbiomeMarker/man/normalize-methods.html)
 
@@ -840,17 +766,17 @@ TMM calculates the normalization factor using a robust statistics based on the a
 In CLR, the log-ratios are computed relative to the geometric mean of all features."
 
 ```{r CLR}
-ps.less.clr <- microbiome::transform(ps.less,"clr")
-ps.less.clr.ord <- ordinate(ps.less.clr,"PCoA","euclidean")
+ps.cleaner.clr <- microbiome::transform(ps.cleaner,"clr")
+ps.cleaner.clr.ord <- ordinate(ps.cleaner.clr,"PCoA","euclidean")
 
-plot_ordination(ps.less.clr,ps.less.clr.ord,color="year")+
+plot_ordination(ps.cleaner.clr,ps.cleaner.clr.ord,color="year")+
   stat_ellipse()
 
-plot_ordination(ps.less.clr,ps.less.clr.ord,color="year",shape="zone")+
+plot_ordination(ps.cleaner.clr,ps.cleaner.clr.ord,color="year",shape="zone")+
   facet_wrap(spp~site)+
   stat_ellipse()
 
-#saveRDS(ps.less.clr,file="ps.cleanest.less.clr.rds")
+#saveRDS(ps.cleaner.clr,file="fl16s.ps.cleaner.clr.rd3.rds")
 ```
 
 ```{r norm tmm}
@@ -868,6 +794,134 @@ SeqNorm =  calcNormFactors(SeqList, method = "TMM")
 head(SeqNorm$samples)
 seq.tmm = t(cpm(SeqNorm, normalized.lib.sizes = TRUE))
 #saveRDS(seq.tmm,file="seq.cleaner.tmm.rds")
+```
+
+# OTU outliers
+
+```{r trim outliers, eval=FALSE}
+library(MCMC.OTU)
+
+ps.otu <- data.frame(ps.cleaner@otu_table)
+
+#formatting the table for mcmc.otu - requires one first column that's 1 through whatever
+#& has "X" as column name
+nums <- 1:nrow(ps.otu) 
+samples <- rownames(ps.otu)
+
+int <- cbind(sample = 0, ps.otu)
+seq.formcmc <- cbind(X = 0, int)
+
+seq.formcmc$X <- nums
+seq.formcmc$sample <- samples
+
+seq.trim.allinfo <- purgeOutliers(seq.formcmc,count.columns=3:12110,sampleZcut=-2.5,otu.cut=0,zero.cut=0.008)
+# [1] "samples with counts below z-score -2.5 :"
+# [1] "1200" "1206" "1238" "1146" "1171" "1071" "1086" "827"  "1119"
+# [1] "zscores:"
+#      1200      1206      1238      1146      1171      1071      1086       827      1119 
+# -2.536456 -2.687624 -2.517637 -3.071198 -2.684779 -2.530152 -3.658967 -2.653904 -3.681352 
+# [1] "OTUs with counts in 0.008 of samples:"
+# 
+# FALSE  TRUE 
+#  2365  9743 
+
+#remove sample info
+seq.trim <- seq.trim.allinfo[,3:9745]
+
+ps.cleaner@otu_table <- otu_table(seq.trim,taxa_are_rows=F)
+ps.trim <- prune_samples(sample_sums(ps.cleaner)>4200,ps.cleaner)
+ps.trim
+#leaves 347 samples, 9743 taxa
+
+#saveRDS(ps.trim,file="fl16s.ps.cleaner.rd3.trim.rds")
+```
+
+Plot trimmed
+
+```{r plot trimmed}
+ps.trim <- readRDS(file="fl16s.ps.cleaner.rd3.trim.rds")
+ps.trim.ord <- ordinate(ps.trim,"NMDS","bray")
+
+plot_ordination(ps.trim,ps.trim.ord,color="year")+
+  stat_ellipse()
+```
+
+# Sum by family
+
+```{r sum by family, eval=FALSE}
+#raw sums
+ps.clean <- readRDS("~/Google Drive (nicfall@bu.edu)/Flirma/flirma_networks_master/fl_16s/01.generate_asv_table/fl16s.ps.cleaner.rd3_newvars.rds")
+tax <- as.data.frame(ps.clean@tax_table@.Data)
+
+#trimmed
+#tax <- as.data.frame(ps.trim@tax_table@.Data)
+
+tax.clean <- data.frame(row.names = row.names(tax),
+                        Kingdom = str_replace(tax[,1], "D_0__",""),
+                        Phylum = str_replace(tax[,2], "D_1__",""),
+                        Class = str_replace(tax[,3], "D_2__",""),
+                        Order = str_replace(tax[,4], "D_3__",""),
+                        Family = str_replace(tax[,5], "D_4__",""),
+                        Genus = str_replace(tax[,6], "D_5__",""),
+                        Species = str_replace(tax[,7], "D_6__",""),
+                        stringsAsFactors = FALSE)
+tax.clean[is.na(tax.clean)] <- ""
+
+for (i in 1:7){ tax.clean[,i] <- as.character(tax.clean[,i])}
+####### Fill holes in the tax table
+tax.clean[is.na(tax.clean)] <- ""
+for (i in 1:nrow(tax.clean)){
+  if (tax.clean[i,2] == ""){
+    kingdom <- paste("Kingdom_", tax.clean[i,1], sep = "")
+    tax.clean[i, 2:7] <- kingdom
+  } else if (tax.clean[i,3] == ""){
+    phylum <- paste("Phylum_", tax.clean[i,2], sep = "")
+    tax.clean[i, 3:7] <- phylum
+  } else if (tax.clean[i,4] == ""){
+    class <- paste("Class_", tax.clean[i,3], sep = "")
+    tax.clean[i, 4:7] <- class
+  } else if (tax.clean[i,5] == ""){
+    order <- paste("Order_", tax.clean[i,4], sep = "")
+    tax.clean[i, 5:7] <- order
+  } else if (tax.clean[i,6] == ""){
+    family <- paste("Family_", tax.clean[i,5], sep = "")
+    tax.clean[i, 6:7] <- family
+  } else if (tax.clean[i,7] == ""){
+    tax.clean$Species[i] <- paste("Genus",tax.clean$Genus[i], sep = "_")
+  }
+}
+
+tax_table(ps.clean) <- as.matrix(tax.clean)
+#tax_table(ps.trim) <- as.matrix(tax.clean)
+
+#family
+ps.clean.fam <- tax_glom(ps.clean,"Family")
+#saveRDS(ps.clean.fam,"ps.clean.fam.rds")
+
+ps.trim.fam.ord <- ordinate(ps.trim.fam,"PCoA","euclidean")
+
+plot_ordination(ps.trim.fam,ps.trim.fam.ord,color="year")+
+  stat_ellipse()
+
+#saveRDS(ps.trim.fam,"ps.trim.fam.rds")
+
+ps.trim.fam.sid <- subset_samples(ps.trim.fam,spp=="ssid")
+ps.trim.fam.rad <- subset_samples(ps.trim.fam,spp=="srad")
+
+ps.trim.fam.sid.no0 <- prune_taxa(taxa_sums(ps.trim.fam.sid) > 0, ps.trim.fam.sid) 
+# otu_table()   OTU Table:         [ 489 taxa and 201 samples ]
+# sample_data() Sample Data:       [ 201 samples by 9 sample variables ]
+# tax_table()   Taxonomy Table:    [ 489 taxa by 7 taxonomic ranks ]
+ps.trim.fam.rad.no0 <- prune_taxa(taxa_sums(ps.trim.fam.rad) > 0, ps.trim.fam.rad) 
+# otu_table()   OTU Table:         [ 486 taxa and 155 samples ]
+# sample_data() Sample Data:       [ 155 samples by 9 sample variables ]
+# tax_table()   Taxonomy Table:    [ 486 taxa by 7 taxonomic ranks ]
+```
+
+If needed again:
+
+```{r}
+ps.trim.fam <- readRDS("ps.trim.fam.rds")
 ```
 
 ## PCA from batch effect walkthrough
