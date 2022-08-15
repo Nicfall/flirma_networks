@@ -31,11 +31,9 @@ setwd("/Volumes/GoogleDrive/My Drive/Flirma/flirma_networks/fl_16s/02.diversity"
 Be careful, I tried different data inputs [i.e. not rare, or rare]
 
 ```{r}
-# ps.clean1 <-readRDS("../01.generate_asv_table/ps.cleanest.less.rds")
-# ps.clean <- subset_samples(ps.clean1,site!="UK3")
+#ps.clean <-readRDS("../01.generate_asv_table/ps.cleanest.less.rds")
 
-ps.rare <- readRDS("../01.generate_asv_table/ps.cleanest.rare6500.rds")
-ps.clean <- subset_samples(ps.rare,site!="UK3")
+ps.clean <- readRDS("../01.generate_asv_table/ps.cleanest.rare6000.rds")
 
 samdf <- data.frame(ps.clean@sam_data)
 ```
@@ -45,7 +43,7 @@ samdf <- data.frame(ps.clean@sam_data)
 [Notes from phyloseq author](https://rdrr.io/bioc/phyloseq/man/estimate_richness.html)
 Visualize alpha-diversity - Should be done on raw, untrimmed dataset
 
-```{r generate div metrics}
+```{r generate div metrics, eval=F}
 df <- data.frame(estimate_richness(ps.clean, split=TRUE, measures=c("Shannon","InvSimpson","Observed")))
 
 df$sample_num <- rownames(df)
@@ -55,10 +53,12 @@ df.div <- merge(df,samdf,by="sample_num") #add sample data
 
 #shannon diversity divided by species richness
 df.div$even <- df.div$Shannon/(log(df.div$Observed))
-#write.csv(df.div,file="fl16s.df.diversity_rare.csv")
+#write.csv(df.div,file="fl16s.df.diversity.csv")
+write.csv(df.div,file="fl16s.df.diversity_rare.csv")
 
 ##reorder the time points
 df.div$time <- factor(df.div$time, levels = c("Pre","Irma","Post"))
+df.div$zone <- as.factor(df.div$zone)
 
 #separate species
 df.div.rad <- subset(df.div,spp=="srad")
@@ -68,8 +68,8 @@ df.div.sid <- subset(df.div,spp=="ssid")
 Re-read in data, skipping the two sections above
 
 ```{r re-read in}
-df.div <- read.csv("fl16s.df.diversity.csv")
-#df.div <- read.csv("fl16s.df.diversity_rare.csv")
+#df.div <- read.csv("fl16s.df.diversity.csv")
+df.div <- read.csv("fl16s.df.diversity_rare.csv")
 
 df.div$zone <- as.factor(df.div$zone)
 df.div$time <- factor(df.div$time,levels=c("Pre","Irma","Post"))
@@ -103,7 +103,7 @@ gg.sh.sids.yr <- ggplot(df.div.sid,aes(x=time,y=Shannon,fill=time,color=time,sha
   scale_x_discrete(labels=c("Pre","Disturb.","Post"))
 gg.sh.sids.yr
 
-ggsave(gg.sh.sids.yr,file="gg.sids.shannon.pdf",width=3.5,height=4)
+#ggsave(gg.sh.sids.yr,file="gg.sids.shannon.pdf",width=3.5,height=4)
 ```
 
 ### Shannon sids stats - zone
@@ -122,13 +122,12 @@ df.div.sid.18.lk1 <- subset(df.div.sid.18,site=="LK1")
 #are they sig different across reef zones?
 wilcox.test(Shannon~zone,data=df.div.sid.15.lk1)#p < 0.001***
 #still same sig level when rarefied
-wilcox.test(Shannon~zone,data=df.div.sid.17.lk1)#ns, rare or not
+wilcox.test(Shannon~zone,data=df.div.sid.17.lk1)#p < 0.1 .
+#not rare:
+# W = 102, p-value = 0.08873
+#trend lost with rarefaction
+# W = 63, p-value = 0.1564
 wilcox.test(Shannon~zone,data=df.div.sid.18.lk1)#ns, rare or not
-
-#are there variance differences?
-leveneTest(df.div.sid.15.lk1$Shannon,df.div.sid.15.lk1$zone) #no
-leveneTest(df.div.sid.17.lk1$Shannon,df.div.sid.17.lk1$zone) #no
-leveneTest(df.div.sid.18.lk1$Shannon,df.div.sid.18.lk1$zone) #no
 
 #UPPER KEYS 1
 df.div.sid.15.uk1 <- subset(df.div.sid.15,site=="UK1")
@@ -136,26 +135,9 @@ df.div.sid.17.uk1 <- subset(df.div.sid.17,site=="UK1")
 df.div.sid.18.uk1 <- subset(df.div.sid.18,site=="UK1")
 
 wilcox.test(Shannon~zone,data=df.div.sid.15.uk1)#ns, rare or not
-wilcox.test(Shannon~zone,data=df.div.sid.17.uk1)#ns, rare or not
+wilcox.test(Shannon~zone,data=df.div.sid.17.uk1)#trend when rare
+#W = 102, p-value = 0.08873
 wilcox.test(Shannon~zone,data=df.div.sid.18.uk1)#ns, rare or not
-
-leveneTest(df.div.sid.15.uk1$Shannon,df.div.sid.15.uk1$zone)
-#       Df F value  Pr(>F)  
-# group  1  6.0536 0.02488 *
-#       17                  
-#STATS RAREFIED:
-#       Df F value  Pr(>F)  
-# group  1  6.5605 0.02023 *
-#       17                  
-leveneTest(df.div.sid.17.uk1$Shannon,df.div.sid.17.uk1$zone) #no
-leveneTest(df.div.sid.18.uk1$Shannon,df.div.sid.18.uk1$zone)
-#       Df F value  Pr(>F)  
-# group  1  7.2451 0.02097 *
-#       11                  
-#STATS RAREFIED:
-#       Df F value Pr(>F)  
-# group  1  7.6767 0.0182 *
-#       11    
 
 #UPPER KEYS 2
 df.div.sid.15.uk2 <- subset(df.div.sid.15,site=="UK2")
@@ -165,17 +147,6 @@ df.div.sid.18.uk2 <- subset(df.div.sid.18,site=="UK2")
 wilcox.test(Shannon~zone,data=df.div.sid.15.uk2)#ns, rare or not
 wilcox.test(Shannon~zone,data=df.div.sid.17.uk2)#ns, rare or not
 wilcox.test(Shannon~zone,data=df.div.sid.18.uk2)#ns, rare or not
-
-leveneTest(df.div.sid.15.uk2$Shannon,df.div.sid.15.uk2$zone) #no
-leveneTest(df.div.sid.17.uk2$Shannon,df.div.sid.17.uk2$zone)
-#       Df F value  Pr(>F)  
-# group  1  4.8262 0.03998 *
-#       20                  
-#STATS RAREFIED:
-#       Df F value Pr(>F)  
-# group  1  4.7356 0.0417 *
-#       20                 
-leveneTest(df.div.sid.18.uk2$Shannon,df.div.sid.18.uk2$zone) #no
 ```
 
 ### Shannon sids stats - time 
@@ -227,81 +198,6 @@ pairwise.wilcox.test(df.div.sid.uk2.in$Shannon, df.div.sid.uk2.in$time, p.adjust
 #ns, rare or not
 pairwise.wilcox.test(df.div.sid.uk2.off$Shannon, df.div.sid.uk2.off$time, p.adjust.method = "BH")
 #ns, rare or not
-
-### variance by time
-#lower keys 1 inshore
-df.div.sid.lk1.in.irmpos <- subset(df.div.sid.lk1.in,time!="Pre")
-leveneTest(df.div.sid.lk1.in.irmpos$Shannon,df.div.sid.lk1.in.irmpos$time) #ns
-
-df.div.sid.lk1.in.prepos <- subset(df.div.sid.lk1.in,time!="Irma")
-leveneTest(df.div.sid.lk1.in.prepos$Shannon,df.div.sid.lk1.in.prepos$time) #ns
-
-df.div.sid.lk1.in.preirm <- subset(df.div.sid.lk1.in,time!="Post")
-leveneTest(df.div.sid.lk1.in.preirm$Shannon,df.div.sid.lk1.in.preirm$time) #ns
-
-#lower keys 1 offshore
-df.div.sid.lk1.off.irmpos <- subset(df.div.sid.lk1.off,time!="Pre")
-leveneTest(df.div.sid.lk1.off.irmpos$Shannon,df.div.sid.lk1.off.irmpos$time) #ns
-
-df.div.sid.lk1.off.prepos <- subset(df.div.sid.lk1.off,time!="Irma")
-leveneTest(df.div.sid.lk1.off.prepos$Shannon,df.div.sid.lk1.off.prepos$time) #ns
-
-df.div.sid.lk1.off.preirm <- subset(df.div.sid.lk1.off,time!="Post")
-leveneTest(df.div.sid.lk1.off.preirm$Shannon,df.div.sid.lk1.off.preirm$time) #ns
-
-#upper keys 1 inshore
-df.div.sid.uk1.in.irmpos <- subset(df.div.sid.uk1.in,time!="Pre")
-leveneTest(df.div.sid.uk1.in.irmpos$Shannon,df.div.sid.uk1.in.irmpos$time) #ns
-
-df.div.sid.uk1.in.prepos <- subset(df.div.sid.uk1.in,time!="Irma")
-leveneTest(df.div.sid.uk1.in.prepos$Shannon,df.div.sid.uk1.in.prepos$time) #ns
-#       Df F value  Pr(>F)  
-# group  1  3.3861 0.08869 .
-#       13                  
-df.div.sid.uk1.in.preirm <- subset(df.div.sid.uk1.in,time!="Post")
-leveneTest(df.div.sid.uk1.in.preirm$Shannon,df.div.sid.uk1.in.preirm$time) 
-#       Df F value  Pr(>F)  
-# group  1  6.1528 0.02265 *
-#       19             
-
-#upper keys 1 offshore
-df.div.sid.uk1.off.irmpos <- subset(df.div.sid.uk1.off,time!="Pre")
-leveneTest(df.div.sid.uk1.off.irmpos$Shannon,df.div.sid.uk1.off.irmpos$time)
-#       Df F value  Pr(>F)  
-# group  1  3.4923 0.07802 .
-#       18  
-
-df.div.sid.uk1.off.prepos <- subset(df.div.sid.uk1.off,time!="Irma")
-leveneTest(df.div.sid.uk1.off.prepos$Shannon,df.div.sid.uk1.off.prepos$time) #ns
-
-df.div.sid.uk1.off.preirm <- subset(df.div.sid.uk1.off,time!="Post")
-leveneTest(df.div.sid.uk1.off.preirm$Shannon,df.div.sid.uk1.off.preirm$time) #ns
-
-#upper keys 2 inshore
-df.div.sid.uk2.in.irmpos <- subset(df.div.sid.uk2.in,time!="Pre")
-leveneTest(df.div.sid.uk2.in.irmpos$Shannon,df.div.sid.uk2.in.irmpos$time) #ns
-#       Df F value  Pr(>F)  
-# group  1  4.4467 0.05108 .
-#       16                  
-
-df.div.sid.uk2.in.prepos <- subset(df.div.sid.uk2.in,time!="Irma")
-leveneTest(df.div.sid.uk2.in.prepos$Shannon,df.div.sid.uk2.in.prepos$time) #ns
-
-df.div.sid.uk2.in.preirm <- subset(df.div.sid.uk2.in,time!="Post")
-leveneTest(df.div.sid.uk2.in.preirm$Shannon,df.div.sid.uk2.in.preirm$time) #ns
-
-#upper keys 2 offshore
-df.div.sid.uk2.off.irmpos <- subset(df.div.sid.uk2.off,time!="Pre")
-leveneTest(df.div.sid.uk2.off.irmpos$Shannon,df.div.sid.uk2.off.irmpos$time) #ns
-
-df.div.sid.uk2.off.prepos <- subset(df.div.sid.uk2.off,time!="Irma")
-leveneTest(df.div.sid.uk2.off.prepos$Shannon,df.div.sid.uk2.off.prepos$time) #ns
-
-df.div.sid.uk2.off.preirm <- subset(df.div.sid.uk2.off,time!="Post")
-leveneTest(df.div.sid.uk2.off.preirm$Shannon,df.div.sid.uk2.off.preirm$time) #ns
-#       Df F value  Pr(>F)  
-# group  1  3.1925 0.08994 .
-#       19                  
 ```
 
 ### Shannon rads plot
@@ -313,8 +209,8 @@ gg.sh.rads.yr <- ggplot(df.div.rad,aes(x=time,y=Shannon,fill=time,color=time,sha
   #add color="black" here for outlines
   geom_boxplot(outlier.shape=NA,color="black",aes(alpha=zone))+
   ylab("Shannon index")+
-  xlab("Timepoint")+
-  ylim(0,7.5)+
+  xlab("Time point")+
+  ylim(0,7.6)+
   theme_bw()+
   scale_color_manual(values=c("#3B0F70","#FA7F53","#A8327D"))+
   scale_fill_manual(values=c("#3B0F70","#FA7F53","#A8327D"))+
@@ -335,13 +231,6 @@ gg.sh.rads.yr
 ### Shannon rads stats - zone
 
 ```{r shannon rads rz}
-shapiro.test(df.div.rad$Shannon) #good
-
-# a.sha <- aov(Shannon~time*site*zone*,data=df.div.rad)
-# summary(a.sha)
-# 
-# TukeyHSD(a.sha)
-
 # within site & year
 df.div.rad.15 <- subset(df.div.rad,time=="Pre")
 df.div.rad.17 <- subset(df.div.rad,time=="Irma")
@@ -377,7 +266,7 @@ df.div.18.uk2 <- subset(df.div.rad.18,site=="UK2")
 wilcox.test(Shannon~zone,data=df.div.15.uk2)#ns
 wilcox.test(Shannon~zone,data=df.div.17.uk2)#p < 0.05 *
 # data:  Shannon by zone
-# W = 12, p-value = 0.01061
+# W = 11, p-value = 0.01522
 wilcox.test(Shannon~zone,data=df.div.18.uk2)#ns
 ```
 

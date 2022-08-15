@@ -646,13 +646,18 @@ seqtab.cleanest <- data.frame(otu_table(ps.cleanest))
 
 Read in data & packages
 
-```{r read in data for batch processing}
+```{r read in data}
 library(ggplot2)
 library(vegan)
 library(phyloseq)
 
 setwd("/Volumes/GoogleDrive/My Drive/Flirma/flirma_networks/fl_16s/01.generate_asv_table")
-ps.cleanest <- readRDS("ps.cleanest.rds")
+#ps.temp <- readRDS("ps.cleanest.rds")
+##exclude UK3
+#ps.cleanest <- subset_samples(ps.temp,site!="UK3")
+#saveRDS(ps.cleanest, "ps.cleanest.nouk3.rds")
+
+ps.cleanest <- readRDS("ps.cleanest.nouk3.rds")
 taxa <- readRDS("fl16s.rd3.taxa.newids.rds")
 samdf <- read.csv("fl_sample_info - 16s_all_newvars.csv")
 row.names(samdf) <- samdf$sample_num
@@ -683,21 +688,21 @@ plot_ordination(ps.cleanest.rel,ps.cleanest.rel.ord,color="year")
 
 ### Rarefy
 
-```{r rarefy raw - do once then save & run again, eval=FALSE}
+```{r rarefy raw - do once then save, eval=FALSE}
 seqtab.cleanest <- data.frame(ps.cleanest@otu_table)
 
 rarecurve(seqtab.cleanest,step=500,label=FALSE) #after removing contaminants
 
 total <- rowSums(seqtab.cleanest)
-fewer <- subset(total, total <6500)
-#21 samples to remove, that's ~95% of samples which seems good
+fewer <- subset(total, total <6000)
+#18 samples to remove, that's ~95% of samples which seems good
 fewer
 
-row.names.remove <- c("1196","1200","1206","1207","1222","1236","1238","1143","1145","1146","1149","703","1171","1176","1071","1075","1086","1088","827","850","1119")
+row.names.remove <- c("1196","1200","1206","1207","1236","1238","1143","1145","1146","1149","1171","1176","1071","1086","1088","827","850","1119")
 seqtab.less <- seqtab.cleanest[!(row.names(seqtab.cleanest) %in% row.names.remove),]
-#335 left
+#298 left
 
-seqtab.rare <- rrarefy(seqtab.less,sample=6500)
+seqtab.rare <- rrarefy(seqtab.less,sample=6000)
 rarecurve(seqtab.rare,step=500,label=FALSE)
 
 #phyloseq object but rarefied
@@ -708,9 +713,9 @@ ps.rare
 
 #removing missing taxa - lost after rarefying
 ps.rare <- prune_taxa(taxa_sums(ps.rare) > 0, ps.rare)
-ps.rare #11978
+ps.rare #11897
 
-#saveRDS(ps.rare,file="ps.cleanest.rare6500.rds")
+#saveRDS(ps.rare,file="ps.cleanest.rare6000.rds")
 
 #remove samples from cleanest that were removed in rarefaction
 ps.less <- phyloseq(otu_table(seqtab.less, taxa_are_rows=FALSE), 
@@ -720,19 +725,17 @@ ps.less
 
 #removing missing taxa - lost after removing samples
 ps.less <- prune_taxa(taxa_sums(ps.less) > 0, ps.less)
-ps.less #11980
+ps.less #11907
 
 #saveRDS(ps.less,file="ps.cleanest.less.rds")
 ```
-
-*Note:* Using these two phyloseq objects (ps.less, ps.rare) in alpha diversity, because authors say not to use trimmed objects in alpha diversity (trimming below)
 
 #### Plot rarefied
 
 Worse?
 
 ```{r rare}
-ps.rare <- readRDS("ps.cleanest.rare6500.rds")
+ps.rare <- readRDS("ps.cleanest.rare6000.rds")
 ps.rare.ord <- ordinate(ps.rare, method="PCoA",distance="bray")
 plot_ordination(ps.rare,ps.rare.ord,color="year")
 ```
@@ -748,216 +751,22 @@ ps.rare.rel.ord <- ordinate(ps.rare.rel, method="PCoA",distance="bray")
 plot_ordination(ps.rare.rel,ps.rare.rel.ord,color="year")
 ```
 
-# OTU singletons trimmed
+Checking read depths after all this processing
 
 ```{r}
 ps.less <- readRDS("ps.cleanest.less.rds")
-#ps.rare <- readRDS("ps.cleanest.rare6500.rds")
+mean(sample_sums(ps.less))
+#40902.98
+sd(sample_sums(ps.less))
+#28402.7
+
+#saving some other info
+samdf.cleanest <- data.frame(ps.cleanest@sam_data)
+row.names(seqtab.cleanest)==row.names(samdf.cleanest)
+samdf.cleanest$depth <- rowSums(seqtab.cleanest)
+#write.csv(samdf.cleanest,file="samdf.cleanest.csv")
 ```
 
-```{r trim outliers, eval=FALSE}
-library(MCMC.OTU)
-
-ps.otu <- data.frame(ps.less@otu_table)
-
-#formatting the table for mcmc.otu - requires one first column that's 1 through whatever
-#& has "X" as column name
-nums <- 1:nrow(ps.otu) 
-samples <- rownames(ps.otu)
-
-int <- cbind(sample = 0, ps.otu)
-seq.formcmc <- cbind(X = 0, int)
-
-seq.formcmc$X <- nums
-seq.formcmc$sample <- samples
-
-seq.trim.allinfo <- purgeOutliers(seq.formcmc,count.columns=3:11982,sampleZcut=-2.5,otu.cut=0,zero.cut=0.00597)
-# [1] "samples with counts below z-score -2.5 :"
-# character(0)
-# [1] "zscores:"
-# named numeric(0)
-# [1] "OTUs with counts in 0.00597 of samples:"
-# 
-# FALSE  TRUE 
-#  1267 10713 
-
-#remove sample info
-seq.trim <- seq.trim.allinfo[,3:10715]
-
-ps.trim <- phyloseq(otu_table(seq.trim, taxa_are_rows=FALSE), 
-                    sample_data(samdf), 
-                    tax_table(taxa))
-ps.trim
-# phyloseq-class experiment-level object
-# otu_table()   OTU Table:         [ 10713 taxa and 335 samples ]
-# sample_data() Sample Data:       [ 335 samples by 11 sample variables ]
-# tax_table()   Taxonomy Table:    [ 10713 taxa by 8 taxonomic ranks ]
-
-#saveRDS(ps.trim,file="ps.cleanest.trim.rds")
-```
-
-Trimmed & rarefied for checks
-
-Ran once then just reading in file next time
-
-```{r, eval=F}
-seqtab.rare2 <- rrarefy(seq.trim,sample=6500)
-#rarecurve(seqtab.rare2,step=500,label=FALSE)
-
-#phyloseq object but rarefied
-ps.trim.rare <- phyloseq(otu_table(seqtab.rare2, taxa_are_rows=FALSE), 
-                    sample_data(samdf), 
-                    tax_table(taxa))
-ps.trim.rare
-
-#removing missing taxa - lost after rarefying
-ps.trim.rare <- prune_taxa(taxa_sums(ps.trim.rare) > 0, ps.trim.rare)
-ps.trim.rare #10711 taxa
-
-#saveRDS(ps.trim.rare,file="ps.cleanest.trim.rare.rds")
-```
-
-Plot trimmed
-
-```{r plot trimmed}
-ps.trim <- readRDS(file="ps.cleanest.trim.rds")
-ps.trim.ord <- ordinate(ps.trim,"NMDS","bray")
-
-plot_ordination(ps.trim,ps.trim.ord,color="year")+
-  stat_ellipse()
-```
-
-# Other normalizations
-
-Text from [microbiomeMarker](https://rdrr.io/github/yiluheihei/microbiomeMarker/man/normalize-methods.html)
-
-"CSS is based on the assumption that the count distributions in each sample are equivalent for low abundant genes up to a certain threshold. Only the segment of each sample’s count distribution that is relatively invariant across samples is scaled by CSS
-
-RLE assumes most features are not differential and uses the relative abundances to calculate the normalization factor.
-
-TMM calculates the normalization factor using a robust statistics based on the assumption that most features are not differential and should, in average, be equal between the samples. The TMM scaling factor is calculated as the weighted mean of log-ratios between each pair of samples, after excluding the highest count OTUs and OTUs with the largest log-fold change.
-
-In CLR, the log-ratios are computed relative to the geometric mean of all features."
-
-```{r CLR}
-ps.less.clr <- microbiome::transform(ps.less,"clr")
-ps.less.clr.ord <- ordinate(ps.less.clr,"PCoA","euclidean")
-
-plot_ordination(ps.less.clr,ps.less.clr.ord,color="year")+
-  stat_ellipse()
-
-plot_ordination(ps.less.clr,ps.less.clr.ord,color="year",shape="zone")+
-  facet_wrap(spp~site)+
-  stat_ellipse()
-
-#saveRDS(ps.less.clr,file="ps.cleanest.less.clr.rds")
-```
-
-```{r norm tmm}
-###TMM normalization
-#BiocManager::install("edgeR", update = FALSE)
-library(edgeR)
-
-seqs.types <- as.data.frame(ps.cleaner@otu_table)
-seqs.types.t <- t(seqs.types)
-
-SeqList = DGEList(counts = seqs.types.t)
-head(SeqList$samples)
-
-SeqNorm =  calcNormFactors(SeqList, method = "TMM")
-head(SeqNorm$samples)
-seq.tmm = t(cpm(SeqNorm, normalized.lib.sizes = TRUE))
-#saveRDS(seq.tmm,file="seq.cleaner.tmm.rds")
-```
-
-## PCA from batch effect walkthrough
-
-Below text taken from [here](https://github.com/EvaYiwenWang/Managing_batch_effects)
-will cite 'Wang 2020 managing batch effects in microbiome data' paper
-
-"LM and LMM are suitable for known batch effects, and can consider batch x treatment interaction and deal with unbalanced batch x treatment design. But they are univariate and rely on a Gaussian likelihood assumption, which may not apply to zero-inflated microbiome data despite CLR transformation.
-
-We fit a linear model with effect of interest and batch effect for each OTU in both sponge and AD data. The P-value for the regression coefficient associated with the *effect of interest* in a linear model is then extracted and multiple testing corrected with "FDR"."
-
-```{r batch packages}
-library("dplyr")
-#BiocManager::install("mixOmics")
-library("mixOmics")
-library("gridExtra")
-library("grid")
-```
-
-```{r}
-samdf.cleaner <- data.frame(ps.cleaner@sam_data)
-seqtab.cleaner <- data.frame(ps.cleaner@otu_table)
-row.names(samdf.cleaner)==row.names(seqtab.cleaner)
-
-#defining batch vs. treatments
-# samdf.cleaner <- samdf.cleaner %>%
-#   mutate(batch = if_else(year==2018,"run2","run1"))
-
-#if doing clr transformation, add 1 here
-ad.clr <- seqtab.cleaner + 1
-
-ad.clr <- logratio.transfo(ad.clr, logratio = 'CLR')
-
-class(ad.clr) <- 'matrix' 
-
-ad.batch <- samdf.cleaner$seq_run
-ad.trt <- samdf.cleaner$year
-
-ad.pca.before <- pca(ad.clr, ncomp = 3)
-data = as.data.frame(ad.pca.before$variates$X)
-batch = as.factor(ad.batch)
-trt = as.factor(ad.trt)
-expl.var = ad.pca.before$prop_expl_var$X
-
-pMain <- ggplot(data = data, aes(x = data[ ,1], y = data[ ,2], colour = batch, shape = trt)) + 
-  geom_point()+ 
-  xlab(paste0('PC1: ', round(as.numeric(expl.var[1])*100), '% expl.var')) + 
-  ylab(paste0('PC2: ', round(as.numeric(expl.var[2])*100), '% expl.var')) + 
-  scale_color_manual(values = color.mixo(1:10)) + 
-  theme_bw()+
-  stat_ellipse()
-#xlim(xlim[1], xlim[2]) + 
-#ylim(ylim[1], ylim[2]) + 
-#labs(colour = batch.legend.title, shape = trt.legend.title)
-pMain  
-
-pTop <- ggplot(data,aes(x = data[ ,1], fill = batch, linetype = trt)) + 
-  geom_density(alpha = 0.5) + 
-  ylab('Density') 
-
-pRight <- ggplot(data, aes(x=data[ ,2], fill = batch,linetype=trt)) + 
-  geom_density(alpha = 0.5) +  coord_flip() + ylab('Density') 
-
-grid.arrange(pTop, pMain, pRight)
-```
-
-```{r heat map, eval=FALSE}
-ad.clr.scale <- scale(ad.clr,center = T, scale = T)
-ad.clr.scale <- scale(t(ad.clr.scale), center = T, scale = T)
-
-ad.anno_col <- data.frame(Batch = ad.batch, Treatment = ad.trt)
-ad.anno_metabo_colors <- list(Batch = c('run1'="red",'run2'="blue"), 
-                             Treatment = c("2018"="orange","2017"="purple","2016"="green","2015"="lightblue"))
-
-library("pheatmap")
-
-pheatmap(ad.clr.scale, 
-         scale = 'none', 
-         cluster_rows = F, 
-         cluster_cols = T, 
-         fontsize_row = 4, fontsize_col = 6,
-         fontsize = 8,
-         clustering_distance_rows = 'euclidean',
-         clustering_method = 'ward.D',
-         treeheight_row = 30,
-         annotation_col = ad.anno_col,
-         annotation_colors = ad.anno_metabo_colors,
-         border_color = 'NA',
-         main = 'Scaled')
-```
 
 
 

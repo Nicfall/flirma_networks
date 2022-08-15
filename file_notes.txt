@@ -18,10 +18,4 @@ R data frames:
 Phyloseq objects
 - ps.cleanest = neg controls removed, ncbi & dada2 taxonomy checked
 - ps.cleanest.less = 21 low read samples removed [only for alpha diversity]
-- ps.cleanest.less.rare = rarefied to 6500 [only for alpha diversity]
-- ps.cleanest.trim = OTUs only present in <2 samples removed
-- ps.cleanest.trim.rare = trim object^ rarefied to 6500
-
-
-02. diversity
--------------
+- ps.cleanest.rare6000 = rarefied to 6000 

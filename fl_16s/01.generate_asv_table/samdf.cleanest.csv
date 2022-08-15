@@ -1,0 +1,317 @@
+"","sample_num","full_site","site","zone","site_zone","sample","spp","year","time","season","seq_run","lib_size","is.neg","depth"
+"1190","1190","W Washer","LK1","Inshore","LK1-I","LK1-I_1190","srad","2018","Post","Fall","run2",34936,FALSE,32898
+"1191","1191","W Washer","LK1","Inshore","LK1-I","LK1-I_1191","srad","2018","Post","Fall","run2",19013,FALSE,18815
+"1192","1192","W Washer","LK1","Inshore","LK1-I","LK1-I_1192","srad","2018","Post","Fall","run2",7953,FALSE,7699
+"1193","1193","W Washer","LK1","Inshore","LK1-I","LK1-I_1193","srad","2018","Post","Fall","run2",32412,FALSE,31440
+"1194","1194","W Washer","LK1","Inshore","LK1-I","LK1-I_1194","srad","2018","Post","Fall","run2",41858,FALSE,40400
+"1196","1196","W Washer","LK1","Inshore","LK1-I","LK1-I_1196","srad","2018","Post","Fall","run2",4936,FALSE,4877
+"1197","1197","W Washer","LK1","Inshore","LK1-I","LK1-I_1197","srad","2018","Post","Fall","run2",13866,FALSE,13422
+"1198","1198","W Washer","LK1","Inshore","LK1-I","LK1-I_1198","srad","2018","Post","Fall","run2",10941,FALSE,10597
+"1199","1199","W Washer","LK1","Inshore","LK1-I","LK1-I_1199","srad","2018","Post","Fall","run2",10593,FALSE,10447
+"1200","1200","W Washer","LK1","Inshore","LK1-I","LK1-I_1200","ssid","2018","Post","Fall","run2",4258,FALSE,4002
+"1201","1201","W Washer","LK1","Inshore","LK1-I","LK1-I_1201","ssid","2018","Post","Fall","run2",31112,FALSE,30583
+"1202","1202","W Washer","LK1","Inshore","LK1-I","LK1-I_1202","ssid","2018","Post","Fall","run2",27776,FALSE,27544
+"1203","1203","W Washer","LK1","Inshore","LK1-I","LK1-I_1203","ssid","2018","Post","Fall","run2",24647,FALSE,23847
+"1204","1204","W Washer","LK1","Inshore","LK1-I","LK1-I_1204","ssid","2018","Post","Fall","run2",39641,FALSE,38446
+"1205","1205","W Washer","LK1","Inshore","LK1-I","LK1-I_1205","ssid","2018","Post","Fall","run2",22638,FALSE,22219
+"1206","1206","W Washer","LK1","Inshore","LK1-I","LK1-I_1206","ssid","2018","Post","Fall","run2",3654,FALSE,3566
+"1207","1207","W Washer","LK1","Inshore","LK1-I","LK1-I_1207","ssid","2018","Post","Fall","run2",5361,FALSE,5361
+"1208","1208","W Washer","LK1","Inshore","LK1-I","LK1-I_1208","ssid","2018","Post","Fall","run2",14735,FALSE,14429
+"1209","1209","W Washer","LK1","Inshore","LK1-I","LK1-I_1209","ssid","2018","Post","Fall","run2",25162,FALSE,24248
+"947","947","W Washer","LK1","Inshore","LK1-I","LK1-I_947","ssid","2017","Irma","Fall","run1",34886,FALSE,34145
+"948","948","W Washer","LK1","Inshore","LK1-I","LK1-I_948","ssid","2017","Irma","Fall","run1",100818,FALSE,99942
+"949","949","W Washer","LK1","Inshore","LK1-I","LK1-I_949","ssid","2017","Irma","Fall","run1",19912,FALSE,19483
+"950","950","W Washer","LK1","Inshore","LK1-I","LK1-I_950","ssid","2017","Irma","Fall","run1",28490,FALSE,27874
+"951","951","W Washer","LK1","Inshore","LK1-I","LK1-I_951","ssid","2017","Irma","Fall","run1",96361,FALSE,94705
+"952","952","W Washer","LK1","Inshore","LK1-I","LK1-I_952","ssid","2017","Irma","Fall","run1",30449,FALSE,29611
+"953","953","W Washer","LK1","Inshore","LK1-I","LK1-I_953","ssid","2017","Irma","Fall","run1",38703,FALSE,38114
+"955","955","W Washer","LK1","Inshore","LK1-I","LK1-I_955","ssid","2017","Irma","Fall","run1",68299,FALSE,67664
+"956","956","W Washer","LK1","Inshore","LK1-I","LK1-I_956","srad","2017","Irma","Fall","run1",24663,FALSE,24516
+"957","957","W Washer","LK1","Inshore","LK1-I","LK1-I_957","srad","2017","Irma","Fall","run1",66939,FALSE,66454
+"958","958","W Washer","LK1","Inshore","LK1-I","LK1-I_958","srad","2017","Irma","Fall","run1",27456,FALSE,27232
+"959","959","W Washer","LK1","Inshore","LK1-I","LK1-I_959","srad","2017","Irma","Fall","run1",32444,FALSE,32041
+"960","960","W Washer","LK1","Inshore","LK1-I","LK1-I_960","srad","2017","Irma","Fall","run1",145579,FALSE,145276
+"961","961","W Washer","LK1","Inshore","LK1-I","LK1-I_961","srad","2017","Irma","Fall","run1",20227,FALSE,19618
+"962","962","W Washer","LK1","Inshore","LK1-I","LK1-I_962","srad","2017","Irma","Fall","run1",40289,FALSE,39634
+"963","963","W Washer","LK1","Inshore","LK1-I","LK1-I_963","srad","2017","Irma","Fall","run1",18759,FALSE,18183
+"964","964","W Washer","LK1","Inshore","LK1-I","LK1-I_964","srad","2017","Irma","Fall","run1",19537,FALSE,19460
+"965","965","W Washer","LK1","Inshore","LK1-I","LK1-I_965","ssid","2017","Irma","Fall","run1",27610,FALSE,27450
+"976","976","W Washer","LK1","Inshore","LK1-I","LK1-I_976","srad","2017","Irma","Fall","run1",42341,FALSE,42060
+"977","977","W Washer","LK1","Inshore","LK1-I","LK1-I_977","ssid","2016","Pre","Spring","run1",16706,FALSE,16634
+"978","978","W Washer","LK1","Inshore","LK1-I","LK1-I_978","ssid","2016","Pre","Spring","run1",51477,FALSE,50376
+"979","979","W Washer","LK1","Inshore","LK1-I","LK1-I_979","ssid","2016","Pre","Spring","run1",39700,FALSE,36379
+"980","980","W Washer","LK1","Inshore","LK1-I","LK1-I_980","ssid","2016","Pre","Spring","run1",25242,FALSE,25046
+"981","981","W Washer","LK1","Inshore","LK1-I","LK1-I_981","ssid","2016","Pre","Spring","run1",46084,FALSE,45723
+"982","982","W Washer","LK1","Inshore","LK1-I","LK1-I_982","ssid","2016","Pre","Spring","run1",36939,FALSE,36579
+"983","983","W Washer","LK1","Inshore","LK1-I","LK1-I_983","ssid","2016","Pre","Spring","run1",28300,FALSE,28015
+"984","984","W Washer","LK1","Inshore","LK1-I","LK1-I_984","ssid","2016","Pre","Spring","run1",56737,FALSE,55195
+"985","985","W Washer","LK1","Inshore","LK1-I","LK1-I_985","ssid","2016","Pre","Spring","run1",31217,FALSE,31085
+"986","986","W Washer","LK1","Inshore","LK1-I","LK1-I_986","ssid","2016","Pre","Spring","run1",17853,FALSE,17708
+"988","988","W Washer","LK1","Inshore","LK1-I","LK1-I_988","srad","2016","Pre","Spring","run1",40577,FALSE,39627
+"989","989","W Washer","LK1","Inshore","LK1-I","LK1-I_989","srad","2016","Pre","Spring","run1",16585,FALSE,16396
+"990","990","W Washer","LK1","Inshore","LK1-I","LK1-I_990","srad","2016","Pre","Spring","run1",32026,FALSE,29386
+"991","991","W Washer","LK1","Inshore","LK1-I","LK1-I_991","srad","2016","Pre","Spring","run1",82228,FALSE,81225
+"992","992","W Washer","LK1","Inshore","LK1-I","LK1-I_992","srad","2016","Pre","Spring","run1",55144,FALSE,54780
+"993","993","W Washer","LK1","Inshore","LK1-I","LK1-I_993","srad","2016","Pre","Spring","run1",20445,FALSE,20087
+"994","994","W Washer","LK1","Inshore","LK1-I","LK1-I_994","srad","2016","Pre","Spring","run1",113070,FALSE,111990
+"995","995","W Washer","LK1","Inshore","LK1-I","LK1-I_995","srad","2016","Pre","Spring","run1",57612,FALSE,57469
+"996","996","W Washer","LK1","Inshore","LK1-I","LK1-I_996","srad","2016","Pre","Spring","run1",24749,FALSE,24416
+"10","10","E Sambo","LK1","Offshore","LK1-O","LK1-O_10","ssid","2015","Pre","Spring","run1",37467,FALSE,36707
+"1221","1221","E Sambo","LK1","Offshore","LK1-O","LK1-O_1221","srad","2018","Post","Fall","run2",11139,FALSE,10974
+"1222","1222","E Sambo","LK1","Offshore","LK1-O","LK1-O_1222","srad","2018","Post","Fall","run2",6828,FALSE,6393
+"1223","1223","E Sambo","LK1","Offshore","LK1-O","LK1-O_1223","srad","2018","Post","Fall","run2",36756,FALSE,35316
+"1225","1225","E Sambo","LK1","Offshore","LK1-O","LK1-O_1225","srad","2018","Post","Fall","run2",19596,FALSE,19109
+"1226","1226","E Sambo","LK1","Offshore","LK1-O","LK1-O_1226","srad","2018","Post","Fall","run2",19896,FALSE,19762
+"1227","1227","E Sambo","LK1","Offshore","LK1-O","LK1-O_1227","srad","2018","Post","Fall","run2",12426,FALSE,12292
+"1228","1228","E Sambo","LK1","Offshore","LK1-O","LK1-O_1228","srad","2018","Post","Fall","run2",7224,FALSE,7070
+"1230","1230","E Sambo","LK1","Offshore","LK1-O","LK1-O_1230","ssid","2018","Post","Fall","run2",46758,FALSE,44382
+"1231","1231","E Sambo","LK1","Offshore","LK1-O","LK1-O_1231","ssid","2018","Post","Fall","run2",25118,FALSE,24585
+"1232","1232","E Sambo","LK1","Offshore","LK1-O","LK1-O_1232","ssid","2018","Post","Fall","run2",40485,FALSE,39674
+"1233","1233","E Sambo","LK1","Offshore","LK1-O","LK1-O_1233","ssid","2018","Post","Fall","run2",25051,FALSE,24731
+"1234","1234","E Sambo","LK1","Offshore","LK1-O","LK1-O_1234","ssid","2018","Post","Fall","run2",11595,FALSE,11334
+"1235","1235","E Sambo","LK1","Offshore","LK1-O","LK1-O_1235","ssid","2018","Post","Fall","run2",8535,FALSE,8510
+"1236","1236","E Sambo","LK1","Offshore","LK1-O","LK1-O_1236","ssid","2018","Post","Fall","run2",5871,FALSE,5744
+"1237","1237","E Sambo","LK1","Offshore","LK1-O","LK1-O_1237","ssid","2018","Post","Fall","run2",8659,FALSE,8628
+"1238","1238","E Sambo","LK1","Offshore","LK1-O","LK1-O_1238","ssid","2018","Post","Fall","run2",4246,FALSE,4060
+"1","1","E Sambo","LK1","Offshore","LK1-O","LK1-O_1","ssid","2015","Pre","Spring","run1",54804,FALSE,54238
+"21","21","E Sambo","LK1","Offshore","LK1-O","LK1-O_21","srad","2015","Pre","Spring","run1",39655,FALSE,38657
+"22","22","E Sambo","LK1","Offshore","LK1-O","LK1-O_22","srad","2015","Pre","Spring","run1",65465,FALSE,64498
+"23","23","E Sambo","LK1","Offshore","LK1-O","LK1-O_23","srad","2015","Pre","Spring","run1",76481,FALSE,76003
+"24","24","E Sambo","LK1","Offshore","LK1-O","LK1-O_24","srad","2015","Pre","Spring","run1",31588,FALSE,31212
+"25","25","E Sambo","LK1","Offshore","LK1-O","LK1-O_25","srad","2015","Pre","Spring","run1",111940,FALSE,110407
+"26","26","E Sambo","LK1","Offshore","LK1-O","LK1-O_26","srad","2015","Pre","Spring","run1",48581,FALSE,47896
+"27","27","E Sambo","LK1","Offshore","LK1-O","LK1-O_27","srad","2015","Pre","Spring","run1",32262,FALSE,32026
+"28","28","E Sambo","LK1","Offshore","LK1-O","LK1-O_28","srad","2015","Pre","Spring","run1",103799,FALSE,102720
+"29","29","E Sambo","LK1","Offshore","LK1-O","LK1-O_29","srad","2015","Pre","Spring","run1",48318,FALSE,47331
+"2","2","E Sambo","LK1","Offshore","LK1-O","LK1-O_2","ssid","2015","Pre","Spring","run1",70480,FALSE,70003
+"30","30","E Sambo","LK1","Offshore","LK1-O","LK1-O_30","srad","2015","Pre","Spring","run1",90325,FALSE,89010
+"3","3","E Sambo","LK1","Offshore","LK1-O","LK1-O_3","ssid","2015","Pre","Spring","run1",34089,FALSE,33654
+"4","4","E Sambo","LK1","Offshore","LK1-O","LK1-O_4","ssid","2015","Pre","Spring","run1",41597,FALSE,40963
+"5","5","E Sambo","LK1","Offshore","LK1-O","LK1-O_5","ssid","2015","Pre","Spring","run1",169421,FALSE,167315
+"6","6","E Sambo","LK1","Offshore","LK1-O","LK1-O_6","ssid","2015","Pre","Spring","run1",45741,FALSE,44951
+"7","7","E Sambo","LK1","Offshore","LK1-O","LK1-O_7","ssid","2015","Pre","Spring","run1",87762,FALSE,86408
+"8","8","E Sambo","LK1","Offshore","LK1-O","LK1-O_8","ssid","2015","Pre","Spring","run1",78822,FALSE,77727
+"916","916","E Sambo","LK1","Offshore","LK1-O","LK1-O_916","ssid","2017","Irma","Fall","run1",21867,FALSE,20820
+"917","917","E Sambo","LK1","Offshore","LK1-O","LK1-O_917","ssid","2017","Irma","Fall","run1",33792,FALSE,33367
+"918","918","E Sambo","LK1","Offshore","LK1-O","LK1-O_918","ssid","2017","Irma","Fall","run1",32580,FALSE,32173
+"919","919","E Sambo","LK1","Offshore","LK1-O","LK1-O_919","ssid","2017","Irma","Fall","run1",120754,FALSE,120529
+"921","921","E Sambo","LK1","Offshore","LK1-O","LK1-O_921","ssid","2017","Irma","Fall","run1",20881,FALSE,20762
+"922","922","E Sambo","LK1","Offshore","LK1-O","LK1-O_922","ssid","2017","Irma","Fall","run1",30172,FALSE,29883
+"923","923","E Sambo","LK1","Offshore","LK1-O","LK1-O_923","ssid","2017","Irma","Fall","run1",72210,FALSE,58693
+"924","924","E Sambo","LK1","Offshore","LK1-O","LK1-O_924","ssid","2017","Irma","Fall","run1",47619,FALSE,44316
+"925","925","E Sambo","LK1","Offshore","LK1-O","LK1-O_925","ssid","2017","Irma","Fall","run1",25177,FALSE,24593
+"926","926","E Sambo","LK1","Offshore","LK1-O","LK1-O_926","srad","2017","Irma","Fall","run1",19929,FALSE,19433
+"927","927","E Sambo","LK1","Offshore","LK1-O","LK1-O_927","srad","2017","Irma","Fall","run1",77508,FALSE,76726
+"928","928","E Sambo","LK1","Offshore","LK1-O","LK1-O_928","srad","2017","Irma","Fall","run1",41533,FALSE,39718
+"929","929","E Sambo","LK1","Offshore","LK1-O","LK1-O_929","srad","2017","Irma","Fall","run1",45938,FALSE,45014
+"930","930","E Sambo","LK1","Offshore","LK1-O","LK1-O_930","srad","2017","Irma","Fall","run1",19263,FALSE,18684
+"931","931","E Sambo","LK1","Offshore","LK1-O","LK1-O_931","srad","2017","Irma","Fall","run1",71057,FALSE,68578
+"932","932","E Sambo","LK1","Offshore","LK1-O","LK1-O_932","srad","2017","Irma","Fall","run1",40744,FALSE,40604
+"933","933","E Sambo","LK1","Offshore","LK1-O","LK1-O_933","srad","2017","Irma","Fall","run1",61475,FALSE,61173
+"934","934","E Sambo","LK1","Offshore","LK1-O","LK1-O_934","srad","2017","Irma","Fall","run1",93083,FALSE,91795
+"935","935","E Sambo","LK1","Offshore","LK1-O","LK1-O_935","srad","2017","Irma","Fall","run1",25110,FALSE,24861
+"943","943","E Sambo","LK1","Offshore","LK1-O","LK1-O_943","ssid","2017","Irma","Fall","run1",41263,FALSE,41197
+"1140","1140","Cheeca Rocks","UK1","Inshore","UK1-I","UK1-I_1140","ssid","2018","Post","Fall","run2",44832,FALSE,44685
+"1141","1141","Cheeca Rocks","UK1","Inshore","UK1-I","UK1-I_1141","ssid","2018","Post","Fall","run2",21473,FALSE,21340
+"1142","1142","Cheeca Rocks","UK1","Inshore","UK1-I","UK1-I_1142","ssid","2018","Post","Fall","run2",13550,FALSE,12873
+"1143","1143","Cheeca Rocks","UK1","Inshore","UK1-I","UK1-I_1143","ssid","2018","Post","Fall","run2",4737,FALSE,4513
+"1144","1144","Cheeca Rocks","UK1","Inshore","UK1-I","UK1-I_1144","ssid","2018","Post","Fall","run2",10558,FALSE,10114
+"1145","1145","Cheeca Rocks","UK1","Inshore","UK1-I","UK1-I_1145","ssid","2018","Post","Fall","run2",4292,FALSE,4286
+"1146","1146","Cheeca Rocks","UK1","Inshore","UK1-I","UK1-I_1146","ssid","2018","Post","Fall","run2",2679,FALSE,2608
+"1147","1147","Cheeca Rocks","UK1","Inshore","UK1-I","UK1-I_1147","ssid","2018","Post","Fall","run2",8034,FALSE,7797
+"1149","1149","Cheeca Rocks","UK1","Inshore","UK1-I","UK1-I_1149","ssid","2018","Post","Fall","run2",4680,FALSE,4305
+"61","61","Cheeca Rocks","UK1","Inshore","UK1-I","UK1-I_61","ssid","2015","Pre","Spring","run1",46254,FALSE,46086
+"62","62","Cheeca Rocks","UK1","Inshore","UK1-I","UK1-I_62","ssid","2015","Pre","Spring","run1",23378,FALSE,22999
+"63","63","Cheeca Rocks","UK1","Inshore","UK1-I","UK1-I_63","ssid","2015","Pre","Spring","run1",53056,FALSE,52488
+"64","64","Cheeca Rocks","UK1","Inshore","UK1-I","UK1-I_64","ssid","2015","Pre","Spring","run1",31710,FALSE,31374
+"65","65","Cheeca Rocks","UK1","Inshore","UK1-I","UK1-I_65","ssid","2015","Pre","Spring","run1",21814,FALSE,21452
+"66","66","Cheeca Rocks","UK1","Inshore","UK1-I","UK1-I_66","ssid","2015","Pre","Spring","run1",57256,FALSE,56678
+"67","67","Cheeca Rocks","UK1","Inshore","UK1-I","UK1-I_67","ssid","2015","Pre","Spring","run1",25109,FALSE,25047
+"68","68","Cheeca Rocks","UK1","Inshore","UK1-I","UK1-I_68","ssid","2015","Pre","Spring","run1",42722,FALSE,42415
+"69","69","Cheeca Rocks","UK1","Inshore","UK1-I","UK1-I_69","ssid","2015","Pre","Spring","run1",108060,FALSE,106755
+"701","701","Cheeca Rocks","UK1","Inshore","UK1-I","UK1-I_701","ssid","2017","Irma","Fall","run1",30123,FALSE,29349
+"702","702","Cheeca Rocks","UK1","Inshore","UK1-I","UK1-I_702","ssid","2017","Irma","Fall","run1",23417,FALSE,23197
+"703","703","Cheeca Rocks","UK1","Inshore","UK1-I","UK1-I_703","ssid","2017","Irma","Fall","run1",6191,FALSE,6071
+"704","704","Cheeca Rocks","UK1","Inshore","UK1-I","UK1-I_704","ssid","2017","Irma","Fall","run1",58715,FALSE,57878
+"705","705","Cheeca Rocks","UK1","Inshore","UK1-I","UK1-I_705","ssid","2017","Irma","Fall","run1",23770,FALSE,23491
+"706","706","Cheeca Rocks","UK1","Inshore","UK1-I","UK1-I_706","ssid","2017","Irma","Fall","run1",21010,FALSE,20849
+"707","707","Cheeca Rocks","UK1","Inshore","UK1-I","UK1-I_707","ssid","2017","Irma","Fall","run1",37548,FALSE,36886
+"708","708","Cheeca Rocks","UK1","Inshore","UK1-I","UK1-I_708","ssid","2017","Irma","Fall","run1",26974,FALSE,26885
+"709","709","Cheeca Rocks","UK1","Inshore","UK1-I","UK1-I_709","ssid","2017","Irma","Fall","run1",26307,FALSE,26177
+"70","70","Cheeca Rocks","UK1","Inshore","UK1-I","UK1-I_70","ssid","2015","Pre","Spring","run1",67150,FALSE,66702
+"710","710","Cheeca Rocks","UK1","Inshore","UK1-I","UK1-I_710","ssid","2017","Irma","Fall","run1",40026,FALSE,39222
+"711","711","Cheeca Rocks","UK1","Inshore","UK1-I","UK1-I_711","ssid","2017","Irma","Fall","run1",41612,FALSE,40434
+"725","725","Cheeca Rocks","UK1","Inshore","UK1-I","UK1-I_725","ssid","2017","Irma","Fall","run1",31010,FALSE,30297
+"726","726","Cheeca Rocks","UK1","Inshore","UK1-I","UK1-I_726","srad","2017","Irma","Fall","run1",50218,FALSE,49036
+"727","727","Cheeca Rocks","UK1","Inshore","UK1-I","UK1-I_727","srad","2017","Irma","Fall","run1",33900,FALSE,33575
+"729","729","Cheeca Rocks","UK1","Inshore","UK1-I","UK1-I_729","srad","2017","Irma","Fall","run1",31500,FALSE,31030
+"731","731","Cheeca Rocks","UK1","Inshore","UK1-I","UK1-I_731","srad","2017","Irma","Fall","run1",14432,FALSE,13687
+"732","732","Cheeca Rocks","UK1","Inshore","UK1-I","UK1-I_732","srad","2017","Irma","Fall","run1",34494,FALSE,33772
+"733","733","Cheeca Rocks","UK1","Inshore","UK1-I","UK1-I_733","srad","2017","Irma","Fall","run1",47660,FALSE,47048
+"735","735","Cheeca Rocks","UK1","Inshore","UK1-I","UK1-I_735","srad","2017","Irma","Fall","run1",86224,FALSE,83507
+"81","81","Cheeca Rocks","UK1","Inshore","UK1-I","UK1-I_81","srad","2015","Pre","Spring","run1",47065,FALSE,43050
+"82","82","Cheeca Rocks","UK1","Inshore","UK1-I","UK1-I_82","srad","2015","Pre","Spring","run1",56736,FALSE,55802
+"83","83","Cheeca Rocks","UK1","Inshore","UK1-I","UK1-I_83","srad","2015","Pre","Spring","run1",38724,FALSE,37877
+"84","84","Cheeca Rocks","UK1","Inshore","UK1-I","UK1-I_84","srad","2015","Pre","Spring","run1",20908,FALSE,20233
+"85","85","Cheeca Rocks","UK1","Inshore","UK1-I","UK1-I_85","srad","2015","Pre","Spring","run1",17953,FALSE,17864
+"86","86","Cheeca Rocks","UK1","Inshore","UK1-I","UK1-I_86","srad","2015","Pre","Spring","run1",40477,FALSE,40176
+"87","87","Cheeca Rocks","UK1","Inshore","UK1-I","UK1-I_87","srad","2015","Pre","Spring","run1",25102,FALSE,24754
+"88","88","Cheeca Rocks","UK1","Inshore","UK1-I","UK1-I_88","srad","2015","Pre","Spring","run1",116632,FALSE,115482
+"89","89","Cheeca Rocks","UK1","Inshore","UK1-I","UK1-I_89","srad","2015","Pre","Spring","run1",12968,FALSE,12679
+"90","90","Cheeca Rocks","UK1","Inshore","UK1-I","UK1-I_90","srad","2015","Pre","Spring","run1",16164,FALSE,16039
+"1170","1170","Rocky Top","UK1","Offshore","UK1-O","UK1-O_1170","ssid","2018","Post","Fall","run2",23423,FALSE,22230
+"1171","1171","Rocky Top","UK1","Offshore","UK1-O","UK1-O_1171","ssid","2018","Post","Fall","run2",3760,FALSE,3485
+"1172","1172","Rocky Top","UK1","Offshore","UK1-O","UK1-O_1172","ssid","2018","Post","Fall","run2",28474,FALSE,28091
+"1173","1173","Rocky Top","UK1","Offshore","UK1-O","UK1-O_1173","ssid","2018","Post","Fall","run2",29454,FALSE,29240
+"1174","1174","Rocky Top","UK1","Offshore","UK1-O","UK1-O_1174","ssid","2018","Post","Fall","run2",28806,FALSE,26431
+"1175","1175","Rocky Top","UK1","Offshore","UK1-O","UK1-O_1175","ssid","2018","Post","Fall","run2",28238,FALSE,27511
+"1176","1176","Rocky Top","UK1","Offshore","UK1-O","UK1-O_1176","ssid","2018","Post","Fall","run2",5975,FALSE,5937
+"1177","1177","Rocky Top","UK1","Offshore","UK1-O","UK1-O_1177","ssid","2018","Post","Fall","run2",7248,FALSE,7009
+"1178","1178","Rocky Top","UK1","Offshore","UK1-O","UK1-O_1178","ssid","2018","Post","Fall","run2",11224,FALSE,10989
+"1179","1179","Rocky Top","UK1","Offshore","UK1-O","UK1-O_1179","ssid","2018","Post","Fall","run2",15910,FALSE,15597
+"31","31","Rocky Top","UK1","Offshore","UK1-O","UK1-O_31","ssid","2015","Pre","Spring","run1",58435,FALSE,58086
+"32","32","Rocky Top","UK1","Offshore","UK1-O","UK1-O_32","ssid","2015","Pre","Spring","run1",26430,FALSE,26252
+"33","33","Rocky Top","UK1","Offshore","UK1-O","UK1-O_33","ssid","2015","Pre","Spring","run1",34772,FALSE,32036
+"35","35","Rocky Top","UK1","Offshore","UK1-O","UK1-O_35","ssid","2015","Pre","Spring","run1",9590,FALSE,9583
+"36","36","Rocky Top","UK1","Offshore","UK1-O","UK1-O_36","ssid","2015","Pre","Spring","run1",17428,FALSE,17342
+"37","37","Rocky Top","UK1","Offshore","UK1-O","UK1-O_37","ssid","2015","Pre","Spring","run1",96914,FALSE,95833
+"38","38","Rocky Top","UK1","Offshore","UK1-O","UK1-O_38","ssid","2015","Pre","Spring","run1",96585,FALSE,96070
+"39","39","Rocky Top","UK1","Offshore","UK1-O","UK1-O_39","ssid","2015","Pre","Spring","run1",51237,FALSE,50426
+"40","40","Rocky Top","UK1","Offshore","UK1-O","UK1-O_40","ssid","2015","Pre","Spring","run1",60700,FALSE,59929
+"51","51","Rocky Top","UK1","Offshore","UK1-O","UK1-O_51","srad","2015","Pre","Spring","run1",167874,FALSE,165018
+"52","52","Rocky Top","UK1","Offshore","UK1-O","UK1-O_52","srad","2015","Pre","Spring","run1",62302,FALSE,61703
+"53","53","Rocky Top","UK1","Offshore","UK1-O","UK1-O_53","srad","2015","Pre","Spring","run1",70484,FALSE,69382
+"54","54","Rocky Top","UK1","Offshore","UK1-O","UK1-O_54","srad","2015","Pre","Spring","run1",181630,FALSE,179179
+"55","55","Rocky Top","UK1","Offshore","UK1-O","UK1-O_55","srad","2015","Pre","Spring","run1",40297,FALSE,39743
+"56","56","Rocky Top","UK1","Offshore","UK1-O","UK1-O_56","srad","2015","Pre","Spring","run1",54968,FALSE,54513
+"57","57","Rocky Top","UK1","Offshore","UK1-O","UK1-O_57","srad","2015","Pre","Spring","run1",48652,FALSE,48312
+"58","58","Rocky Top","UK1","Offshore","UK1-O","UK1-O_58","srad","2015","Pre","Spring","run1",61825,FALSE,61022
+"59","59","Rocky Top","UK1","Offshore","UK1-O","UK1-O_59","srad","2015","Pre","Spring","run1",22626,FALSE,22437
+"60","60","Rocky Top","UK1","Offshore","UK1-O","UK1-O_60","srad","2015","Pre","Spring","run1",55139,FALSE,53904
+"761","761","Rocky Top","UK1","Offshore","UK1-O","UK1-O_761","ssid","2017","Irma","Fall","run1",20680,FALSE,19950
+"762","762","Rocky Top","UK1","Offshore","UK1-O","UK1-O_762","ssid","2017","Irma","Fall","run1",36846,FALSE,36828
+"763","763","Rocky Top","UK1","Offshore","UK1-O","UK1-O_763","ssid","2017","Irma","Fall","run1",39365,FALSE,38997
+"764","764","Rocky Top","UK1","Offshore","UK1-O","UK1-O_764","ssid","2017","Irma","Fall","run1",42288,FALSE,42266
+"765","765","Rocky Top","UK1","Offshore","UK1-O","UK1-O_765","ssid","2017","Irma","Fall","run1",44118,FALSE,43804
+"766","766","Rocky Top","UK1","Offshore","UK1-O","UK1-O_766","ssid","2017","Irma","Fall","run1",40342,FALSE,39892
+"767","767","Rocky Top","UK1","Offshore","UK1-O","UK1-O_767","ssid","2017","Irma","Fall","run1",92002,FALSE,91446
+"768","768","Rocky Top","UK1","Offshore","UK1-O","UK1-O_768","ssid","2017","Irma","Fall","run1",23848,FALSE,23481
+"769","769","Rocky Top","UK1","Offshore","UK1-O","UK1-O_769","ssid","2017","Irma","Fall","run1",80919,FALSE,80020
+"770","770","Rocky Top","UK1","Offshore","UK1-O","UK1-O_770","ssid","2017","Irma","Fall","run1",50572,FALSE,50249
+"771","771","Rocky Top","UK1","Offshore","UK1-O","UK1-O_771","ssid","2017","Irma","Fall","run1",72108,FALSE,70745
+"772","772","Rocky Top","UK1","Offshore","UK1-O","UK1-O_772","ssid","2017","Irma","Fall","run1",40075,FALSE,39519
+"1070","1070","Basin Hill","UK2","Inshore","UK2-I","UK2-I_1070","srad","2018","Post","Fall","run2",16300,FALSE,15577
+"1071","1071","Basin Hill","UK2","Inshore","UK2-I","UK2-I_1071","srad","2018","Post","Fall","run2",4445,FALSE,4003
+"1072","1072","Basin Hill","UK2","Inshore","UK2-I","UK2-I_1072","srad","2018","Post","Fall","run2",19878,FALSE,19775
+"1073","1073","Basin Hill","UK2","Inshore","UK2-I","UK2-I_1073","srad","2018","Post","Fall","run2",28429,FALSE,27858
+"1074","1074","Basin Hill","UK2","Inshore","UK2-I","UK2-I_1074","srad","2018","Post","Fall","run2",16251,FALSE,15664
+"1075","1075","Basin Hill","UK2","Inshore","UK2-I","UK2-I_1075","srad","2018","Post","Fall","run2",6516,FALSE,6391
+"1076","1076","Basin Hill","UK2","Inshore","UK2-I","UK2-I_1076","srad","2018","Post","Fall","run2",14304,FALSE,13647
+"1077","1077","Basin Hill","UK2","Inshore","UK2-I","UK2-I_1077","srad","2018","Post","Fall","run2",21125,FALSE,20938
+"1078","1078","Basin Hill","UK2","Inshore","UK2-I","UK2-I_1078","srad","2018","Post","Fall","run2",28531,FALSE,28453
+"1079","1079","Basin Hill","UK2","Inshore","UK2-I","UK2-I_1079","srad","2018","Post","Fall","run2",21250,FALSE,20721
+"1080","1080","Basin Hill","UK2","Inshore","UK2-I","UK2-I_1080","ssid","2018","Post","Fall","run2",7944,FALSE,7822
+"1081","1081","Basin Hill","UK2","Inshore","UK2-I","UK2-I_1081","ssid","2018","Post","Fall","run2",27384,FALSE,27058
+"1082","1082","Basin Hill","UK2","Inshore","UK2-I","UK2-I_1082","ssid","2018","Post","Fall","run2",28133,FALSE,27753
+"1083","1083","Basin Hill","UK2","Inshore","UK2-I","UK2-I_1083","ssid","2018","Post","Fall","run2",14149,FALSE,14004
+"1084","1084","Basin Hill","UK2","Inshore","UK2-I","UK2-I_1084","ssid","2018","Post","Fall","run2",30859,FALSE,30467
+"1085","1085","Basin Hill","UK2","Inshore","UK2-I","UK2-I_1085","ssid","2018","Post","Fall","run2",7910,FALSE,7849
+"1086","1086","Basin Hill","UK2","Inshore","UK2-I","UK2-I_1086","ssid","2018","Post","Fall","run2",1665,FALSE,1644
+"1088","1088","Basin Hill","UK2","Inshore","UK2-I","UK2-I_1088","ssid","2018","Post","Fall","run2",4365,FALSE,4270
+"1089","1089","Basin Hill","UK2","Inshore","UK2-I","UK2-I_1089","ssid","2018","Post","Fall","run2",27882,FALSE,26032
+"121","121","Basin Hill","UK2","Inshore","UK2-I","UK2-I_121","ssid","2015","Pre","Spring","run1",19599,FALSE,18992
+"122","122","Basin Hill","UK2","Inshore","UK2-I","UK2-I_122","ssid","2015","Pre","Spring","run1",35138,FALSE,34757
+"123","123","Basin Hill","UK2","Inshore","UK2-I","UK2-I_123","ssid","2015","Pre","Spring","run1",19606,FALSE,18502
+"124","124","Basin Hill","UK2","Inshore","UK2-I","UK2-I_124","ssid","2015","Pre","Spring","run1",32947,FALSE,31693
+"125","125","Basin Hill","UK2","Inshore","UK2-I","UK2-I_125","ssid","2015","Pre","Spring","run1",70246,FALSE,69151
+"126","126","Basin Hill","UK2","Inshore","UK2-I","UK2-I_126","ssid","2015","Pre","Spring","run1",44139,FALSE,43745
+"127","127","Basin Hill","UK2","Inshore","UK2-I","UK2-I_127","ssid","2015","Pre","Spring","run1",25263,FALSE,24823
+"128","128","Basin Hill","UK2","Inshore","UK2-I","UK2-I_128","ssid","2015","Pre","Spring","run1",64950,FALSE,64250
+"129","129","Basin Hill","UK2","Inshore","UK2-I","UK2-I_129","ssid","2015","Pre","Spring","run1",22377,FALSE,22192
+"130","130","Basin Hill","UK2","Inshore","UK2-I","UK2-I_130","ssid","2015","Pre","Spring","run1",19080,FALSE,18991
+"141","141","Basin Hill","UK2","Inshore","UK2-I","UK2-I_141","srad","2015","Pre","Spring","run1",103651,FALSE,103204
+"143","143","Basin Hill","UK2","Inshore","UK2-I","UK2-I_143","srad","2015","Pre","Spring","run1",23891,FALSE,23676
+"144","144","Basin Hill","UK2","Inshore","UK2-I","UK2-I_144","srad","2015","Pre","Spring","run1",24183,FALSE,23928
+"145","145","Basin Hill","UK2","Inshore","UK2-I","UK2-I_145","srad","2015","Pre","Spring","run1",85762,FALSE,84079
+"147","147","Basin Hill","UK2","Inshore","UK2-I","UK2-I_147","srad","2015","Pre","Spring","run1",32584,FALSE,32157
+"148","148","Basin Hill","UK2","Inshore","UK2-I","UK2-I_148","srad","2015","Pre","Spring","run1",13253,FALSE,13028
+"149","149","Basin Hill","UK2","Inshore","UK2-I","UK2-I_149","srad","2015","Pre","Spring","run1",38483,FALSE,37385
+"150","150","Basin Hill","UK2","Inshore","UK2-I","UK2-I_150","srad","2015","Pre","Spring","run1",12348,FALSE,12225
+"801","801","Basin Hill","UK2","Inshore","UK2-I","UK2-I_801","ssid","2017","Irma","Fall","run1",44539,FALSE,44314
+"808","808","Basin Hill","UK2","Inshore","UK2-I","UK2-I_808","ssid","2017","Irma","Fall","run1",37851,FALSE,36997
+"809","809","Basin Hill","UK2","Inshore","UK2-I","UK2-I_809","ssid","2017","Irma","Fall","run1",64455,FALSE,62776
+"821","821","Basin Hill","UK2","Inshore","UK2-I","UK2-I_821","ssid","2017","Irma","Fall","run1",26480,FALSE,25846
+"822","822","Basin Hill","UK2","Inshore","UK2-I","UK2-I_822","ssid","2017","Irma","Fall","run1",27570,FALSE,26955
+"823","823","Basin Hill","UK2","Inshore","UK2-I","UK2-I_823","ssid","2017","Irma","Fall","run1",57301,FALSE,55208
+"824","824","Basin Hill","UK2","Inshore","UK2-I","UK2-I_824","ssid","2017","Irma","Fall","run1",25629,FALSE,25461
+"825","825","Basin Hill","UK2","Inshore","UK2-I","UK2-I_825","ssid","2017","Irma","Fall","run1",14271,FALSE,14225
+"826","826","Basin Hill","UK2","Inshore","UK2-I","UK2-I_826","ssid","2017","Irma","Fall","run1",35928,FALSE,35514
+"827","827","Basin Hill","UK2","Inshore","UK2-I","UK2-I_827","ssid","2017","Irma","Fall","run1",3738,FALSE,3622
+"829","829","Basin Hill","UK2","Inshore","UK2-I","UK2-I_829","ssid","2017","Irma","Fall","run1",24796,FALSE,24515
+"830","830","Basin Hill","UK2","Inshore","UK2-I","UK2-I_830","ssid","2017","Irma","Fall","run1",49608,FALSE,49379
+"846","846","Basin Hill","UK2","Inshore","UK2-I","UK2-I_846","srad","2017","Irma","Fall","run1",27263,FALSE,27068
+"847","847","Basin Hill","UK2","Inshore","UK2-I","UK2-I_847","srad","2017","Irma","Fall","run1",32866,FALSE,32698
+"848","848","Basin Hill","UK2","Inshore","UK2-I","UK2-I_848","srad","2017","Irma","Fall","run1",37479,FALSE,35776
+"850","850","Basin Hill","UK2","Inshore","UK2-I","UK2-I_850","srad","2017","Irma","Fall","run1",6050,FALSE,4928
+"851","851","Basin Hill","UK2","Inshore","UK2-I","UK2-I_851","srad","2017","Irma","Fall","run1",18286,FALSE,15349
+"852","852","Basin Hill","UK2","Inshore","UK2-I","UK2-I_852","srad","2017","Irma","Fall","run1",89572,FALSE,86578
+"853","853","Basin Hill","UK2","Inshore","UK2-I","UK2-I_853","srad","2017","Irma","Fall","run1",37442,FALSE,32651
+"854","854","Basin Hill","UK2","Inshore","UK2-I","UK2-I_854","srad","2017","Irma","Fall","run1",12696,FALSE,12570
+"855","855","Basin Hill","UK2","Inshore","UK2-I","UK2-I_855","srad","2017","Irma","Fall","run1",14944,FALSE,11094
+"100","100","Carysfort","UK2","Offshore","UK2-O","UK2-O_100","ssid","2015","Pre","Spring","run1",36356,FALSE,36204
+"1100","1100","Carysfort","UK2","Offshore","UK2-O","UK2-O_1100","srad","2018","Post","Fall","run2",37976,FALSE,37658
+"1101","1101","Carysfort","UK2","Offshore","UK2-O","UK2-O_1101","srad","2018","Post","Fall","run2",47590,FALSE,47287
+"1102","1102","Carysfort","UK2","Offshore","UK2-O","UK2-O_1102","srad","2018","Post","Fall","run2",40732,FALSE,34915
+"1103","1103","Carysfort","UK2","Offshore","UK2-O","UK2-O_1103","srad","2018","Post","Fall","run2",29343,FALSE,29017
+"1106","1106","Carysfort","UK2","Offshore","UK2-O","UK2-O_1106","srad","2018","Post","Fall","run2",17175,FALSE,16844
+"1108","1108","Carysfort","UK2","Offshore","UK2-O","UK2-O_1108","srad","2018","Post","Fall","run2",34241,FALSE,33509
+"1109","1109","Carysfort","UK2","Offshore","UK2-O","UK2-O_1109","srad","2018","Post","Fall","run2",27671,FALSE,27325
+"1110","1110","Carysfort","UK2","Offshore","UK2-O","UK2-O_1110","ssid","2018","Post","Fall","run2",8818,FALSE,8688
+"1111","1111","Carysfort","UK2","Offshore","UK2-O","UK2-O_1111","ssid","2018","Post","Fall","run2",22270,FALSE,21660
+"1112","1112","Carysfort","UK2","Offshore","UK2-O","UK2-O_1112","ssid","2018","Post","Fall","run2",8362,FALSE,8024
+"1113","1113","Carysfort","UK2","Offshore","UK2-O","UK2-O_1113","ssid","2018","Post","Fall","run2",29409,FALSE,29084
+"1114","1114","Carysfort","UK2","Offshore","UK2-O","UK2-O_1114","ssid","2018","Post","Fall","run2",17600,FALSE,16407
+"1115","1115","Carysfort","UK2","Offshore","UK2-O","UK2-O_1115","ssid","2018","Post","Fall","run2",12401,FALSE,12120
+"1116","1116","Carysfort","UK2","Offshore","UK2-O","UK2-O_1116","ssid","2018","Post","Fall","run2",28551,FALSE,28140
+"1117","1117","Carysfort","UK2","Offshore","UK2-O","UK2-O_1117","ssid","2018","Post","Fall","run2",27559,FALSE,27162
+"1118","1118","Carysfort","UK2","Offshore","UK2-O","UK2-O_1118","ssid","2018","Post","Fall","run2",24108,FALSE,23855
+"1119","1119","Carysfort","UK2","Offshore","UK2-O","UK2-O_1119","ssid","2018","Post","Fall","run2",1638,FALSE,1630
+"111","111","Carysfort","UK2","Offshore","UK2-O","UK2-O_111","srad","2015","Pre","Spring","run1",57001,FALSE,55869
+"112","112","Carysfort","UK2","Offshore","UK2-O","UK2-O_112","srad","2015","Pre","Spring","run1",45136,FALSE,37525
+"113","113","Carysfort","UK2","Offshore","UK2-O","UK2-O_113","srad","2015","Pre","Spring","run1",88061,FALSE,86748
+"114","114","Carysfort","UK2","Offshore","UK2-O","UK2-O_114","srad","2015","Pre","Spring","run1",29634,FALSE,29365
+"115","115","Carysfort","UK2","Offshore","UK2-O","UK2-O_115","srad","2015","Pre","Spring","run1",74753,FALSE,73888
+"116","116","Carysfort","UK2","Offshore","UK2-O","UK2-O_116","srad","2015","Pre","Spring","run1",38430,FALSE,37703
+"117","117","Carysfort","UK2","Offshore","UK2-O","UK2-O_117","srad","2015","Pre","Spring","run1",40388,FALSE,39314
+"118","118","Carysfort","UK2","Offshore","UK2-O","UK2-O_118","srad","2015","Pre","Spring","run1",41749,FALSE,41406
+"119","119","Carysfort","UK2","Offshore","UK2-O","UK2-O_119","srad","2015","Pre","Spring","run1",87581,FALSE,87093
+"120","120","Carysfort","UK2","Offshore","UK2-O","UK2-O_120","srad","2015","Pre","Spring","run1",41301,FALSE,40388
+"798","798","Carysfort","UK2","Offshore","UK2-O","UK2-O_798","ssid","2017","Irma","Fall","run1",85840,FALSE,81974
+"800","800","Carysfort","UK2","Offshore","UK2-O","UK2-O_800","ssid","2017","Irma","Fall","run1",34686,FALSE,34104
+"820","820","Carysfort","UK2","Offshore","UK2-O","UK2-O_820","ssid","2017","Irma","Fall","run1",47124,FALSE,46853
+"883","883","Carysfort","UK2","Offshore","UK2-O","UK2-O_883","ssid","2017","Irma","Fall","run1",16382,FALSE,15998
+"884","884","Carysfort","UK2","Offshore","UK2-O","UK2-O_884","ssid","2017","Irma","Fall","run1",25258,FALSE,24855
+"885","885","Carysfort","UK2","Offshore","UK2-O","UK2-O_885","ssid","2017","Irma","Fall","run1",72391,FALSE,71994
+"886","886","Carysfort","UK2","Offshore","UK2-O","UK2-O_886","ssid","2017","Irma","Fall","run1",34894,FALSE,34458
+"887","887","Carysfort","UK2","Offshore","UK2-O","UK2-O_887","ssid","2017","Irma","Fall","run1",22164,FALSE,21911
+"888","888","Carysfort","UK2","Offshore","UK2-O","UK2-O_888","ssid","2017","Irma","Fall","run1",67072,FALSE,66712
+"889","889","Carysfort","UK2","Offshore","UK2-O","UK2-O_889","ssid","2017","Irma","Fall","run1",50711,FALSE,50218
+"890","890","Carysfort","UK2","Offshore","UK2-O","UK2-O_890","ssid","2017","Irma","Fall","run1",50065,FALSE,49550
+"906","906","Carysfort","UK2","Offshore","UK2-O","UK2-O_906","srad","2017","Irma","Fall","run1",98011,FALSE,96843
+"907","907","Carysfort","UK2","Offshore","UK2-O","UK2-O_907","srad","2017","Irma","Fall","run1",64980,FALSE,64954
+"908","908","Carysfort","UK2","Offshore","UK2-O","UK2-O_908","srad","2017","Irma","Fall","run1",37531,FALSE,36921
+"909","909","Carysfort","UK2","Offshore","UK2-O","UK2-O_909","srad","2017","Irma","Fall","run1",111508,FALSE,110368
+"910","910","Carysfort","UK2","Offshore","UK2-O","UK2-O_910","srad","2017","Irma","Fall","run1",19883,FALSE,19646
+"912","912","Carysfort","UK2","Offshore","UK2-O","UK2-O_912","srad","2017","Irma","Fall","run1",70206,FALSE,69544
+"913","913","Carysfort","UK2","Offshore","UK2-O","UK2-O_913","srad","2017","Irma","Fall","run1",89112,FALSE,89026
+"914","914","Carysfort","UK2","Offshore","UK2-O","UK2-O_914","srad","2017","Irma","Fall","run1",70374,FALSE,69140
+"915","915","Carysfort","UK2","Offshore","UK2-O","UK2-O_915","srad","2017","Irma","Fall","run1",41567,FALSE,41553
+"91","91","Carysfort","UK2","Offshore","UK2-O","UK2-O_91","ssid","2015","Pre","Spring","run1",86370,FALSE,85997
+"92","92","Carysfort","UK2","Offshore","UK2-O","UK2-O_92","ssid","2015","Pre","Spring","run1",19152,FALSE,18894
+"93","93","Carysfort","UK2","Offshore","UK2-O","UK2-O_93","ssid","2015","Pre","Spring","run1",45080,FALSE,44593
+"94","94","Carysfort","UK2","Offshore","UK2-O","UK2-O_94","ssid","2015","Pre","Spring","run1",93696,FALSE,92395
+"95","95","Carysfort","UK2","Offshore","UK2-O","UK2-O_95","ssid","2015","Pre","Spring","run1",40230,FALSE,39412
+"96","96","Carysfort","UK2","Offshore","UK2-O","UK2-O_96","ssid","2015","Pre","Spring","run1",44214,FALSE,43556
+"97","97","Carysfort","UK2","Offshore","UK2-O","UK2-O_97","ssid","2015","Pre","Spring","run1",51811,FALSE,51142
+"98","98","Carysfort","UK2","Offshore","UK2-O","UK2-O_98","ssid","2015","Pre","Spring","run1",22014,FALSE,21850
+"99","99","Carysfort","UK2","Offshore","UK2-O","UK2-O_99","ssid","2015","Pre","Spring","run1",100628,FALSE,99434
