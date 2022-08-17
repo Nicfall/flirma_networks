@@ -88,8 +88,8 @@ library("vegan")
 ```
 
 ```{r working directory, include=FALSE}
-#setwd("~/Google Drive (nicfall@bu.edu)/Flirma/flirma_networks/fl_its2")
-setwd("/Volumes/GoogleDrive-104519233854090018057/My Drive/Flirma/flirma_networks/fl_its2")
+setwd("~/Google Drive (nicfall@bu.edu)/Flirma/flirma_networks/fl_its2")
+#setwd("/Volumes/GoogleDrive-104519233854090018057/My Drive/Flirma/flirma_networks/fl_its2")
 ```
 
 ## Checking for no read samples
@@ -107,7 +107,7 @@ counts.no0 <- counts[rowSums(counts)>0,]
 
 Ran once then saved to re-read in later
 
-```{r phyloseq object}
+```{r phyloseq object, eval=F}
 # import dataframe holding sample information
 samdf <- read.csv("fl_sample_info - ITS2_all.csv")
 head(samdf)
@@ -131,7 +131,7 @@ ps
 # phyloseq-class experiment-level object
 # otu_table()   OTU Table:         [ 75 taxa and 323 samples ]
 # sample_data() Sample Data:       [ 323 samples by 12 sample variables ]
-# tax_table()   Taxonomy Table:    [ 75 taxa by 7 taxonomic ranks ]
+# tax_table()   Taxonomy Table:    [ 75 taxa by 4 taxonomic ranks ]
 
 #saveRDS(ps,file="ps.its2.rds")
 ```
@@ -164,7 +164,7 @@ Ran once then saved to re-read in later
 # #saveRDS(ps.all,"ps.all.its2.RDS")
 ```
 
-## Re-read in data - all types
+## Re-read in data
 
 ```{r re-read data}
 ps <- readRDS("ps.its2.RDS")
@@ -294,42 +294,120 @@ gg.bar.clade
 #ggsave("bar.clade.radians.pdf",width=9,height=4)
 ```
 
-```{r sids by samples}
-ps.sid.pre.rel <- transform_sample_counts(ps.sid.pre, function(x) x / sum(x))
-ps.sid.pre.rel.sz <- merge_samples(ps.sid.pre.rel, "site_zone")
-ps.sid.pre.rel.sz <- transform_sample_counts(ps.sid.pre.rel.sz, function(x) x / sum(x))
+## Bar plots by majority sequence
 
-gg.bar.pre <- plot_bar(ps.sid.pre.rel.sz, fill="Majority_ITS2_sequence")+
+### Assessing type profile distances
+
+Note - used file "20211215T030311_unifrac_profiles_PCoA_coords_B_sqrt.csv", made the name shorter. I also removed the 'proportion explained' line at the end. Also added the first type that shows up as its own column, 'first_type'
+
+Proportion explained: PC1 0.584828597, PC2 0.146734687
+
+```{r}
+library(ggrepel)
+
+setwd("/Volumes/GoogleDrive/My Drive/Flirma/flirma_networks/fl_its2")
+
+uni.cord <- read.csv("unifrac_profiles_PCoA_coords_B_sqrt.csv")
+
+ggplot(uni.cord,aes(x=PC1,y=PC2,color=type_collapsed,label=sample))+
+  geom_point()+
+  geom_text_repel(max.overlaps=20)+
+  stat_ellipse()
+
+#separated B5-1* & B5-2* by the 0 on PC2, except for 1 that was just below 0
+```
+
+Important setup
+
+```{r}
+ps.maj <- tax_glom(ps,"Majority_ITS2_collapsed")
+ntaxa(ps); ntaxa(ps.maj) #18
+
+ps.maj <- subset_samples(ps.maj,site!="UK3")
+
+#siderea
+ps.maj.sid <- subset_samples(ps.maj,spp=="ssid")
+
+ps.maj.sid.pre <- subset_samples(ps.maj.sid,time=="Pre")
+ps.maj.sid.irm <- subset_samples(ps.maj.sid,time=="Irma")
+ps.maj.sid.pos <- subset_samples(ps.maj.sid,time=="Post")
+
+#radians
+ps.maj.rad <- subset_samples(ps.maj,spp=="srad")
+
+ps.maj.rad.pre <- subset_samples(ps.maj.rad,time=="Pre")
+ps.maj.rad.irm <- subset_samples(ps.maj.rad,time=="Irma")
+ps.maj.rad.pos <- subset_samples(ps.maj.rad,time=="Post")
+```
+
+```{r sids by samples}
+library(scales)
+library(colorspace)
+
+##for colors planning:
+##need 3 for A - greys
+# pal <- hcl.colors(3, "Grays")
+# show_col(pal)
+# pal #took last three:
+# "#1B1B1B" "#969696" "#F9F9F9"
+
+##need 5 for B - blue
+##need 5 for C - green
+# 
+# pal <- hcl.colors(10,"Cork")
+# show_col(pal)
+# pal
+#"#00294D","#195481","#5882AF","#9AB0CE","#D6DDE9","#D3E0D2","#95B792","#548C4E","#1F5D12","#002F00"
+
+#need 1 for D - brown
+#"#B8773A"
+
+#majority.seq.colors <- c("#492900","#B8773A","#F6D2BE",
+                         #   "#E2FCFF","#B5D9FC","#8CB6DD","#7293B2","#587189","#405162","#2A333C","#181818","#333325","#515138","#71704C","#939261","#B6B577","#D9D8A2","#FCFCD3",
+                         # "#474747","#7A7A7A","#A8A8A8","#CDCDCD","#E2E2E2",
+                         # "black")
+
+maj.seq.colors <- c("#1B1B1B","#969696","#F9F9F9","#00294D","#195481","#5882AF","#9AB0CE","#D6DDE9","#D3E0D2","#95B792","#548C4E","#1F5D12","#002F00","#B8773A")
+                         
+ps.maj.sid.pre.rel <- transform_sample_counts(ps.maj.sid.pre, function(x) x / sum(x))
+ps.maj.sid.pre.rel.sz <- merge_samples(ps.maj.sid.pre.rel, "site_zone")
+ps.maj.sid.pre.rel.sz <- transform_sample_counts(ps.maj.sid.pre.rel.sz, function(x) x / sum(x))
+
+gg.bar.pre <- plot_bar(ps.maj.sid.pre.rel.sz, fill="Majority_ITS2_collapsed")+
     ggtitle("Pre")+
     theme_cowplot()+
     theme(axis.text.x=element_text(angle=90,hjust=1))+
-    xlab("")
+    xlab("")+
+  scale_fill_manual(values=maj.seq.colors)
 gg.bar.pre
 
-ps.sid.irm.rel <- transform_sample_counts(ps.sid.irm, function(x) x / sum(x))
-ps.sid.irm.rel.sz <- merge_samples(ps.sid.irm.rel, "site_zone")
-ps.sid.irm.rel.sz <- transform_sample_counts(ps.sid.irm.rel.sz, function(x) x / sum(x))
+ps.maj.sid.irm.rel <- transform_sample_counts(ps.maj.sid.irm, function(x) x / sum(x))
+ps.maj.sid.irm.rel.sz <- merge_samples(ps.maj.sid.irm.rel, "site_zone")
+ps.maj.sid.irm.rel.sz <- transform_sample_counts(ps.maj.sid.irm.rel.sz, function(x) x / sum(x))
 
-gg.bar.irm <- plot_bar(ps.sid.irm.rel.sz, fill="Majority_ITS2_sequence")+
-    ggtitle("Irma")+
+gg.bar.irm <- plot_bar(ps.maj.sid.irm.rel.sz, fill="Majority_ITS2_collapsed")+
+    ggtitle("Disturbance")+
     theme_cowplot()+
     theme(axis.text.x=element_text(angle=90,hjust=1))+
-    xlab("")
+    xlab("")+
+    scale_fill_manual(values=maj.seq.colors)
+gg.bar.irm
 
-ps.sid.pos.rel <- transform_sample_counts(ps.sid.pos, function(x) x / sum(x))
-ps.sid.pos.rel.sz <- merge_samples(ps.sid.pos.rel, "site_zone")
-ps.sid.pos.rel.sz <- transform_sample_counts(ps.sid.pos.rel.sz, function(x) x / sum(x))
+ps.maj.sid.pos.rel <- transform_sample_counts(ps.maj.sid.pos, function(x) x / sum(x))
+ps.maj.sid.pos.rel.sz <- merge_samples(ps.maj.sid.pos.rel, "site_zone")
+ps.maj.sid.pos.rel.sz <- transform_sample_counts(ps.maj.sid.pos.rel.sz, function(x) x / sum(x))
 
-gg.bar.pos <- plot_bar(ps.sid.pos.rel.sz, fill="Majority_ITS2_sequence3")+
+gg.bar.pos <- plot_bar(ps.maj.sid.pos.rel.sz, fill="Majority_ITS2_collapsed")+
     ggtitle("Post")+
     theme_cowplot()+
     theme(axis.text.x=element_text(angle=90,hjust=1))+
-    xlab("")
+    xlab("")+
+    scale_fill_manual(values=maj.seq.colors)
 gg.bar.pos
 
 gg.bar.its2 <- ggarrange(gg.bar.pre,gg.bar.irm,gg.bar.pos,ncol=3,common.legend=T,legend="right")
 gg.bar.its2
-ggsave("bar.its2.sids.pdf",width=9,height=4)
+#ggsave("bar.its2.sids.pdf",width=9,height=4)
 ```
 
 ```{r}
@@ -344,10 +422,73 @@ plot_bar(ps.sid.pre.rel, fill="Majority_ITS2_sequence")+
 
 ```
 
+## Bar plot by type profile (yuck)
 
+```{r}
+ps <- readRDS("ps.its2.RDS")
 
+ps <- subset_samples(ps,site!="UK3")
 
+ps.sid <- subset_samples(ps,spp=="ssid")
 
+ps.sid.pre <- subset_samples(ps.sid,time=="Pre")
+ps.sid.irm <- subset_samples(ps.sid,time=="Irma")
+ps.sid.pos <- subset_samples(ps.sid,time=="Post")
+
+ps.sid.pre.lk1 <- subset_samples(ps.sid.pre,site=="LK1")
+ps.sid.pre.uk1 <- subset_samples(ps.sid.pre,site=="UK1")
+ps.sid.pre.uk2 <- subset_samples(ps.sid.pre,site=="UK2")
+
+ps.sid.irm.lk1 <- subset_samples(ps.sid.irm,site=="LK1")
+ps.sid.irm.uk1 <- subset_samples(ps.sid.irm,site=="UK1")
+ps.sid.irm.uk2 <- subset_samples(ps.sid.irm,site=="UK2")
+
+ps.sid.pos.lk1 <- subset_samples(ps.sid.pos,site=="LK1")
+ps.sid.pos.uk1 <- subset_samples(ps.sid.pos,site=="UK1")
+ps.sid.pos.uk2 <- subset_samples(ps.sid.pos,site=="UK2")
+```
+
+```{r}
+library(ggpubr)
+library(cowplot)
+
+ps.sid.pre.rel <- transform_sample_counts(ps.sid.pre, function(x) x / sum(x))
+ps.sid.pre.rel.sz <- merge_samples(ps.sid.pre.rel, "site_zone")
+ps.sid.pre.rel.sz.rel <- transform_sample_counts(ps.sid.pre.rel.sz, function(x) x / sum(x))
+
+bar.sid.pre.sz <- plot_bar(ps.sid.pre.rel.sz.rel, fill="ITS2_type_profile")+
+    ggtitle("Pre")+
+    theme_cowplot()+
+    theme(axis.text.x=element_text(angle=90,hjust=1),legend.position="bottom")+
+    xlab("")
+bar.sid.pre.sz
+
+ps.sid.irm.rel <- transform_sample_counts(ps.sid.irm, function(x) x / sum(x))
+ps.sid.irm.rel.sz <- merge_samples(ps.sid.irm.rel, "site_zone")
+ps.sid.irm.rel.sz.rel <- transform_sample_counts(ps.sid.irm.rel.sz, function(x) x / sum(x))
+
+bar.sid.irm.sz <- plot_bar(ps.sid.irm.rel.sz.rel, fill="Clade")+
+    ggtitle("irm")+
+    theme_cowplot()+
+    theme(axis.text.x=element_text(angle=90,hjust=1))+
+    xlab("")
+bar.sid.irm.sz
+
+ps.sid.pos.rel <- transform_sample_counts(ps.sid.pos, function(x) x / sum(x))
+ps.sid.pos.rel.sz <- merge_samples(ps.sid.pos.rel, "site_zone")
+ps.sid.pos.rel.sz.rel <- transform_sample_counts(ps.sid.pos.rel.sz, function(x) x / sum(x))
+
+bar.sid.pos.sz <- plot_bar(ps.sid.pos.rel.sz.rel, fill="Clade")+
+    ggtitle("pos")+
+    theme_cowplot()+
+    theme(axis.text.x=element_text(angle=90,hjust=1))+
+    xlab("")
+bar.sid.pos.sz
+
+gg.bar.clade <- ggarrange(bar.sid.pre.sz,bar.sid.irm.sz,bar.sid.pos.sz,ncol=3,common.legend=T,legend="right")
+gg.bar.clade
+
+```
 
 Mo'orea stuff to update/delete
 

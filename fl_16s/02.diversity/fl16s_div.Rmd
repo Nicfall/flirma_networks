@@ -23,7 +23,10 @@ library("Rmisc")
 library(car)
 
 #home
-setwd("/Volumes/GoogleDrive/My Drive/Flirma/flirma_networks/fl_16s/02.diversity")
+#setwd("/Volumes/GoogleDrive/My Drive/Flirma/flirma_networks/fl_16s/02.diversity")
+
+#work
+setwd("/Volumes/GoogleDrive-104519233854090018057/My Drive/Flirma/flirma_networks/fl_16s/02.diversity")
 ```
 
 ## Read in data
@@ -31,9 +34,9 @@ setwd("/Volumes/GoogleDrive/My Drive/Flirma/flirma_networks/fl_16s/02.diversity"
 Be careful, I tried different data inputs [i.e. not rare, or rare]
 
 ```{r}
-#ps.clean <-readRDS("../01.generate_asv_table/ps.cleanest.less.rds")
+ps.clean <- readRDS("../01.generate_asv_table/ps.cleanest.less.rds")
 
-ps.clean <- readRDS("../01.generate_asv_table/ps.cleanest.rare6000.rds")
+#ps.clean <- readRDS("../01.generate_asv_table/ps.cleanest.rare6000.rds")
 
 samdf <- data.frame(ps.clean@sam_data)
 ```
@@ -54,7 +57,7 @@ df.div <- merge(df,samdf,by="sample_num") #add sample data
 #shannon diversity divided by species richness
 df.div$even <- df.div$Shannon/(log(df.div$Observed))
 #write.csv(df.div,file="fl16s.df.diversity.csv")
-write.csv(df.div,file="fl16s.df.diversity_rare.csv")
+#write.csv(df.div,file="fl16s.df.diversity_rare.csv")
 
 ##reorder the time points
 df.div$time <- factor(df.div$time, levels = c("Pre","Irma","Post"))
@@ -68,8 +71,8 @@ df.div.sid <- subset(df.div,spp=="ssid")
 Re-read in data, skipping the two sections above
 
 ```{r re-read in}
-#df.div <- read.csv("fl16s.df.diversity.csv")
-df.div <- read.csv("fl16s.df.diversity_rare.csv")
+df.div <- read.csv("fl16s.df.diversity.csv")
+#df.div <- read.csv("fl16s.df.diversity_rare.csv")
 
 df.div$zone <- as.factor(df.div$zone)
 df.div$time <- factor(df.div$time,levels=c("Pre","Irma","Post"))
@@ -200,7 +203,7 @@ pairwise.wilcox.test(df.div.sid.uk2.off$Shannon, df.div.sid.uk2.off$time, p.adju
 #ns, rare or not
 ```
 
-### Shannon rads plot
+## Shannon rads{.tabset}
 
 ```{r shannon rads}
 gg.sh.rads.yr <- ggplot(df.div.rad,aes(x=time,y=Shannon,fill=time,color=time,shape=zone))+
@@ -225,8 +228,6 @@ gg.sh.rads.yr
 
 #ggsave(gg.sh.rads.yr,file="gg.sha.rads.year.pdf",width=3.5,height=4)
 ```
-
-### Shannon rads stats
 
 ### Shannon rads stats - zone
 
@@ -308,18 +309,17 @@ pairwise.wilcox.test(df.div.rad.uk2.off$Shannon, df.div.rad.uk2.off$time, p.adju
 # Post 0.0037 0.0079
 ```
 
-## Observed
-
-### Observed sids - by zone
+## Richness sids
 
 ```{r}
-gg.ob.sids.yr <- ggplot(df.div.sid,aes(x=time,y=Observed,fill=time,color=time,shape=zone))+
-  facet_grid(site~.,scales="free_y")+  
+gg.ob.sid.yr <- ggplot(df.div.sid,aes(x=time,y=Observed,fill=time,color=time,shape=zone))+
+  facet_grid(site~.)+  
+  #facet_grid(site~.,scales="free_y")+  
   geom_jitter(aes(alpha=zone),position = position_jitterdodge())+
   #add color="black" here for outlines
   geom_boxplot(outlier.shape=NA,color="black",aes(alpha=zone))+
   ylab("ASV richness")+
-  xlab("Timepoint")+
+  xlab("Time point")+
   ylim(0,1000)+
   theme_bw()+
   scale_color_manual(values=c("#3B0F70","#FA7F53","#A8327D"))+
@@ -328,109 +328,113 @@ gg.ob.sids.yr <- ggplot(df.div.sid,aes(x=time,y=Observed,fill=time,color=time,sh
   theme(plot.title=element_text(face = "italic"),axis.text.x=element_text(angle=45,vjust=1.1,hjust=1))+
   ggtitle("S. siderea")+
   scale_alpha_manual(values=c(0.45,0.75),name="Reef zone")+
-  guides(fill="none",color="none")
-gg.ob.sids.yr
+  guides(fill="none",color="none")+
+  scale_x_discrete(labels=c("Pre","Disturb.","Post"))
+  
+gg.ob.sid.yr
 
-gg.ob.sids.zone <- ggplot(df.div.sid,aes(x=zone,y=Observed,color=zone,shape=zone,fill=zone))+
-  #ylim(0,1000)+
-  facet_grid(time~site,scales="free_y")+
-  geom_jitter(alpha=0.6)+
-  geom_boxplot(outlier.shape=NA,color="black",alpha=0.5)+
-  ylab("ASV richness")+
-  xlab("Zone")+
-  theme_bw()+
-  scale_color_manual(values=c("#3BBA76","#453882"))+
-  scale_fill_manual(values=c("#3BBA76","#453882"))+
-  scale_shape_manual(values=c(16,18))+
-  theme(legend.position="none",plot.title=element_text(face = "italic"),axis.text.x=element_text(angle=45,vjust=1.1,hjust=1))+
-  ggtitle("S. siderea")+
-  xlab("Reef zone")
-gg.ob.sids.zone
-#ggsave("gg.obs.sids.year.pdf",width=3)
-```
-
-### Observed sids - by time
-
-```{r}
-gg.ob.sids.yr <- ggplot(df.div.sid,aes(x=time,y=Observed,color=time,shape=zone,fill=time))+
-  ylim(0,1000)+
-  facet_grid(zone~site,scales="free_y")+
-  geom_jitter(alpha=0.8)+
-  geom_boxplot(outlier.shape=NA,color="black",alpha=0.5)+
-  ylab("ASV richness")+
-  xlab("Timepoint")+
-  theme_bw()+
-  scale_color_manual(values=c("#3B0F70","#FA7F53","#A8327D"))+
-  scale_fill_manual(values=c("#3B0F70","#FA7F53","#A8327D"))+
-  scale_shape_manual(values=c(16,18))+
-  theme(legend.position="none",plot.title=element_text(face = "italic"),axis.text.x=element_text(angle=45,vjust=1.1,hjust=1))+
-  ggtitle("S. siderea")
-gg.ob.sids.yr
-
-ggsave(gg.ob.sids.yr,file="gg.obs.sids.year.pdf",width=4,height=4)
+#ggsave(gg.ob.sid.yr,file="gg.sids.rich.pdf",width=3.5,height=4)
 ```
 
 ### Observed sids stats - zone
 
-```{r shannon rz}
-#shapiro.test(log(df.div.sid$Observed)) #good
+```{r sids obs rz stats}
+# within site & year
+df.div.sid.15 <- subset(df.div.sid,time=="Pre")
+df.div.sid.17 <- subset(df.div.sid,time=="Irma")
+df.div.sid.18 <- subset(df.div.sid,time=="Post")
 
-#LK1
-wilcox.test(Observed~zone,data=df.div.sid.15.lk1)
-#W = 7, p-value = 0.00219 *
-wilcox.test(Observed~zone,data=df.div.sid.17.lk1)
-#W = 70, p-value = 0.04347 *
-wilcox.test(Observed~zone,data=df.div.sid.18.lk1) #ns 
+#LOWER KEYS 1
+df.div.sid.15.lk1 <- subset(df.div.sid.15,site=="LK1")
+df.div.sid.17.lk1 <- subset(df.div.sid.17,site=="LK1")
+df.div.sid.18.lk1 <- subset(df.div.sid.18,site=="LK1")
 
-#UK1
-wilcox.test(Observed~zone,data=df.div.sid.15.uk1) #ns
-wilcox.test(Observed~zone,data=df.div.sid.17.uk1) #ns
-wilcox.test(Observed~zone,data=df.div.sid.18.uk1) #ns
+#are they sig different across reef zones?
+wilcox.test(Observed~zone,data=df.div.sid.15.lk1)#p < 0.01**
+#W = 7, p-value = 0.00219
+#rare: W = 7, p-value = 0.0009743
+wilcox.test(Observed~zone,data=df.div.sid.17.lk1) #p < 0.05*
+#W = 70, p-value = 0.04347
+#rare: same
+wilcox.test(Observed~zone,data=df.div.sid.18.lk1)#ns, rare or not
 
-#UK2
-wilcox.test(Observed~zone,data=df.div.15.uk2) #ns
-wilcox.test(Observed~zone,data=df.div.17.uk2) #ns
-wilcox.test(Observed~zone,data=df.div.18.uk2) #ns
+#UPPER KEYS 1
+df.div.sid.15.uk1 <- subset(df.div.sid.15,site=="UK1")
+df.div.sid.17.uk1 <- subset(df.div.sid.17,site=="UK1")
+df.div.sid.18.uk1 <- subset(df.div.sid.18,site=="UK1")
+
+wilcox.test(Observed~zone,data=df.div.sid.15.uk1)#ns, rare or not
+wilcox.test(Observed~zone,data=df.div.sid.17.uk1)#ns, rare or not
+wilcox.test(Observed~zone,data=df.div.sid.18.uk1)#ns, rare or not
+
+#UPPER KEYS 2
+df.div.sid.15.uk2 <- subset(df.div.sid.15,site=="UK2")
+df.div.sid.17.uk2 <- subset(df.div.sid.17,site=="UK2")
+df.div.sid.18.uk2 <- subset(df.div.sid.18,site=="UK2")
+
+wilcox.test(Observed~zone,data=df.div.sid.15.uk2)#ns, rare or not
+wilcox.test(Observed~zone,data=df.div.sid.17.uk2)#ns, rare or not
+wilcox.test(Observed~zone,data=df.div.sid.18.uk2)#ns, rare or not
 ```
 
 ### Observed sids stats - time 
 
-```{r stats by year}
-df.div.sid.lk1 <- subset(df.div.sid,site=="LK1")
-df.div.sid.uk1 <- subset(df.div.sid,site=="UK1")
-df.div.sid.uk2 <- subset(df.div.sid,site=="UK2")
+```{r sids obs time stats}
 
-df.div.sid.lk1.in <- subset(df.div.sid.lk1,zone=="Inshore")
-df.div.sid.lk1.off <- subset(df.div.sid.lk1,zone=="Offshore")
-
-df.div.sid.uk1.in <- subset(df.div.sid.uk1,zone=="Inshore")
-df.div.sid.uk1.off <- subset(df.div.sid.uk1,zone=="Offshore")
-
-df.div.sid.uk2.in <- subset(df.div.sid.uk2,zone=="Inshore")
-df.div.sid.uk2.off <- subset(df.div.sid.uk2,zone=="Offshore")
-
-pairwise.wilcox.test(df.div.sid.lk1.in$Shannon, df.div.sid.lk1.in$time, p.adjust.method = "BH")
-pairwise.wilcox.test(df.div.sid.lk1.off$Shannon, df.div.sid.lk1.off$time, p.adjust.method = "BH")
-#      Pre    Irma  
-# Irma 0.0029 -     
-# Post 0.0472 0.4470
-
-pairwise.wilcox.test(df.div.sid.uk1.in$Shannon, df.div.sid.uk1.in$time, p.adjust.method = "BH")
-pairwise.wilcox.test(df.div.sid.uk1.off$Shannon, df.div.sid.uk1.off$time, p.adjust.method = "BH")
-#ns
-
-pairwise.wilcox.test(df.div.sid.uk2.in$Shannon, df.div.sid.uk2.in$time, p.adjust.method = "BH")
-pairwise.wilcox.test(df.div.sid.uk2.off$Shannon, df.div.sid.uk2.off$time, p.adjust.method = "BH")
-#ns
 ```
 
-## Evenness
+## Richness rads {.tabset}
+
+```{r}
+gg.ob.rad.yr <- ggplot(df.div.rad,aes(x=time,y=Observed,fill=time,color=time,shape=zone))+
+  facet_grid(site~.)+  
+  #facet_grid(site~.,scales="free_y")+  
+  geom_jitter(aes(alpha=zone),position = position_jitterdodge())+
+  #add color="black" here for outlines
+  geom_boxplot(outlier.shape=NA,color="black",aes(alpha=zone))+
+  ylab("ASV richness")+
+  xlab("Time point")+
+  ylim(0,2000)+
+  theme_bw()+
+  scale_color_manual(values=c("#3B0F70","#FA7F53","#A8327D"))+
+  scale_fill_manual(values=c("#3B0F70","#FA7F53","#A8327D"))+
+  scale_shape_manual(values=c(21,23),name="Reef zone")+
+  theme(plot.title=element_text(face = "italic"),axis.text.x=element_text(angle=45,vjust=1.1,hjust=1))+
+  ggtitle("S. radians")+
+  scale_alpha_manual(values=c(0.45,0.75),name="Reef zone")+
+  guides(fill="none",color="none")+
+  scale_x_discrete(labels=c("Pre","Disturb.","Post"))
+  
+gg.ob.rad.yr
+
+#ggsave(gg.ob.rad.yr,file="gg.rads.rich.pdf",width=3.5,height=4)
+```
+
+### Observed sids stats - zone
+
+```{r sids obs rz stats}
+
+```
+
+### Observed sids stats - time 
+
+```{r sids obs time stats}
+
+```
+
+
+## Evenness sids
 
 ```{r}
 
 
 ```
 
+## Evenness rads
 
+```{r}
+
+
+```
 
 
