@@ -1160,10 +1160,30 @@ out.df <- data.frame(coh.neg,coh.pos)
 ## Cohesion results
 
 ```{r}
-                                                                                                                                                                                                                                                                                                          library(ggplot2)
+library(ggplot2)
 library(cowplot)
 library(ggpubr)
 
+setwd("/Volumes/GoogleDrive/My Drive/Flirma/flirma_networks/fl_16s/05.networks/files/cohesion")
+```
+
+Ran once then re-read in later
+
+```{r cohesion results, eval=F}
+df.coh.sid.lk1i <- readRDS("df.cohesion.sid.lk1i.rds")
+df.coh.sid.lk1o <- readRDS("df.cohesion.sid.lk1o.rds")
+df.coh.sid.uk1i <- readRDS("df.cohesion.sid.uk1i.rds")
+df.coh.sid.uk1o <- readRDS("df.cohesion.sid.uk1o.rds")
+df.coh.sid.uk2i <- readRDS("df.cohesion.sid.uk2i.rds")
+df.coh.sid.uk2o <- readRDS("df.cohesion.sid.uk2o.rds")
+
+df.coh.sid.lk1i$year <- 
+
+df.list <- list(df1,df2,...)
+res <- lapply(df.list, function(x) rowMeans(subset(x, select = c(start, stop)), na.rm = TRUE))
+# to keep the original data.frame also
+res <- lapply(df.list, function(x) cbind(x,"rowmean"=rowMeans(subset(x, select = c(start, stop)), na.rm = TRUE)))
+  
 negco15$year <- c(rep("2015",57))
 negco17$year <- c(rep("2017",56))
 negco18$year <- c(rep("2018",28))
