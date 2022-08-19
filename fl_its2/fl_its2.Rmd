@@ -85,6 +85,8 @@ library('Rmisc')
 library(cowplot)
 library("ggpubr")
 library("vegan")
+library(scales)
+library(colorspace)
 ```
 
 ```{r working directory, include=FALSE}
@@ -97,6 +99,7 @@ setwd("~/Google Drive (nicfall@bu.edu)/Flirma/flirma_networks/fl_its2")
 ```{r counts per sample}
 counts <- read.csv('flits_symportal_profile_counts.csv',header=TRUE,row.names=1,check.names=FALSE)
 #325 samples, 75 type profiles
+#+1 sample that's fake 'UK1-O_000' so I can plot UK1-O below
 
 sort(rowSums(counts))
 counts.no0 <- counts[rowSums(counts)>0,]
@@ -129,9 +132,9 @@ ps <- phyloseq(otu_table(mcounts, taxa_are_rows=FALSE),
 
 ps
 # phyloseq-class experiment-level object
-# otu_table()   OTU Table:         [ 75 taxa and 323 samples ]
-# sample_data() Sample Data:       [ 323 samples by 12 sample variables ]
-# tax_table()   Taxonomy Table:    [ 75 taxa by 4 taxonomic ranks ]
+# otu_table()   OTU Table:         [ 75 taxa and 324 samples ]
+# sample_data() Sample Data:       [ 324 samples by 12 sample variables ]
+# tax_table()   Taxonomy Table:    [ 75 taxa by 5 taxonomic ranks ]
 
 #saveRDS(ps,file="ps.its2.rds")
 ```
@@ -216,7 +219,7 @@ ps.rad.gen.pos <- subset_samples(ps.rad.gen,time=="Post")
 
 ### S. siderea
 
-```{r}
+```{r genus ssid}
 ps.sid.gen.pre.rel <- transform_sample_counts(ps.sid.gen.pre, function(x) x / sum(x))
 ps.sid.gen.pre.rel.sz <- merge_samples(ps.sid.gen.pre.rel, "site_zone")
 ps.sid.gen.pre.rel.sz.rel <- transform_sample_counts(ps.sid.gen.pre.rel.sz, function(x) x / sum(x))
@@ -257,7 +260,7 @@ gg.bar.clade
 
 ### S. radians
 
-```{r}
+```{r genus srad}
 ps.rad.gen.pre.rel <- transform_sample_counts(ps.rad.gen.pre, function(x) x / sum(x))
 ps.rad.gen.pre.rel.sz <- merge_samples(ps.rad.gen.pre.rel, "site_zone")
 ps.rad.gen.pre.rel.sz <- transform_sample_counts(ps.rad.gen.pre.rel.sz, function(x) x / sum(x))
@@ -301,8 +304,9 @@ gg.bar.clade
 Note - used file "20211215T030311_unifrac_profiles_PCoA_coords_B_sqrt.csv", made the name shorter. I also removed the 'proportion explained' line at the end. Also added the first type that shows up as its own column, 'first_type'
 
 Proportion explained: PC1 0.584828597, PC2 0.146734687
+For bray curtis: PC1 0.231, PC2 0.139
 
-```{r}
+```{r determine groupings}
 library(ggrepel)
 
 setwd("/Volumes/GoogleDrive/My Drive/Flirma/flirma_networks/fl_its2")
@@ -313,15 +317,25 @@ ggplot(uni.cord,aes(x=PC1,y=PC2,color=type_collapsed,label=sample))+
   geom_point()+
   geom_text_repel(max.overlaps=20)+
   stat_ellipse()
-
 #separated B5-1* & B5-2* by the 0 on PC2, except for 1 that was just below 0
+
+#checking bray curtis
+bray.cord <- read.csv("braycurtis_profiles_PCoA_coords_B_sqrt.csv")
+
+ggplot(bray.cord,aes(x=PC1,y=PC2,color=type_bray,label=sample))+
+  geom_point()+
+  geom_text_repel(max.overlaps=20)+
+  stat_ellipse()
 ```
 
 Important setup
 
-```{r}
+```{r set up its2 profiles}
 ps.maj <- tax_glom(ps,"Majority_ITS2_collapsed")
-ntaxa(ps); ntaxa(ps.maj) #18
+#ps.maj <- tax_glom(ps,"Majority_ITS2_sequence_bray")
+
+ntaxa(ps); ntaxa(ps.maj) #18 for unifrac sids, 14 for rads
+#16 for bray sids
 
 ps.maj <- subset_samples(ps.maj,site!="UK3")
 
@@ -329,56 +343,424 @@ ps.maj <- subset_samples(ps.maj,site!="UK3")
 ps.maj.sid <- subset_samples(ps.maj,spp=="ssid")
 
 ps.maj.sid.pre <- subset_samples(ps.maj.sid,time=="Pre")
+ps.maj.sid.pre.lk1 <- subset_samples(ps.maj.sid.pre,site=="LK1")
+ps.maj.sid.pre.uk1 <- subset_samples(ps.maj.sid.pre,site=="UK1")
+ps.maj.sid.pre.uk2 <- subset_samples(ps.maj.sid.pre,site=="UK2")
+
 ps.maj.sid.irm <- subset_samples(ps.maj.sid,time=="Irma")
+ps.maj.sid.irm.lk1 <- subset_samples(ps.maj.sid.irm,site=="LK1")
+ps.maj.sid.irm.uk1 <- subset_samples(ps.maj.sid.irm,site=="UK1")
+ps.maj.sid.irm.uk2 <- subset_samples(ps.maj.sid.irm,site=="UK2")
+
 ps.maj.sid.pos <- subset_samples(ps.maj.sid,time=="Post")
+ps.maj.sid.pos.lk1 <- subset_samples(ps.maj.sid.pos,site=="LK1")
+ps.maj.sid.pos.uk1 <- subset_samples(ps.maj.sid.pos,site=="UK1")
+ps.maj.sid.pos.uk2 <- subset_samples(ps.maj.sid.pos,site=="UK2")
 
 #radians
 ps.maj.rad <- subset_samples(ps.maj,spp=="srad")
 
 ps.maj.rad.pre <- subset_samples(ps.maj.rad,time=="Pre")
+ps.maj.rad.pre.lk1 <- subset_samples(ps.maj.rad.pre,site=="LK1")
+ps.maj.rad.pre.uk1 <- subset_samples(ps.maj.rad.pre,site=="UK1")
+ps.maj.rad.pre.uk2 <- subset_samples(ps.maj.rad.pre,site=="UK2")
+
 ps.maj.rad.irm <- subset_samples(ps.maj.rad,time=="Irma")
+ps.maj.rad.irm.lk1 <- subset_samples(ps.maj.rad.irm,site=="LK1")
+ps.maj.rad.irm.uk1 <- subset_samples(ps.maj.rad.irm,site=="UK1")
+ps.maj.rad.irm.uk2 <- subset_samples(ps.maj.rad.irm,site=="UK2")
+
 ps.maj.rad.pos <- subset_samples(ps.maj.rad,time=="Post")
+ps.maj.rad.pos.lk1 <- subset_samples(ps.maj.rad.pos,site=="LK1")
+#ps.maj.rad.pos.uk1 <- subset_samples(ps.maj.rad.pos,site=="UK1")
+#not available
+ps.maj.rad.pos.uk2 <- subset_samples(ps.maj.rad.pos,site=="UK2")
 ```
 
-```{r sids by samples}
-library(scales)
-library(colorspace)
+Removing black bars from phyloseq plot
 
-##for colors planning:
-##need 3 for A - greys
-# pal <- hcl.colors(3, "Grays")
-# show_col(pal)
-# pal #took last three:
-# "#1B1B1B" "#969696" "#F9F9F9"
+```{r}
+plot_bar2 <-  function (physeq, x = "Sample", y = "Abundance", fill = NULL, title = NULL, facet_grid = NULL, border_color = NA) 
+{
+  mdf = psmelt(physeq)
+  p = ggplot(mdf, aes_string(x = x, y = y, fill = fill))
+  p = p + geom_bar(stat = "identity", position = "stack",  color = border_color)
+  p = p + theme(axis.text.x = element_text(angle = -90, hjust = 0))
+  if (!is.null(facet_grid)) {
+    p <- p + facet_grid(facet_grid)
+  }
+  if (!is.null(title)) {
+    p <- p + ggtitle(title)
+  }
+  return(p)
+}
 
-##need 5 for B - blue
-##need 5 for C - green
-# 
-# pal <- hcl.colors(10,"Cork")
-# show_col(pal)
-# pal
-#"#00294D","#195481","#5882AF","#9AB0CE","#D6DDE9","#D3E0D2","#95B792","#548C4E","#1F5D12","#002F00"
+maj.seq.colors <- c("#474747","#7A7A7A","#A8A8A8","#00294D","#195481","#5882AF","#9AB0CE","#D6DDE9","#D3E0D2","#95B792","#548C4E","#1F5D12","#002F00","#B8773A")
+```
 
-#need 1 for D - brown
-#"#B8773A"
+### The plots{.tabset}
 
-#majority.seq.colors <- c("#492900","#B8773A","#F6D2BE",
-                         #   "#E2FCFF","#B5D9FC","#8CB6DD","#7293B2","#587189","#405162","#2A333C","#181818","#333325","#515138","#71704C","#939261","#B6B577","#D9D8A2","#FCFCD3",
-                         # "#474747","#7A7A7A","#A8A8A8","#CDCDCD","#E2E2E2",
-                         # "black")
+#### S. siderea
 
-maj.seq.colors <- c("#1B1B1B","#969696","#F9F9F9","#00294D","#195481","#5882AF","#9AB0CE","#D6DDE9","#D3E0D2","#95B792","#548C4E","#1F5D12","#002F00","#B8773A")
-                         
-ps.maj.sid.pre.rel <- transform_sample_counts(ps.maj.sid.pre, function(x) x / sum(x))
-ps.maj.sid.pre.rel.sz <- merge_samples(ps.maj.sid.pre.rel, "site_zone")
-ps.maj.sid.pre.rel.sz <- transform_sample_counts(ps.maj.sid.pre.rel.sz, function(x) x / sum(x))
+LOWER KEYS 1
 
-gg.bar.pre <- plot_bar(ps.maj.sid.pre.rel.sz, fill="Majority_ITS2_collapsed")+
+```{r}
+ps.maj.sid.pre.lk1.rel <- transform_sample_counts(ps.maj.sid.pre.lk1, function(x) x / sum(x))
+ps.maj.sid.pre.lk1.rel.zone <- merge_samples(ps.maj.sid.pre.lk1.rel, "zone")
+ps.maj.sid.pre.lk1.zone <- transform_sample_counts(ps.maj.sid.pre.lk1.rel.zone, function(x) x / sum(x))
+
+gg.maj.sid.pre.lk1.zone <- plot_bar2(ps.maj.sid.pre.lk1.zone, fill="Majority_ITS2_collapsed")+
     ggtitle("Pre")+
     theme_cowplot()+
     theme(axis.text.x=element_text(angle=90,hjust=1))+
     xlab("")+
-  scale_fill_manual(values=maj.seq.colors)
+  scale_x_discrete(labels=c("Inshore","Offshore"))+
+  scale_fill_manual(values=maj.seq.colors)+
+  geom_bar(stat = "identity")+
+  #theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+  theme(axis.text.x=element_text(angle=45))
+  
+gg.maj.sid.pre.lk1.zone
+
+ps.maj.sid.irm.lk1.rel <- transform_sample_counts(ps.maj.sid.irm.lk1, function(x) x / sum(x))
+ps.maj.sid.irm.lk1.rel.zone <- merge_samples(ps.maj.sid.irm.lk1.rel, "zone")
+ps.maj.sid.irm.lk1.zone <- transform_sample_counts(ps.maj.sid.irm.lk1.rel.zone, function(x) x / sum(x))
+
+gg.maj.sid.irm.lk1.zone <- plot_bar2(ps.maj.sid.irm.lk1.zone, fill="Majority_ITS2_collapsed")+
+    ggtitle("Disturb.")+
+    theme_cowplot()+
+    theme(axis.text.x=element_text(angle=90,hjust=1))+
+    xlab("")+
+  scale_x_discrete(labels=c("Inshore","Offshore"))+
+  scale_fill_manual(values=maj.seq.colors)+
+  geom_bar(stat = "identity")+
+  #theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+  theme(axis.text.x=element_text(angle=45))
+  
+gg.maj.sid.irm.lk1.zone
+
+ps.maj.sid.pos.lk1.rel <- transform_sample_counts(ps.maj.sid.pos.lk1, function(x) x / sum(x))
+ps.maj.sid.pos.lk1.rel.zone <- merge_samples(ps.maj.sid.pos.lk1.rel, "zone")
+ps.maj.sid.pos.lk1.zone <- transform_sample_counts(ps.maj.sid.pos.lk1.rel.zone, function(x) x / sum(x))
+
+gg.maj.sid.pos.lk1.zone <- plot_bar2(ps.maj.sid.pos.lk1.zone, fill="Majority_ITS2_collapsed")+
+    ggtitle("Post")+
+    theme_cowplot()+
+    theme(axis.text.x=element_text(angle=90,hjust=1))+
+    xlab("")+
+  scale_x_discrete(labels=c("Inshore","Offshore"))+
+  scale_fill_manual(values=maj.seq.colors)+
+  geom_bar(stat = "identity")+
+  #theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+  theme(axis.text.x=element_text(angle=45))
+  
+gg.maj.sid.pos.lk1.zone
+
+#ggarrange(gg.maj.sid.pre.lk1.zone,gg.maj.sid.irm.lk1.zone,gg.maj.sid.pos.lk1.zone,nrow=1)
+```
+
+UPPER KEYS 1
+
+```{r}
+ps.maj.sid.pre.uk1.rel <- transform_sample_counts(ps.maj.sid.pre.uk1, function(x) x / sum(x))
+ps.maj.sid.pre.uk1.rel.zone <- merge_samples(ps.maj.sid.pre.uk1.rel, "zone")
+ps.maj.sid.pre.uk1.zone <- transform_sample_counts(ps.maj.sid.pre.uk1.rel.zone, function(x) x / sum(x))
+
+gg.maj.sid.pre.uk1.zone <- plot_bar2(ps.maj.sid.pre.uk1.zone, fill="Majority_ITS2_collapsed")+
+    ggtitle("Pre")+
+    theme_cowplot()+
+    theme(axis.text.x=element_text(angle=90,hjust=1))+
+    xlab("")+
+  scale_x_discrete(labels=c("Inshore","Offshore"))+
+  scale_fill_manual(values=maj.seq.colors)+
+  geom_bar(stat = "identity")+
+  #theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+  theme(axis.text.x=element_text(angle=45))
+  
+gg.maj.sid.pre.uk1.zone
+
+ps.maj.sid.irm.uk1.rel <- transform_sample_counts(ps.maj.sid.irm.uk1, function(x) x / sum(x))
+ps.maj.sid.irm.uk1.rel.zone <- merge_samples(ps.maj.sid.irm.uk1.rel, "zone")
+ps.maj.sid.irm.uk1.zone <- transform_sample_counts(ps.maj.sid.irm.uk1.rel.zone, function(x) x / sum(x))
+
+gg.maj.sid.irm.uk1.zone <- plot_bar2(ps.maj.sid.irm.uk1.zone, fill="Majority_ITS2_collapsed")+
+    ggtitle("Disturb.")+
+    theme_cowplot()+
+    theme(axis.text.x=element_text(angle=90,hjust=1))+
+    xlab("")+
+  scale_x_discrete(labels=c("Inshore","Offshore"))+
+  scale_fill_manual(values=maj.seq.colors)+
+  geom_bar(stat = "identity")+
+  #theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+  theme(axis.text.x=element_text(angle=45))
+  
+gg.maj.sid.irm.uk1.zone
+
+ps.maj.sid.pos.uk1.rel <- transform_sample_counts(ps.maj.sid.pos.uk1, function(x) x / sum(x))
+ps.maj.sid.pos.uk1.rel.zone <- merge_samples(ps.maj.sid.pos.uk1.rel, "zone")
+ps.maj.sid.pos.uk1.zone <- transform_sample_counts(ps.maj.sid.pos.uk1.rel.zone, function(x) x / sum(x))
+
+gg.maj.sid.pos.uk1.zone <- plot_bar2(ps.maj.sid.pos.uk1.zone, fill="Majority_ITS2_collapsed")+
+    ggtitle("Post")+
+    theme_cowplot()+
+    theme(axis.text.x=element_text(angle=90,hjust=1))+
+    xlab("")+
+  scale_x_discrete(labels=c("Inshore","Offshore"))+
+  scale_fill_manual(values=maj.seq.colors)+
+  geom_bar(stat = "identity")+
+  #theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+  theme(axis.text.x=element_text(angle=45))
+  
+gg.maj.sid.pos.uk1.zone
+
+#ggarrange(gg.maj.sid.pre.uk1.zone,gg.maj.sid.irm.uk1.zone,gg.maj.sid.pos.uk1.zone,nrow=1)
+```
+
+UPPER KEYS 2
+
+```{r}
+ps.maj.sid.pre.uk2.rel <- transform_sample_counts(ps.maj.sid.pre.uk2, function(x) x / sum(x))
+ps.maj.sid.pre.uk2.rel.zone <- merge_samples(ps.maj.sid.pre.uk2.rel, "zone")
+ps.maj.sid.pre.uk2.zone <- transform_sample_counts(ps.maj.sid.pre.uk2.rel.zone, function(x) x / sum(x))
+
+gg.maj.sid.pre.uk2.zone <- plot_bar2(ps.maj.sid.pre.uk2.zone, fill="Majority_ITS2_collapsed")+
+    ggtitle("Pre")+
+    theme_cowplot()+
+    theme(axis.text.x=element_text(angle=90,hjust=1))+
+    xlab("")+
+  scale_x_discrete(labels=c("Inshore","Offshore"))+
+  scale_fill_manual(values=maj.seq.colors)+
+  geom_bar(stat = "identity")+
+  #theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+  theme(axis.text.x=element_text(angle=45))
+  
+gg.maj.sid.pre.uk2.zone
+
+ps.maj.sid.irm.uk2.rel <- transform_sample_counts(ps.maj.sid.irm.uk2, function(x) x / sum(x))
+ps.maj.sid.irm.uk2.rel.zone <- merge_samples(ps.maj.sid.irm.uk2.rel, "zone")
+ps.maj.sid.irm.uk2.zone <- transform_sample_counts(ps.maj.sid.irm.uk2.rel.zone, function(x) x / sum(x))
+
+gg.maj.sid.irm.uk2.zone <- plot_bar2(ps.maj.sid.irm.uk2.zone, fill="Majority_ITS2_collapsed")+
+    ggtitle("Disturb.")+
+    theme_cowplot()+
+    theme(axis.text.x=element_text(angle=90,hjust=1))+
+    xlab("")+
+  scale_x_discrete(labels=c("Inshore","Offshore"))+
+  scale_fill_manual(values=maj.seq.colors)+
+  geom_bar(stat = "identity")+
+  #theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+  theme(axis.text.x=element_text(angle=45))
+  
+gg.maj.sid.irm.uk2.zone
+
+ps.maj.sid.pos.uk2.rel <- transform_sample_counts(ps.maj.sid.pos.uk2, function(x) x / sum(x))
+ps.maj.sid.pos.uk2.rel.zone <- merge_samples(ps.maj.sid.pos.uk2.rel, "zone")
+ps.maj.sid.pos.uk2.zone <- transform_sample_counts(ps.maj.sid.pos.uk2.rel.zone, function(x) x / sum(x))
+
+gg.maj.sid.pos.uk2.zone <- plot_bar2(ps.maj.sid.pos.uk2.zone, fill="Majority_ITS2_collapsed")+
+    ggtitle("Post")+
+    theme_cowplot()+
+    theme(axis.text.x=element_text(angle=90,hjust=1))+
+    xlab("")+
+  scale_x_discrete(labels=c("Inshore","Offshore"))+
+  scale_fill_manual(values=maj.seq.colors)+
+  geom_bar(stat = "identity")+
+  #theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+  theme(axis.text.x=element_text(angle=45))
+  
+gg.maj.sid.pos.uk2.zone
+
+#ggarrange(gg.maj.sid.pre.uk2.zone,gg.maj.sid.irm.uk2.zone,gg.maj.sid.pos.uk2.zone,nrow=1)
+```
+
+All the sites
+
+```{r}
+ggarrange(gg.maj.sid.pre.lk1.zone,gg.maj.sid.irm.lk1.zone,gg.maj.sid.pos.lk1.zone,gg.maj.sid.pre.uk1.zone,gg.maj.sid.irm.uk1.zone,gg.maj.sid.pos.uk1.zone,gg.maj.sid.pre.uk2.zone,gg.maj.sid.irm.uk2.zone,gg.maj.sid.pos.uk2.zone,nrow=3,ncol=3,common.legend=T,legend="right")
+
+#ggsave("gg.its2.sids.pdf",h=8,w=7)
+```
+
+#### S. radians
+
+LOWER KEYS 1
+
+```{r rad lk1}
+ps.maj.rad.pre.lk1.rel <- transform_sample_counts(ps.maj.rad.pre.lk1, function(x) x / sum(x))
+ps.maj.rad.pre.lk1.rel.zone <- merge_samples(ps.maj.rad.pre.lk1.rel, "zone")
+ps.maj.rad.pre.lk1.zone <- transform_sample_counts(ps.maj.rad.pre.lk1.rel.zone, function(x) x / sum(x))
+
+gg.maj.rad.pre.lk1.zone <- plot_bar2(ps.maj.rad.pre.lk1.zone, fill="Majority_ITS2_collapsed")+
+    ggtitle("Pre")+
+    theme_cowplot()+
+    theme(axis.text.x=element_text(angle=90,hjust=1))+
+    xlab("")+
+  scale_x_discrete(labels=c("Inshore","Offshore"))+
+  scale_fill_manual(values=maj.seq.colors)+
+  geom_bar(stat = "identity")+
+  #theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+  theme(axis.text.x=element_text(angle=45))
+  
+gg.maj.rad.pre.lk1.zone
+
+ps.maj.rad.irm.lk1.rel <- transform_sample_counts(ps.maj.rad.irm.lk1, function(x) x / sum(x))
+ps.maj.rad.irm.lk1.rel.zone <- merge_samples(ps.maj.rad.irm.lk1.rel, "zone")
+ps.maj.rad.irm.lk1.zone <- transform_sample_counts(ps.maj.rad.irm.lk1.rel.zone, function(x) x / sum(x))
+
+gg.maj.rad.irm.lk1.zone <- plot_bar2(ps.maj.rad.irm.lk1.zone, fill="Majority_ITS2_collapsed")+
+    ggtitle("Disturb.")+
+    theme_cowplot()+
+    theme(axis.text.x=element_text(angle=90,hjust=1))+
+    xlab("")+
+  scale_x_discrete(labels=c("Inshore","Offshore"))+
+  scale_fill_manual(values=maj.seq.colors)+
+  geom_bar(stat = "identity")+
+  #theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+  theme(axis.text.x=element_text(angle=45))
+  
+gg.maj.rad.irm.lk1.zone
+
+ps.maj.rad.pos.lk1.rel <- transform_sample_counts(ps.maj.rad.pos.lk1, function(x) x / sum(x))
+ps.maj.rad.pos.lk1.rel.zone <- merge_samples(ps.maj.rad.pos.lk1.rel, "zone")
+ps.maj.rad.pos.lk1.zone <- transform_sample_counts(ps.maj.rad.pos.lk1.rel.zone, function(x) x / sum(x))
+
+gg.maj.rad.pos.lk1.zone <- plot_bar2(ps.maj.rad.pos.lk1.zone, fill="Majority_ITS2_collapsed")+
+    ggtitle("Post")+
+    theme_cowplot()+
+    theme(axis.text.x=element_text(angle=90,hjust=1))+
+    xlab("")+
+  scale_x_discrete(labels=c("Inshore","Offshore"))+
+  scale_fill_manual(values=maj.seq.colors)+
+  geom_bar(stat = "identity")+
+  #theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+  theme(axis.text.x=element_text(angle=45))
+  
+gg.maj.rad.pos.lk1.zone
+
+#ggarrange(gg.maj.rad.pre.lk1.zone,gg.maj.rad.irm.lk1.zone,gg.maj.rad.pos.lk1.zone,nrow=1)
+```
+
+UPPER KEYS 1
+
+```{r rad uk1}
+ps.maj.rad.pre.uk1.rel <- transform_sample_counts(ps.maj.rad.pre.uk1, function(x) x / sum(x))
+ps.maj.rad.pre.uk1.rel.zone <- merge_samples(ps.maj.rad.pre.uk1.rel, "zone")
+ps.maj.rad.pre.uk1.zone <- transform_sample_counts(ps.maj.rad.pre.uk1.rel.zone, function(x) x / sum(x))
+
+gg.maj.rad.pre.uk1.zone <- plot_bar2(ps.maj.rad.pre.uk1.zone, fill="Majority_ITS2_collapsed")+
+    ggtitle("Pre")+
+    theme_cowplot()+
+    theme(axis.text.x=element_text(angle=90,hjust=1))+
+    xlab("")+
+  scale_x_discrete(labels=c("Inshore","Offshore"))+
+  scale_fill_manual(values=maj.seq.colors)+
+  geom_bar(stat = "identity")+
+  #theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+  theme(axis.text.x=element_text(angle=45))
+  
+gg.maj.rad.pre.uk1.zone
+
+ps.maj.rad.irm.uk1.rel <- transform_sample_counts(ps.maj.rad.irm.uk1, function(x) x / sum(x))
+ps.maj.rad.irm.uk1.rel.zone <- merge_samples(ps.maj.rad.irm.uk1.rel, "zone")
+ps.maj.rad.irm.uk1.zone <- transform_sample_counts(ps.maj.rad.irm.uk1.rel.zone, function(x) x / sum(x))
+
+gg.maj.rad.irm.uk1.zone <- plot_bar2(ps.maj.rad.irm.uk1.zone, fill="Majority_ITS2_collapsed")+
+    ggtitle("Disturb.")+
+    theme_cowplot()+
+    theme(axis.text.x=element_text(angle=90,hjust=1))+
+    xlab("")+
+  scale_x_discrete(labels=c("Inshore","Offshore"))+
+  scale_fill_manual(values=maj.seq.colors)+
+  geom_bar(stat = "identity")+
+  #theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+  theme(axis.text.x=element_text(angle=45))
+  
+gg.maj.rad.irm.uk1.zone
+
+#uk1 not available for Post
+
+#ggarrange(gg.maj.rad.pre.uk1.zone,gg.maj.rad.irm.uk1.zone,gg.maj.rad.pos.uk1.zone,nrow=1)
+```
+
+UPPER KEYS 2
+
+```{r}
+ps.maj.rad.pre.uk2.rel <- transform_sample_counts(ps.maj.rad.pre.uk2, function(x) x / sum(x))
+ps.maj.rad.pre.uk2.rel.zone <- merge_samples(ps.maj.rad.pre.uk2.rel, "zone")
+ps.maj.rad.pre.uk2.zone <- transform_sample_counts(ps.maj.rad.pre.uk2.rel.zone, function(x) x / sum(x))
+
+gg.maj.rad.pre.uk2.zone <- plot_bar2(ps.maj.rad.pre.uk2.zone, fill="Majority_ITS2_collapsed")+
+    ggtitle("Pre")+
+    theme_cowplot()+
+    theme(axis.text.x=element_text(angle=90,hjust=1))+
+    xlab("")+
+  scale_x_discrete(labels=c("Inshore","Offshore"))+
+  scale_fill_manual(values=maj.seq.colors)+
+  geom_bar(stat = "identity")+
+  #theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+  theme(axis.text.x=element_text(angle=45))
+  
+gg.maj.rad.pre.uk2.zone
+
+ps.maj.rad.irm.uk2.rel <- transform_sample_counts(ps.maj.rad.irm.uk2, function(x) x / sum(x))
+ps.maj.rad.irm.uk2.rel.zone <- merge_samples(ps.maj.rad.irm.uk2.rel, "zone")
+ps.maj.rad.irm.uk2.zone <- transform_sample_counts(ps.maj.rad.irm.uk2.rel.zone, function(x) x / sum(x))
+
+gg.maj.rad.irm.uk2.zone <- plot_bar2(ps.maj.rad.irm.uk2.zone, fill="Majority_ITS2_collapsed")+
+    ggtitle("Disturb.")+
+    theme_cowplot()+
+    theme(axis.text.x=element_text(angle=90,hjust=1))+
+    xlab("")+
+  scale_x_discrete(labels=c("Inshore","Offshore"))+
+  scale_fill_manual(values=maj.seq.colors)+
+  geom_bar(stat = "identity")+
+  #theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+  theme(axis.text.x=element_text(angle=45))
+  
+gg.maj.rad.irm.uk2.zone
+
+ps.maj.rad.pos.uk2.rel <- transform_sample_counts(ps.maj.rad.pos.uk2, function(x) x / sum(x))
+ps.maj.rad.pos.uk2.rel.zone <- merge_samples(ps.maj.rad.pos.uk2.rel, "zone")
+ps.maj.rad.pos.uk2.zone <- transform_sample_counts(ps.maj.rad.pos.uk2.rel.zone, function(x) x / sum(x))
+
+gg.maj.rad.pos.uk2.zone <- plot_bar2(ps.maj.rad.pos.uk2.zone, fill="Majority_ITS2_collapsed")+
+    ggtitle("Post")+
+    theme_cowplot()+
+    theme(axis.text.x=element_text(angle=90,hjust=1))+
+    xlab("")+
+  scale_x_discrete(labels=c("Inshore","Offshore"))+
+  scale_fill_manual(values=maj.seq.colors)+
+  geom_bar(stat = "identity")+
+  #theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+  theme(axis.text.x=element_text(angle=45))
+  
+gg.maj.rad.pos.uk2.zone
+
+#ggarrange(gg.maj.rad.pre.uk2.zone,gg.maj.rad.irm.uk2.zone,gg.maj.rad.pos.uk2.zone,nrow=1)
+```
+
+All the sites
+
+```{r}
+ggarrange(gg.maj.rad.pre.lk1.zone,gg.maj.rad.irm.lk1.zone,gg.maj.rad.pos.lk1.zone,gg.maj.rad.pre.uk1.zone,gg.maj.rad.irm.uk1.zone,gg.maj.rad.pre.uk2.zone,gg.maj.rad.irm.uk2.zone,gg.maj.rad.pos.uk2.zone,nrow=3,ncol=3,common.legend=T,legend="right")
+
+#ggsave("gg.its2.rads.pdf",h=8,w=7)
+```
+
+### Different version of the same type profile plot
+
+```{r sids by maj seq unifrac}
+ps.maj.sid.pre.rel <- transform_sample_counts(ps.maj.sid.pre, function(x) x / sum(x))
+ps.maj.sid.pre.rel.sz <- merge_samples(ps.maj.sid.pre.rel, "site_zone")
+ps.maj.sid.pre.rel.sz <- transform_sample_counts(ps.maj.sid.pre.rel.sz, function(x) x / sum(x))
+
+gg.bar.pre <- plot_bar2(ps.maj.sid.pre.rel.sz, fill="Majority_ITS2_collapsed")+
+    ggtitle("Pre")+
+    theme_cowplot()+
+    theme(axis.text.x=element_text(angle=90,hjust=1))+
+    xlab("")+
+  scale_fill_manual(values=maj.seq.colors)+
+  geom_bar(stat = "identity")
 gg.bar.pre
 
 ps.maj.sid.irm.rel <- transform_sample_counts(ps.maj.sid.irm, function(x) x / sum(x))
@@ -398,6 +780,52 @@ ps.maj.sid.pos.rel.sz <- merge_samples(ps.maj.sid.pos.rel, "site_zone")
 ps.maj.sid.pos.rel.sz <- transform_sample_counts(ps.maj.sid.pos.rel.sz, function(x) x / sum(x))
 
 gg.bar.pos <- plot_bar(ps.maj.sid.pos.rel.sz, fill="Majority_ITS2_collapsed")+
+    ggtitle("Post")+
+    theme_cowplot()+
+    theme(axis.text.x=element_text(angle=90,hjust=1))+
+    xlab("")+
+    scale_fill_manual(values=maj.seq.colors)
+gg.bar.pos
+
+gg.bar.its2 <- ggarrange(gg.bar.pre,gg.bar.irm,gg.bar.pos,ncol=3,common.legend=T,legend="right")
+gg.bar.its2
+#ggsave("bar.its2.sids.pdf",width=9,height=4)
+```
+
+Type profile - Bray-Curtis distance
+
+```{r}
+maj.seq.colors <- c("#1B1B1B","#969696","#F9F9F9","#00294D","#195481","#5882AF","#9AB0CE","#D6DDE9","#D3E0D2","#95B792","#548C4E","#1F5D12","#002F00","#B8773A")
+                         
+ps.maj.sid.pre.rel <- transform_sample_counts(ps.maj.sid.pre, function(x) x / sum(x))
+ps.maj.sid.pre.rel.sz <- merge_samples(ps.maj.sid.pre.rel, "site_zone")
+ps.maj.sid.pre.rel.sz <- transform_sample_counts(ps.maj.sid.pre.rel.sz, function(x) x / sum(x))
+
+gg.bar.pre <- plot_bar(ps.maj.sid.pre.rel.sz, fill="Majority_ITS2_sequence_bray")+
+    ggtitle("Pre")+
+    theme_cowplot()+
+    theme(axis.text.x=element_text(angle=90,hjust=1))+
+    xlab("")+
+  scale_fill_manual(values=maj.seq.colors)
+gg.bar.pre
+
+ps.maj.sid.irm.rel <- transform_sample_counts(ps.maj.sid.irm, function(x) x / sum(x))
+ps.maj.sid.irm.rel.sz <- merge_samples(ps.maj.sid.irm.rel, "site_zone")
+ps.maj.sid.irm.rel.sz <- transform_sample_counts(ps.maj.sid.irm.rel.sz, function(x) x / sum(x))
+
+gg.bar.irm <- plot_bar(ps.maj.sid.irm.rel.sz, fill="Majority_ITS2_sequence_bray")+
+    ggtitle("Disturbance")+
+    theme_cowplot()+
+    theme(axis.text.x=element_text(angle=90,hjust=1))+
+    xlab("")+
+    scale_fill_manual(values=maj.seq.colors)
+gg.bar.irm
+
+ps.maj.sid.pos.rel <- transform_sample_counts(ps.maj.sid.pos, function(x) x / sum(x))
+ps.maj.sid.pos.rel.sz <- merge_samples(ps.maj.sid.pos.rel, "site_zone")
+ps.maj.sid.pos.rel.sz <- transform_sample_counts(ps.maj.sid.pos.rel.sz, function(x) x / sum(x))
+
+gg.bar.pos <- plot_bar(ps.maj.sid.pos.rel.sz, fill="Majority_ITS2_sequence_bray")+
     ggtitle("Post")+
     theme_cowplot()+
     theme(axis.text.x=element_text(angle=90,hjust=1))+
