@@ -23,10 +23,10 @@ library("Rmisc")
 library(car)
 
 #home
-#setwd("/Volumes/GoogleDrive/My Drive/Flirma/flirma_networks/fl_16s/02.diversity")
+setwd("/Volumes/GoogleDrive/My Drive/Flirma/flirma_networks/fl_16s/02.diversity")
 
 #work
-setwd("/Volumes/GoogleDrive-104519233854090018057/My Drive/Flirma/flirma_networks/fl_16s/02.diversity")
+#setwd("/Volumes/GoogleDrive-104519233854090018057/My Drive/Flirma/flirma_networks/fl_16s/02.diversity")
 ```
 
 ## Read in data
@@ -70,7 +70,7 @@ df.div.sid <- subset(df.div,spp=="ssid")
 
 Re-read in data, skipping the two sections above
 
-```{r re-read in}
+```{r re-read in *start here*}
 df.div <- read.csv("fl16s.df.diversity.csv")
 #df.div <- read.csv("fl16s.df.diversity_rare.csv")
 
@@ -80,6 +80,77 @@ df.div$time <- factor(df.div$time,levels=c("Pre","Irma","Post"))
 #separate species
 df.div.rad <- subset(df.div,spp=="srad")
 df.div.sid <- subset(df.div,spp=="ssid")
+```
+
+More subsetting for stuff below
+
+```{r more & more subsetting sids}
+# within site & year
+df.div.sid.15 <- subset(df.div.sid,time=="Pre")
+df.div.sid.17 <- subset(df.div.sid,time=="Irma")
+df.div.sid.18 <- subset(df.div.sid,time=="Post")
+
+df.div.sid.15.lk1 <- subset(df.div.sid.15,site=="LK1")
+df.div.sid.17.lk1 <- subset(df.div.sid.17,site=="LK1")
+df.div.sid.18.lk1 <- subset(df.div.sid.18,site=="LK1")
+
+df.div.sid.15.uk1 <- subset(df.div.sid.15,site=="UK1")
+df.div.sid.17.uk1 <- subset(df.div.sid.17,site=="UK1")
+df.div.sid.18.uk1 <- subset(df.div.sid.18,site=="UK1")
+
+df.div.sid.15.uk2 <- subset(df.div.sid.15,site=="UK2")
+df.div.sid.17.uk2 <- subset(df.div.sid.17,site=="UK2")
+df.div.sid.18.uk2 <- subset(df.div.sid.18,site=="UK2")
+
+#by time
+df.div.sid.lk1 <- subset(df.div.sid,site=="LK1")
+df.div.sid.uk1 <- subset(df.div.sid,site=="UK1")
+df.div.sid.uk2 <- subset(df.div.sid,site=="UK2")
+
+df.div.sid.lk1.in <- subset(df.div.sid.lk1,zone=="Inshore")
+df.div.sid.lk1.off <- subset(df.div.sid.lk1,zone=="Offshore")
+
+df.div.sid.uk1.in <- subset(df.div.sid.uk1,zone=="Inshore")
+df.div.sid.uk1.off <- subset(df.div.sid.uk1,zone=="Offshore")
+
+df.div.sid.uk2.in <- subset(df.div.sid.uk2,zone=="Inshore")
+df.div.sid.uk2.off <- subset(df.div.sid.uk2,zone=="Offshore")
+```
+
+Subsetting rads
+
+```{r more & more subsetting rads}
+# within site & year
+df.div.rad.15 <- subset(df.div.rad,time=="Pre")
+df.div.rad.17 <- subset(df.div.rad,time=="Irma")
+df.div.rad.18 <- subset(df.div.rad,time=="Post")
+
+#LK1
+df.div.rad.15.lk1 <- subset(df.div.rad.15,site=="LK1")
+df.div.rad.17.lk1 <- subset(df.div.rad.17,site=="LK1")
+df.div.rad.18.lk1 <- subset(df.div.rad.18,site=="LK1")
+
+df.div.rad.15.uk1 <- subset(df.div.rad.15,site=="UK1")
+df.div.rad.17.uk1 <- subset(df.div.rad.17,site=="UK1")
+df.div.rad.18.uk1 <- subset(df.div.rad.18,site=="UK1")
+
+df.div.rad.15.uk2 <- subset(df.div.rad.15,site=="UK2")
+df.div.rad.17.uk2 <- subset(df.div.rad.17,site=="UK2")
+df.div.rad.18.uk2 <- subset(df.div.rad.18,site=="UK2")
+
+#now by time
+df.div.rad.lk1 <- subset(df.div.rad,site=="LK1")
+df.div.rad.uk1 <- subset(df.div.rad,site=="UK1")
+df.div.rad.uk2 <- subset(df.div.rad,site=="UK2")
+
+df.div.rad.lk1.in <- subset(df.div.rad.lk1,zone=="Inshore")
+df.div.rad.lk1.off <- subset(df.div.rad.lk1,zone=="Offshore")
+
+df.div.rad.uk1.in <- subset(df.div.rad.uk1,zone=="Inshore")
+df.div.rad.uk1.off <- subset(df.div.rad.uk1,zone=="Offshore")
+
+df.div.rad.uk2.in <- subset(df.div.rad.uk2,zone=="Inshore")
+df.div.rad.uk2.off <- subset(df.div.rad.uk2,zone=="Offshore")
 ```
 
 # Analyzing alpha metrics
@@ -112,16 +183,7 @@ gg.sh.sids.yr
 ### Shannon sids stats - zone
 
 ```{r shannon sids rz}
-# within site & year
-df.div.sid.15 <- subset(df.div.sid,time=="Pre")
-df.div.sid.17 <- subset(df.div.sid,time=="Irma")
-df.div.sid.18 <- subset(df.div.sid,time=="Post")
-
 #LOWER KEYS 1
-df.div.sid.15.lk1 <- subset(df.div.sid.15,site=="LK1")
-df.div.sid.17.lk1 <- subset(df.div.sid.17,site=="LK1")
-df.div.sid.18.lk1 <- subset(df.div.sid.18,site=="LK1")
-
 #are they sig different across reef zones?
 wilcox.test(Shannon~zone,data=df.div.sid.15.lk1)#p < 0.001***
 #still same sig level when rarefied
@@ -133,20 +195,12 @@ wilcox.test(Shannon~zone,data=df.div.sid.17.lk1)#p < 0.1 .
 wilcox.test(Shannon~zone,data=df.div.sid.18.lk1)#ns, rare or not
 
 #UPPER KEYS 1
-df.div.sid.15.uk1 <- subset(df.div.sid.15,site=="UK1")
-df.div.sid.17.uk1 <- subset(df.div.sid.17,site=="UK1")
-df.div.sid.18.uk1 <- subset(df.div.sid.18,site=="UK1")
-
 wilcox.test(Shannon~zone,data=df.div.sid.15.uk1)#ns, rare or not
 wilcox.test(Shannon~zone,data=df.div.sid.17.uk1)#trend when rare
 #W = 102, p-value = 0.08873
 wilcox.test(Shannon~zone,data=df.div.sid.18.uk1)#ns, rare or not
 
 #UPPER KEYS 2
-df.div.sid.15.uk2 <- subset(df.div.sid.15,site=="UK2")
-df.div.sid.17.uk2 <- subset(df.div.sid.17,site=="UK2")
-df.div.sid.18.uk2 <- subset(df.div.sid.18,site=="UK2")
-
 wilcox.test(Shannon~zone,data=df.div.sid.15.uk2)#ns, rare or not
 wilcox.test(Shannon~zone,data=df.div.sid.17.uk2)#ns, rare or not
 wilcox.test(Shannon~zone,data=df.div.sid.18.uk2)#ns, rare or not
@@ -155,19 +209,6 @@ wilcox.test(Shannon~zone,data=df.div.sid.18.uk2)#ns, rare or not
 ### Shannon sids stats - time 
 
 ```{r stats sids by year}
-df.div.sid.lk1 <- subset(df.div.sid,site=="LK1")
-df.div.sid.uk1 <- subset(df.div.sid,site=="UK1")
-df.div.sid.uk2 <- subset(df.div.sid,site=="UK2")
-
-df.div.sid.lk1.in <- subset(df.div.sid.lk1,zone=="Inshore")
-df.div.sid.lk1.off <- subset(df.div.sid.lk1,zone=="Offshore")
-
-df.div.sid.uk1.in <- subset(df.div.sid.uk1,zone=="Inshore")
-df.div.sid.uk1.off <- subset(df.div.sid.uk1,zone=="Offshore")
-
-df.div.sid.uk2.in <- subset(df.div.sid.uk2,zone=="Inshore")
-df.div.sid.uk2.off <- subset(df.div.sid.uk2,zone=="Offshore")
-
 pairwise.wilcox.test(df.div.sid.lk1.in$Shannon, df.div.sid.lk1.in$time, p.adjust.method = "BH")
 #      Pre   Irma 
 # Irma 0.278 -    
@@ -232,16 +273,7 @@ gg.sh.rads.yr
 ### Shannon rads stats - zone
 
 ```{r shannon rads rz}
-# within site & year
-df.div.rad.15 <- subset(df.div.rad,time=="Pre")
-df.div.rad.17 <- subset(df.div.rad,time=="Irma")
-df.div.rad.18 <- subset(df.div.rad,time=="Post")
-
 #LK1
-df.div.rad.15.lk1 <- subset(df.div.rad.15,site=="LK1")
-df.div.rad.17.lk1 <- subset(df.div.rad.17,site=="LK1")
-df.div.rad.18.lk1 <- subset(df.div.rad.18,site=="LK1")
-
 wilcox.test(Shannon~zone,data=df.div.rad.15.lk1)#p < 0.05*
 # data:  Shannon by zone
 # W = 20, p-value = 0.04347
@@ -249,64 +281,48 @@ wilcox.test(Shannon~zone,data=df.div.rad.17.lk1)#ns
 wilcox.test(Shannon~zone,data=df.div.rad.18.lk1)#ns
 
 #UK1
-df.div.rad.15.uk1 <- subset(df.div.rad.15,site=="UK1")
-df.div.rad.17.uk1 <- subset(df.div.rad.17,site=="UK1")
-df.div.rad.18.uk1 <- subset(df.div.rad.18,site=="UK1")
-
 wilcox.test(Shannon~zone,data=df.div.rad.15.uk1)#p = 0.089 .
 # data:  Shannon by zone
 # W = 27, p-value = 0.08921
+#same trend with rare
 #wilcox.test(Shannon~zone,data=df.div.rad.17.uk1)#can't do, missing data
 #wilcox.test(Shannon~zone,data=df.div.rad.18.uk1)#can't do, missing data
 
 #UK2
-df.div.15.uk2 <- subset(df.div.rad.15,site=="UK2")
-df.div.17.uk2 <- subset(df.div.rad.17,site=="UK2")
-df.div.18.uk2 <- subset(df.div.rad.18,site=="UK2")
-
-wilcox.test(Shannon~zone,data=df.div.15.uk2)#ns
-wilcox.test(Shannon~zone,data=df.div.17.uk2)#p < 0.05 *
+wilcox.test(Shannon~zone,data=df.div.rad.15.uk2)#ns
+wilcox.test(Shannon~zone,data=df.div.rad.17.uk2)#p < 0.05 *
 # data:  Shannon by zone
 # W = 11, p-value = 0.01522
-wilcox.test(Shannon~zone,data=df.div.18.uk2)#ns
+#same with rare
+wilcox.test(Shannon~zone,data=df.div.rad.18.uk2)#ns
 ```
 
 ### Shannon rads stats - time 
 
 ```{r stats rads by year}
-df.div.rad.lk1 <- subset(df.div.rad,site=="LK1")
-df.div.rad.uk1 <- subset(df.div.rad,site=="UK1")
-df.div.rad.uk2 <- subset(df.div.rad,site=="UK2")
-
-df.div.rad.lk1.in <- subset(df.div.rad.lk1,zone=="Inshore")
-df.div.rad.lk1.off <- subset(df.div.rad.lk1,zone=="Offshore")
-
-df.div.rad.uk1.in <- subset(df.div.rad.uk1,zone=="Inshore")
-df.div.rad.uk1.off <- subset(df.div.rad.uk1,zone=="Offshore")
-
-df.div.rad.uk2.in <- subset(df.div.rad.uk2,zone=="Inshore")
-df.div.rad.uk2.off <- subset(df.div.rad.uk2,zone=="Offshore")
-
 pairwise.wilcox.test(df.div.rad.lk1.in$Shannon, df.div.rad.lk1.in$time, p.adjust.method = "BH")
 #      Pre    Irma  
 # Irma 0.8421 -     
 # Post 0.0028 0.0019
+#same with rare
 pairwise.wilcox.test(df.div.rad.lk1.off$Shannon, df.div.rad.lk1.off$time, p.adjust.method = "BH")
 #      Pre     Irma   
 # Irma 0.01340 -      
 # Post 0.00031 0.03301
-
+#same with rare
 pairwise.wilcox.test(df.div.rad.uk1.in$Shannon, df.div.rad.uk1.in$time, p.adjust.method = "BH") #ns
-pairwise.wilcox.test(df.div.rad.uk1.off$Shannon, df.div.rad.uk1.off$time, p.adjust.method = "BH") #ns
+#pairwise.wilcox.test(df.div.rad.uk1.off$Shannon, df.div.rad.uk1.off$time, p.adjust.method = "BH") #not available
 
 pairwise.wilcox.test(df.div.rad.uk2.in$Shannon, df.div.rad.uk2.in$time, p.adjust.method = "BH")
 #      Pre    Irma  
 # Irma 0.0030 -     
 # Post 0.0046 0.9682
+#same with rare
 pairwise.wilcox.test(df.div.rad.uk2.off$Shannon, df.div.rad.uk2.off$time, p.adjust.method = "BH")
 #     Pre    Irma  
 # Irma 0.2110 -     
 # Post 0.0037 0.0079
+#same with rare
 ```
 
 ## Richness sids
@@ -320,7 +336,7 @@ gg.ob.sid.yr <- ggplot(df.div.sid,aes(x=time,y=Observed,fill=time,color=time,sha
   geom_boxplot(outlier.shape=NA,color="black",aes(alpha=zone))+
   ylab("ASV richness")+
   xlab("Time point")+
-  ylim(0,1000)+
+  ylim(-100,1100)+
   theme_bw()+
   scale_color_manual(values=c("#3B0F70","#FA7F53","#A8327D"))+
   scale_fill_manual(values=c("#3B0F70","#FA7F53","#A8327D"))+
@@ -339,16 +355,7 @@ gg.ob.sid.yr
 ### Observed sids stats - zone
 
 ```{r sids obs rz stats}
-# within site & year
-df.div.sid.15 <- subset(df.div.sid,time=="Pre")
-df.div.sid.17 <- subset(df.div.sid,time=="Irma")
-df.div.sid.18 <- subset(df.div.sid,time=="Post")
-
 #LOWER KEYS 1
-df.div.sid.15.lk1 <- subset(df.div.sid.15,site=="LK1")
-df.div.sid.17.lk1 <- subset(df.div.sid.17,site=="LK1")
-df.div.sid.18.lk1 <- subset(df.div.sid.18,site=="LK1")
-
 #are they sig different across reef zones?
 wilcox.test(Observed~zone,data=df.div.sid.15.lk1)#p < 0.01**
 #W = 7, p-value = 0.00219
@@ -359,19 +366,11 @@ wilcox.test(Observed~zone,data=df.div.sid.17.lk1) #p < 0.05*
 wilcox.test(Observed~zone,data=df.div.sid.18.lk1)#ns, rare or not
 
 #UPPER KEYS 1
-df.div.sid.15.uk1 <- subset(df.div.sid.15,site=="UK1")
-df.div.sid.17.uk1 <- subset(df.div.sid.17,site=="UK1")
-df.div.sid.18.uk1 <- subset(df.div.sid.18,site=="UK1")
-
 wilcox.test(Observed~zone,data=df.div.sid.15.uk1)#ns, rare or not
 wilcox.test(Observed~zone,data=df.div.sid.17.uk1)#ns, rare or not
 wilcox.test(Observed~zone,data=df.div.sid.18.uk1)#ns, rare or not
 
 #UPPER KEYS 2
-df.div.sid.15.uk2 <- subset(df.div.sid.15,site=="UK2")
-df.div.sid.17.uk2 <- subset(df.div.sid.17,site=="UK2")
-df.div.sid.18.uk2 <- subset(df.div.sid.18,site=="UK2")
-
 wilcox.test(Observed~zone,data=df.div.sid.15.uk2)#ns, rare or not
 wilcox.test(Observed~zone,data=df.div.sid.17.uk2)#ns, rare or not
 wilcox.test(Observed~zone,data=df.div.sid.18.uk2)#ns, rare or not
@@ -380,7 +379,22 @@ wilcox.test(Observed~zone,data=df.div.sid.18.uk2)#ns, rare or not
 ### Observed sids stats - time 
 
 ```{r sids obs time stats}
+pairwise.wilcox.test(df.div.sid.lk1.in$Observed, df.div.sid.lk1.in$time, p.adjust.method = "BH")
+#      Pre   Irma 
+# Irma 0.037 -    
+# Post 0.591 0.035
+#same level with rarefaction
+pairwise.wilcox.test(df.div.sid.lk1.off$Observed, df.div.sid.lk1.off$time, p.adjust.method = "BH")
+#      Pre   Irma 
+# Irma 0.012 -    
+# Post 0.063 0.417
+#same with rare
 
+pairwise.wilcox.test(df.div.sid.uk1.in$Observed, df.div.sid.uk1.in$time, p.adjust.method = "BH") #ns, rare or not
+pairwise.wilcox.test(df.div.sid.uk1.off$Observed, df.div.sid.uk1.off$time, p.adjust.method = "BH") #ns, rare or not
+
+pairwise.wilcox.test(df.div.sid.uk2.in$Observed, df.div.sid.uk2.in$time, p.adjust.method = "BH") #ns, rare or not
+pairwise.wilcox.test(df.div.sid.uk2.off$Observed, df.div.sid.uk2.off$time, p.adjust.method = "BH") #ns, rare or not
 ```
 
 ## Richness rads {.tabset}
@@ -394,7 +408,7 @@ gg.ob.rad.yr <- ggplot(df.div.rad,aes(x=time,y=Observed,fill=time,color=time,sha
   geom_boxplot(outlier.shape=NA,color="black",aes(alpha=zone))+
   ylab("ASV richness")+
   xlab("Time point")+
-  ylim(0,2000)+
+  ylim(-200,2200)+
   theme_bw()+
   scale_color_manual(values=c("#3B0F70","#FA7F53","#A8327D"))+
   scale_fill_manual(values=c("#3B0F70","#FA7F53","#A8327D"))+
@@ -410,31 +424,216 @@ gg.ob.rad.yr
 #ggsave(gg.ob.rad.yr,file="gg.rads.rich.pdf",width=3.5,height=4)
 ```
 
-### Observed sids stats - zone
+### Observed rads stats - zone
 
-```{r sids obs rz stats}
+```{r rads obs rz stats}
+#LOWER KEYS 1
+#are they sig different across reef zones?
+wilcox.test(Observed~zone,data=df.div.rad.15.lk1) #p < 0.05*
+#W = 14, p-value = 0.01013
+#sig rare
+wilcox.test(Observed~zone,data=df.div.rad.17.lk1) 
+#ns rare or not
+wilcox.test(Observed~zone,data=df.div.rad.18.lk1)
+#ns rare or not
 
+#UPPER KEYS 1
+wilcox.test(Observed~zone,data=df.div.rad.15.uk1)
+#ns rare
+#wilcox.test(Observed~zone,data=df.div.rad.17.uk1)
+#not available
+#wilcox.test(Observed~zone,data=df.div.rad.18.uk1)
+#not available
+
+#UPPER KEYS 2
+wilcox.test(Observed~zone,data=df.div.rad.15.uk2)
+#p = 0.08 not rare
+#p = 0.06 rare
+wilcox.test(Observed~zone,data=df.div.rad.17.uk2) #p < 0.01**
+#W = 8, p-value = 0.005512
+#p = 0.01 rare
+wilcox.test(Observed~zone,data=df.div.rad.18.uk2)
+#ns rare or not
 ```
 
-### Observed sids stats - time 
+### Observed rads stats - time 
 
-```{r sids obs time stats}
+```{r rads obs time stats}
+pairwise.wilcox.test(df.div.rad.lk1.in$Observed, df.div.rad.lk1.in$time, p.adjust.method = "BH")
+#      Pre    Irma  
+# Irma 0.6038 -     
+# Post 0.0037 0.0037
+#same with rare
+pairwise.wilcox.test(df.div.rad.lk1.off$Observed, df.div.rad.lk1.off$time, p.adjust.method = "BH")
+#      Pre     Irma   
+# Irma 0.00073 -      
+# Post 0.00031 0.00967
+#same with rare
 
+pairwise.wilcox.test(df.div.rad.uk1.in$Observed, df.div.rad.uk1.in$time, p.adjust.method = "BH") 
+#ns
+#pairwise.wilcox.test(df.div.rad.uk1.off$Observed, df.div.rad.uk1.off$time, p.adjust.method = "BH") 
+#not available
+
+pairwise.wilcox.test(df.div.rad.uk2.in$Observed, df.div.rad.uk2.in$time, p.adjust.method = "BH") 
+#      Pre    Irma  
+# Irma 0.0044 -     
+# Post 0.0017 0.8148
+#same with rare
+pairwise.wilcox.test(df.div.rad.uk2.off$Observed, df.div.rad.uk2.off$time, p.adjust.method = "BH") 
+#      Pre    Irma  
+# Irma 0.0947 -     
+# Post 0.0012 0.0050
+#same with rare
 ```
-
 
 ## Evenness sids
 
-```{r}
+```{r evenness plot sids}
+gg.ev.sid.yr <- ggplot(df.div.sid,aes(x=time,y=even,fill=time,color=time,shape=zone))+
+  facet_grid(site~.)+  
+  #facet_grid(site~.,scales="free_y")+  
+  geom_jitter(aes(alpha=zone),position = position_jitterdodge())+
+  #add color="black" here for outlines
+  geom_boxplot(outlier.shape=NA,color="black",aes(alpha=zone))+
+  ylab("Bacterial community evenness")+
+  xlab("Time point")+
+  ylim(0,1.05)+
+  theme_bw()+
+  scale_color_manual(values=c("#3B0F70","#FA7F53","#A8327D"))+
+  scale_fill_manual(values=c("#3B0F70","#FA7F53","#A8327D"))+
+  scale_shape_manual(values=c(21,23),name="Reef zone")+
+  theme(plot.title=element_text(face = "italic"),axis.text.x=element_text(angle=45,vjust=1.1,hjust=1))+
+  ggtitle("S. siderea")+
+  scale_alpha_manual(values=c(0.45,0.75),name="Reef zone")+
+  guides(fill="none",color="none")+
+  scale_x_discrete(labels=c("Pre","Disturb.","Post"))
+  
+gg.ev.sid.yr
 
-
+#ggsave(gg.ev.sid.yr,file="gg.sids.even.pdf",width=3.5,height=4)
 ```
 
-## Evenness rads
+### Evenness sids stats - zone
+
+```{r sids even rz stats}
+#LOWER KEYS 1
+#are they sig different across reef zones?
+wilcox.test(even~zone,data=df.div.sid.15.lk1) #p < 0.001***
+#W = 5, p-value = 0.0004114
+wilcox.test(even~zone,data=df.div.sid.17.lk1) #ns
+wilcox.test(even~zone,data=df.div.sid.18.lk1) #ns
+
+#UPPER KEYS 1
+wilcox.test(even~zone,data=df.div.sid.15.uk1)#ns, rare or not
+wilcox.test(even~zone,data=df.div.sid.17.uk1)#ns, rare or not
+wilcox.test(even~zone,data=df.div.sid.18.uk1)#ns, rare or not
+
+#UPPER KEYS 2
+wilcox.test(even~zone,data=df.div.sid.15.uk2)#ns, rare or not
+wilcox.test(even~zone,data=df.div.sid.17.uk2)#ns, rare or not
+wilcox.test(even~zone,data=df.div.sid.18.uk2)#ns, rare or not
+```
+
+### Evenness sids stats - time 
+
+```{r sids even time stats}
+pairwise.wilcox.test(df.div.sid.lk1.in$even, df.div.sid.lk1.in$time, p.adjust.method = "BH")
+#      Pre   Irma 
+# Irma 0.400 -    
+# Post 0.041 0.063
+pairwise.wilcox.test(df.div.sid.lk1.off$even, df.div.sid.lk1.off$time, p.adjust.method = "BH")
+#      Pre   Irma 
+# Irma 0.009 -    
+# Post 0.705 0.740
+
+pairwise.wilcox.test(df.div.sid.uk1.in$even, df.div.sid.uk1.in$time, p.adjust.method = "BH") 
+#      Pre   Irma 
+# Irma 0.872 -    
+# Post 0.014 0.029
+pairwise.wilcox.test(df.div.sid.uk1.off$even, df.div.sid.uk1.off$time, p.adjust.method = "BH") #ns
+
+pairwise.wilcox.test(df.div.sid.uk2.in$even, df.div.sid.uk2.in$time, p.adjust.method = "BH") #ns
+pairwise.wilcox.test(df.div.sid.uk2.off$even, df.div.sid.uk2.off$time, p.adjust.method = "BH") #ns
+```
+
+## Richness rads {.tabset}
 
 ```{r}
+gg.ev.rad.yr <- ggplot(df.div.rad,aes(x=time,y=even,fill=time,color=time,shape=zone))+
+  facet_grid(site~.)+  
+  #facet_grid(site~.,scales="free_y")+  
+  geom_jitter(aes(alpha=zone),position = position_jitterdodge())+
+  #add color="black" here for outlines
+  geom_boxplot(outlier.shape=NA,color="black",aes(alpha=zone))+
+  ylab("Bacterial community evenness")+
+  xlab("Time point")+
+  ylim(0,1.05)+
+  theme_bw()+
+  scale_color_manual(values=c("#3B0F70","#FA7F53","#A8327D"))+
+  scale_fill_manual(values=c("#3B0F70","#FA7F53","#A8327D"))+
+  scale_shape_manual(values=c(21,23),name="Reef zone")+
+  theme(plot.title=element_text(face = "italic"),axis.text.x=element_text(angle=45,vjust=1.1,hjust=1))+
+  ggtitle("S. radians")+
+  scale_alpha_manual(values=c(0.45,0.75),name="Reef zone")+
+  guides(fill="none",color="none")+
+  scale_x_discrete(labels=c("Pre","Disturb.","Post"))
+  
+gg.ev.rad.yr
 
-
+#ggsave(gg.ev.rad.yr,file="gg.rads.even.pdf",width=3.5,height=4)
 ```
+
+### Evenness rads stats - zone
+
+```{r rads eve rz stats}
+#LOWER KEYS 1
+wilcox.test(even~zone,data=df.div.rad.15.lk1) #ns
+wilcox.test(even~zone,data=df.div.rad.17.lk1) #ns
+wilcox.test(even~zone,data=df.div.rad.18.lk1) #ns
+
+#UPPER KEYS 1
+wilcox.test(even~zone,data=df.div.rad.15.uk1) #ns
+#wilcox.test(even~zone,data=df.div.rad.17.uk1)
+#not available
+#wilcox.test(even~zone,data=df.div.rad.18.uk1)
+#not available
+
+#UPPER KEYS 2
+wilcox.test(even~zone,data=df.div.rad.15.uk2) #ns
+wilcox.test(even~zone,data=df.div.rad.17.uk2) #p < 0.05*
+#W = 10, p-value = 0.01111
+wilcox.test(even~zone,data=df.div.rad.18.uk2) #ns
+```
+
+### even rads stats - time 
+
+```{r rads even time stats}
+pairwise.wilcox.test(df.div.rad.lk1.in$even, df.div.rad.lk1.in$time, p.adjust.method = "BH")
+#      Pre    Irma  
+# Irma 0.4470 -     
+# Post 0.0167 0.0092
+pairwise.wilcox.test(df.div.rad.lk1.off$even, df.div.rad.lk1.off$time, p.adjust.method = "BH")
+#      Pre     Irma   
+# Irma 0.09452 -      
+# Post 0.00062 0.10880
+
+pairwise.wilcox.test(df.div.rad.uk1.in$even, df.div.rad.uk1.in$time, p.adjust.method = "BH") 
+#ns
+#pairwise.wilcox.test(df.div.rad.uk1.off$even, df.div.rad.uk1.off$time, p.adjust.method = "BH") 
+#not available
+
+pairwise.wilcox.test(df.div.rad.uk2.in$even, df.div.rad.uk2.in$time, p.adjust.method = "BH") 
+#      Pre    Irma  
+# Irma 0.0089 -     
+# Post 0.0889 1.0000
+pairwise.wilcox.test(df.div.rad.uk2.off$even, df.div.rad.uk2.off$time, p.adjust.method = "BH") 
+#     Pre    Irma  
+# Irma 0.4470 -     
+# Post 0.0059 0.0079
+```
+
+
+
 
 
