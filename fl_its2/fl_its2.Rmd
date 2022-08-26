@@ -90,8 +90,8 @@ library(colorspace)
 ```
 
 ```{r working directory, include=FALSE}
-setwd("~/Google Drive (nicfall@bu.edu)/Flirma/flirma_networks/fl_its2")
-#setwd("/Volumes/GoogleDrive-104519233854090018057/My Drive/Flirma/flirma_networks/fl_its2")
+#setwd("~/Google Drive (nicfall@bu.edu)/Flirma/flirma_networks/fl_its2")
+setwd("/Volumes/GoogleDrive-104519233854090018057/My Drive/Flirma/flirma_networks/fl_its2")
 ```
 
 ## Checking for no read samples
@@ -139,39 +139,10 @@ ps
 #saveRDS(ps,file="ps.its2.rds")
 ```
 
-## Phyloseq object - all types
-
-Ran once then saved to re-read in later
-
-```{r phyloseq object type profiles}
-# counts.all <- read.csv("symportal_allcounts.csv",header=T,row.names=1)
-# 
-# plot(rowSums(counts.all)) 
-# #3 that are 0, removing them now: (513, 87, 76)
-# counts.all.no0 <- counts.all[1:93,]
-# 
-# # # import taxa info - haven't done this with the full suite of types yet
-# # taxa <- read.csv("symportal_taxa.csv",header=TRUE)
-# # rownames(taxa) <- as.factor(taxa$ITS2_type_profile)
-# # mtaxa <- as.matrix(taxa)
-# 
-# # import counts (absolute abundance from its2 type profiles)
-# mcounts.all <- as.matrix(counts.all.no0)
-# 
-# # Construct phyloseq object 
-# ps.all <- phyloseq(otu_table(mcounts.all, taxa_are_rows=FALSE),
-#                sample_data(samdf))
-# 
-# ps.all
-# 
-# #saveRDS(ps.all,"ps.all.its2.RDS")
-```
-
 ## Re-read in data
 
 ```{r re-read data}
 ps <- readRDS("ps.its2.RDS")
-#ps.all <- readRDS("ps.all.its2.RDS")
 ```
 
 ## Subset data for bar plots
@@ -315,9 +286,14 @@ uni.cord <- read.csv("unifrac_profiles_PCoA_coords_B_sqrt.csv")
 
 ggplot(uni.cord,aes(x=PC1,y=PC2,color=type_collapsed,label=sample))+
   geom_point()+
+  xlab("PC1 (58.5%)")+
+  ylab("PC2 (14.7%)")+
   geom_text_repel(max.overlaps=20)+
-  stat_ellipse()
+  stat_ellipse()+
+  theme_bw()
 #separated B5-1* & B5-2* by the 0 on PC2, except for 1 that was just below 0
+
+#ggsave(file="pca_grouped.pdf",w=12,h=10)
 
 #checking bray curtis
 bray.cord <- read.csv("braycurtis_profiles_PCoA_coords_B_sqrt.csv")
@@ -794,7 +770,7 @@ gg.bar.its2
 
 Type profile - Bray-Curtis distance
 
-```{r}
+```{r types by bray}
 maj.seq.colors <- c("#1B1B1B","#969696","#F9F9F9","#00294D","#195481","#5882AF","#9AB0CE","#D6DDE9","#D3E0D2","#95B792","#548C4E","#1F5D12","#002F00","#B8773A")
                          
 ps.maj.sid.pre.rel <- transform_sample_counts(ps.maj.sid.pre, function(x) x / sum(x))
@@ -838,58 +814,94 @@ gg.bar.its2
 #ggsave("bar.its2.sids.pdf",width=9,height=4)
 ```
 
+## Bar plot by type profile
+
+### Setup - packages
+
 ```{r}
-#by sample
-ps.sid.pre.rel <- transform_sample_counts(ps.sid.pre, function(x) x / sum(x))
+#remotes::install_github("KarstensLab/microshades")
+library("microshades")
+#remotes::install_github("mikemc/speedyseq")
+library("speedyseq")
+library(ggpubr)
+library(cowplot)
 
-plot_bar(ps.sid.pre.rel, fill="Majority_ITS2_sequence")+
-    ggtitle("Pre")+
-    theme_cowplot()+
-    theme(axis.text.x=element_text(angle=90,hjust=1))+
-    xlab("")
-
+#setwd("/Volumes/GoogleDrive-104519233854090018057/My Drive/Flirma/flirma_networks/fl_its2")
+setwd("/Volumes/GoogleDrive/My Drive/Flirma/flirma_networks/fl_its2")
 ```
 
-## Bar plot by type profile (yuck)
+### Setup - data
 
 ```{r}
-ps <- readRDS("ps.its2.RDS")
+ps <- readRDS("ps.its2.rds")
 
 ps <- subset_samples(ps,site!="UK3")
 
 ps.sid <- subset_samples(ps,spp=="ssid")
+ps.rad <- subset_samples(ps,spp=="srad")
 
-ps.sid.pre <- subset_samples(ps.sid,time=="Pre")
-ps.sid.irm <- subset_samples(ps.sid,time=="Irma")
-ps.sid.pos <- subset_samples(ps.sid,time=="Post")
+ps.sid.no0 <- prune_taxa(taxa_sums(ps.sid)!=0,ps.sid)
+ps.rad.no0 <- prune_taxa(taxa_sums(ps.rad)!=0,ps.rad)
+```
 
-ps.sid.pre.lk1 <- subset_samples(ps.sid.pre,site=="LK1")
-ps.sid.pre.uk1 <- subset_samples(ps.sid.pre,site=="UK1")
-ps.sid.pre.uk2 <- subset_samples(ps.sid.pre,site=="UK2")
+### Microshades!{.tabset}
 
-ps.sid.irm.lk1 <- subset_samples(ps.sid.irm,site=="LK1")
-ps.sid.irm.uk1 <- subset_samples(ps.sid.irm,site=="UK1")
-ps.sid.irm.uk2 <- subset_samples(ps.sid.irm,site=="UK2")
+#### Microshades plot - sids
 
-ps.sid.pos.lk1 <- subset_samples(ps.sid.pos,site=="LK1")
-ps.sid.pos.uk1 <- subset_samples(ps.sid.pos,site=="UK1")
-ps.sid.pos.uk2 <- subset_samples(ps.sid.pos,site=="UK2")
+```{r}
+# Use microshades function prep_mdf to agglomerate, normalize, and melt the phyloseq object
+mdf.ps.sid <- prep_mdf(ps.sid.no0,subgroup_level="Majority_ITS2_collapsed")
+
+type_groups <- c(unique(mdf.ps.sid$Clade))
+
+# Create a color object for the specified data
+col.mdf.ps.sid <- create_color_dfs(mdf.ps.sid, top_orientation = FALSE,group_level="Clade",subgroup_level="Majority_ITS2_collapsed",selected_groups=c("A","B","C","D"),cvd=TRUE)
+
+# Extract
+col.mdf.ps.sid.m <- col.mdf.ps.sid$mdf
+col.mdf.ps.sid.c <- col.mdf.ps.sid$cdf
+
+col.mdf.ps.sid.m$zone <- sub("I","Inshore",col.mdf.ps.sid.m$zone)
+col.mdf.ps.sid.m$zone <- sub("O","Offshore",col.mdf.ps.sid.m$zone)
+
+col.mdf.ps.sid.m$time <- factor(col.mdf.ps.sid.m$time,levels=c("Pre","Irma","Post"))
+
+col.mdf.ps.sid.c.new <- color_reassign(col.mdf.ps.sid.c,
+                          group_assignment = c("A","B","C","D"),
+                          color_assignment = c("micro_gray","micro_cvd_blue","micro_cvd_green","micro_brown"),group_level="Clade")
+
+col.mdf.ps.sid.m.lk1 <- subset(col.mdf.ps.sid.m,site=="LK1")
+
+ms.plot.lk1 <- plot_microshades(col.mdf.ps.sid.m.lk1, col.mdf.ps.sid.c.new)+
+  facet_wrap(zone~time,scales="free_x")+
+  theme_cowplot()+
+  theme(axis.text.x=element_blank())+
+  ggtitle("Lower Keys 1")
+  #theme(axis.text.x=element_text(angle=45,hjust=1))
+ms.plot.lk1
+
+col.mdf.ps.sid.m.uk1 <- subset(col.mdf.ps.sid.m,site=="UK1")
+
+ms.plot.uk1 <- plot_microshades(col.mdf.ps.sid.m.uk1, col.mdf.ps.sid.c.new)+
+  facet_wrap(zone~time,scales="free_x")+
+  theme_cowplot()+
+  theme(axis.text.x=element_blank())+
+  ggtitle("Upper Keys 1")
+  #theme(axis.text.x=element_text(angle=45,hjust=1))
+ms.plot.uk1
+
+
 ```
 
 ```{r}
-library(ggpubr)
-library(cowplot)
+ps.sid.pre.lk1i.rel <- transform_sample_counts(ps.sid.pre.lk1i, function(x) x / sum(x))
 
-ps.sid.pre.rel <- transform_sample_counts(ps.sid.pre, function(x) x / sum(x))
-ps.sid.pre.rel.sz <- merge_samples(ps.sid.pre.rel, "site_zone")
-ps.sid.pre.rel.sz.rel <- transform_sample_counts(ps.sid.pre.rel.sz, function(x) x / sum(x))
-
-bar.sid.pre.sz <- plot_bar(ps.sid.pre.rel.sz.rel, fill="ITS2_type_profile")+
+bar.sid.pre.lk1i <- plot_bar(ps.sid.pre.lk1i.rel, fill="ITS2_type_profile")+
     ggtitle("Pre")+
     theme_cowplot()+
     theme(axis.text.x=element_text(angle=90,hjust=1),legend.position="bottom")+
     xlab("")
-bar.sid.pre.sz
+bar.sid.pre.lk1i
 
 ps.sid.irm.rel <- transform_sample_counts(ps.sid.irm, function(x) x / sum(x))
 ps.sid.irm.rel.sz <- merge_samples(ps.sid.irm.rel, "site_zone")
@@ -915,102 +927,175 @@ bar.sid.pos.sz
 
 gg.bar.clade <- ggarrange(bar.sid.pre.sz,bar.sid.irm.sz,bar.sid.pos.sz,ncol=3,common.legend=T,legend="right")
 gg.bar.clade
+```
+
+
+```{r heat map?}
+ps.sid.pre.sz <- merge_samples(ps.sid.pre,"site_zone")
+ps.sid.pre.sz <- merge_samples(ps.sid.pre,"site_zone")
+ps.sid.pre.sz <- merge_samples(ps.sid.pre,"site_zone")
+
+ps.sid.pre.sz.no0 <- prune_taxa(taxa_sums(ps.sid.pre.sz)!=0,ps.sid.pre.sz)
+ps.sid.pre.sz.no0.rel <- transform_sample_counts(ps.sid.pre.sz.no0, function(x) x / sum(x))
+
+sppAbun <- as.data.frame(ps.sid.pre.sz.no0.rel@otu_table)
+heatmap(as.matrix(sppAbun))
+
+
+plot_heatmap(ps.sid.pre.lk1.z.no0.rel)
+
+sppAbun <- as.data.frame(ps.sid.pre.lk1.z@otu_table)
+
+sppAbun[sppAbun > 0] <- 1 #converts from abundance to P/A
+sppAbun
+
+sppAbun2 <- sppAbun[,colSums(sppAbun)>0]
+
+heatmap(as.matrix(sppAbun2))
+
+heatmap.2(as.matrix(sppAbun2),Rowv=FALSE,Colv=FALSE)
+
+
+ps.sid.lk1 <- subset_samples(ps.sid.no0,site=="LK1")
+ps.sid.lk1.rel <- transform_sample_counts(ps.sid.lk1, function(x) x / sum(x))
+
+plot_heatmap(ps.sid.lk1.rel)
+
+plot_heatmap(ps.sid.lk1.rel,sample.order="zone",low="blue",high="red",na.value="black",method=NULL,distance=NULL)
+
+## Presence/absence
+
+
+
+mnwb.names <- subset(samdf,site_zone=="MNW-B")
+mnwf.names <- subset(samdf,site_zone=="MNW-F")
+
+mnwb.rows <- c(row.names(mnwb.names))
+
+mnwb.pres <- sppAbun[row.names(sppAbun) %in% mnwb.rows,]
+colSums(mnwb.pres)
+plot(colSums(mnwb.pres))
+
+#install.packages("gplots")
+library(gplots)
+heatmap.2(as.matrix(sppAbun),Rowv=FALSE,Colv=FALSE)
+dev.off()
+
+heatmap(as.matrix(sppAbun), scale='none')
+
+ps.bin <- phyloseq(otu_table(sppAbun, taxa_are_rows=FALSE),
+               sample_data(samdf),
+               tax_table(mtaxa))
+
+ps.bin
+
+
+plot_heatmap(ps.bin,sample.order="site_zone")
+dev.off()
+
+
+#install.packages("gplots")
+library(gplots)
+heatmap.2(as.matrix(sppAbun),Rowv=FALSE,Colv=FALSE)
+dev.off()
+
+heatmap(as.matrix(sppAbun), scale='none')
+
+ps.bin <- phyloseq(otu_table(sppAbun, taxa_are_rows=FALSE),
+               sample_data(samdf),
+               tax_table(mtaxa))
+
+ps.bin
+
+
+plot_heatmap(ps.bin,sample.order="site_zone")
+dev.off()
 
 ```
 
-Mo'orea stuff to update/delete
+```{r bubble plot?}
+library(reshape2)
 
-```{r}
-### Type profile by sample
-#all samples
-#plot_bar(ps,"sample_full")
-ps.rel <- transform_sample_counts(ps, function(x) x / sum(x))
-plot_bar(ps.rel,"ITS2_type_profile", fill="ITS2_type_profile",facet_grid=~site_zone)
+ps.sid.lk1.rel.pre <- subset_samples(ps.sid.lk1.rel,time=="Pre")
+ps.sid.lk1.rel.pre.no0 <- prune_taxa(taxa_sums(ps.sid.lk1.rel.pre)!=0,ps.sid.lk1.rel.pre)
 
-gg.bar <- plot_bar(ps.rel,"sample_full",fill="ITS2_type_profile")+
-  geom_bar(stat="identity")+#put color back here in aes
-  #scale_color_manual(values=c("#8E0152","#DE77AE","#FDE0EF","darkgreen","greenyellow","#25AB82","darkolivegreen3","green3","#E6F5D0"))+
-  scale_fill_manual(name="ITS2 type profiles", values=c("#8E0152","#DE77AE","#FDE0EF","darkgreen","greenyellow","#25AB82","darkolivegreen3","green3","#E6F5D0"))+
+pc <- data.frame(ps.sid.lk1.rel.pre.no0@otu_table)
+pc$Sample <- row.names(pc)
+pcm = melt(pc, id = "Sample")
+
+#pcm$Sample <- factor(pcm$Sample,levels=unique(pcm$Sample))
+pcm$value <- as.numeric(pcm$value)
+
+ggplot(pcm, aes(x = Sample, y = variable)) + 
+  geom_point(aes(size = value, fill = variable), alpha = 0.75, shape = 21) + 
+  scale_size_continuous(limits = c(0.01, 1)) + 
+  labs( x= "", y = "", size = "Relative Abundance (%)", fill = "")  + 
+  theme(legend.key=element_blank(), 
+  axis.text.x = element_text(colour = "black", size = 12, face = "bold", angle = 90, vjust = 0.3, hjust = 1), 
+  axis.text.y = element_text(colour = "black", face = "bold", size = 11), 
+  #legend.text = element_text(size = 10, face ="bold", colour ="black"), 
+  #legend.title = element_text(size = 12, face = "bold"), 
+  #panel.background = element_blank(), panel.border = element_rect(colour = "black", fill = NA, size = 1.2), 
+  legend.position = "right")  
+  #scale_fill_manual(values = colours, guide = FALSE) + 
+  #scale_y_discrete(limits = rev(levels(pcm$variable))) 
+
+library(Rmisc)
+
+melt.ps.sid.lk1.rel <- psmelt(ps.sid.lk1.rel)
+melt.ps.sid.lk1.rel$Abundance[is.na(melt.ps.sid.lk1.rel$Abundance)] <- 0
+melt.ps.sid.lk1.rel.sum <- summarySE(melt.ps.sid.lk1.rel,measurevar="Abundance",groupvars = c("ITS2_type_profile","zone"))
+
+melt.ps.sid.lk1.rel.sum[melt.ps.sid.lk1.rel.sum==0] <- NA
+melt.ps.sid.lk1.rel.sum2 <-melt.ps.sid.lk1.rel.sum[complete.cases(melt.ps.sid.lk1.rel.sum),]
+
+bub.genus.mse <- ggplot(melt.ps.sid.lk1.rel.sum2, aes(x = zone, y = ITS2_type_profile)) + 
+  geom_point(aes(size = Abundance, fill = ITS2_type_profile), alpha = 0.75, shape = 21)+
+  #scale_size_continuous(limits=c(0.00001,1),breaks = c(.0001,.10,.50,.75)) + 
+  #scale_size_continuous(limits = c(0.01, 1), breaks = c(.1,.5,.75,1)) + 
+  #facet_grid(indic_res~.,scales="free",space="free")+
   theme_cowplot()+
-  #theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+
-  scale_x_discrete(breaks=c("MNW-B 70","MNW-F 172","MSE-B 307","MSE-F 614","TNW-B 526","TNW-F 405"),labels=c("MNW-B","MNW-F","MSE-B","MSE-F","TNW-B","TNW-F"))+
-  xlab("Site-reef zone")+
-  geom_vline(xintercept=14.5)+
-  geom_vline(xintercept=30.5)+
-  geom_vline(xintercept=46.5)+
-  geom_vline(xintercept=62.5)+
-  geom_vline(xintercept=77.5)+
-  geom_vline(xintercept=93.5)
-gg.bar
+  #scale_fill_manual(values=cols.mse, guide=FALSE)+
+  #ggtitle("Moorea SE")+
+  #ylab("ASV")+
+  #xlab("")+
+  #scale_x_discrete(labels=c("Back","Fore"))+
+  guides(fill="none")
+bub.genus.mse
 
-#counted 14 samples for MNW-B
-#16 for MNW-F
-#16 MSE-B
-#16 MSE-F
-#15 TNW-B
-#16 TNW-F
 
-#ggsave(gg.bar,file="sym.barplot.pdf",h=4,w=11)                        
+library(dplyr)
+tb <- psmelt(ps.sid.lk1.rel) %>%
+  filter(!is.na(ITS2_type_profile)) %>%
+  group_by(zone,sample,ITS2_type_profile) %>%
+  # Add abundances within each phylum and sample
+  summarize_at("Abundance", sum) %>%
+  # Get phylum proportions within each sample
+  #summarize_at("Proportion", ~ . / sum(.)) %>%
+  # Get the mean proportion each phylum across samples within the `Sex` (Male/Female) variable
+  #summarize_at("Proportion", mean)
+#### bubble plot - genus ####
+library(dplyr)
 
-#want to re-order by similar samples
-```
+#MOOREA NW
+melt.mnw <- psmelt(indic.mnw.rel)
+melt.mnw$Abundance[is.na(melt.mnw$Abundance)] <- 0
+melt.mnw.sum <- summarySE(melt.mnw,measurevar="Abundance",groupvars = c("Genus","zone"))
 
-### Type profile by site & zone
+melt.mnw.sum$bool_col <- melt.mnw.sum$Genus %in% genus.mnwi$genus
+melt.mnw.sum$indic_res <- ifelse(melt.mnw.sum$bool_col == T, "Back reef", "Fore reef")
 
-```{r rel abun plot - by site & zone}
-ps.sz <- merge_samples(ps, "site_zone")
-ps.rel.sz <- transform_sample_counts(ps.sz, function(x) x / sum(x))
-plot_bar(ps.rel.sz, fill="ITS2_type_profile")
-
-ps.mnw <- subset_samples(ps, site=="MNW")
-ps.mnw.z <- merge_samples(ps.mnw, "zone")
-ps.mnw.z.rel <- transform_sample_counts(ps.mnw.z, function(x) x / sum(x))
-ps.mse <- subset_samples(ps, site=="MSE")
-ps.mse.z <- merge_samples(ps.mse, "zone")
-ps.mse.z.rel <- transform_sample_counts(ps.mse.z, function(x) x / sum(x))
-ps.tnw <- subset_samples(ps, site=="TNW")
-ps.tnw.z <- merge_samples(ps.tnw, "zone")
-ps.tnw.z.rel <- transform_sample_counts(ps.tnw.z, function(x) x / sum(x))
-
-ps.mnw.z <- merge_samples(ps.mnw, "zone")
-ps.mnw.z.rel <- transform_sample_counts(ps.mnw.z, function(x) x / sum(x))
-bar.mnw <- plot_bar(ps.mnw.z.rel, fill="ITS2_type_profile")+
+bub.genus.mnw <- ggplot(melt.mnw.sum, aes(x = zone, y = Genus)) + 
+  geom_point(aes(size = Abundance, fill = Genus), alpha = 0.75, shape = 21)+
+  facet_grid(indic_res~.,scales="free",space="free")+
   theme_cowplot()+
-  scale_fill_manual(name="ITS2 type profile",values=c("#8E0152","#DE77AE","#FDE0EF","darkgreen","greenyellow","#25AB82","darkolivegreen3","green3","#E6F5D0"))+
-  ylab("Relative abundance")+
-  xlab("Reef zone")+
-  scale_x_discrete(labels=c("BR","FR"))+
-  ggtitle("Mo'orea NW")
-bar.mnw
+  #scale_fill_manual(values=cols.mnw, guide=FALSE)+
+  ggtitle("Moorea NW")+
+  ylab("ASV")+
+  xlab("")+
+  scale_x_discrete(labels=c("Back","Fore"))
+bub.genus.mnw
 
-bar.mse <- plot_bar(ps.mse.z.rel, fill="ITS2_type_profile")+
-  theme_cowplot()+
-  scale_fill_manual(name="ITS2 type profile",values=c("#8E0152","#DE77AE","#FDE0EF","darkgreen","greenyellow","#25AB82","darkolivegreen3","green3","#E6F5D0"))+
-  ylab("Relative abundance")+
-  scale_x_discrete(labels=c("BR","FR"))+
-  xlab("Reef zone")+
-  ggtitle("Mo'orea SE")
-bar.mse
-
-bar.tnw <- plot_bar(ps.tnw.z.rel, fill="ITS2_type_profile")+
-  theme_cowplot()+
-  scale_fill_manual(name="ITS2 type profile",values=c("#8E0152","#DE77AE","#FDE0EF","darkgreen","greenyellow","#25AB82","darkolivegreen3","green3","#E6F5D0"))+
-  xlab("Reef zone")+
-  ylab("Relative abundance")+
-  scale_x_discrete(labels=c("BR","FR"))+
-  ggtitle("Tahiti NW")
-bar.tnw
-```
-
-### Genus by sample
-
-Not super interesting
-
-```{r rel abun - sample x genus}
-ps.clade <- tax_glom(ps, "Clade")
-ps.clade.rel <- transform_sample_counts(ps.clade, function(x) x / sum(x))
-plot_bar(ps.clade.rel, "sample_full", fill="Clade")+
-    geom_bar(aes(color=Clade, fill=Clade), stat="identity", position="stack")
 ```
 
 ## PCAs{.tabset}
@@ -1643,7 +1728,7 @@ find.top.asv <- function(x,num){
   return(m)
 }
 
-top.asvs <- find.top.asv(ps,1)
+top.asvs <- find.top.asv(ps.sid,5)
 top.asvs$taxa <- as.character(top.asvs$taxa)
 
 #write.csv(top.asvs,file="top_sym.csv",row.names=TRUE)
@@ -1693,7 +1778,7 @@ ps.sz.rel@sam_data$zone <- c("BR","FR","BR","FR","BR","FR")
 plot_heatmap(ps.sz.rel,sample.order="site_zone",low="blue",high="red",na.value="black",method=NULL,distance=NULL)
 
 
-seq.sz.rel <- data.frame(ps.sz.rel@otu_table)
+seq.sz.rel <- data.frame(ps.sid.irm.rel@otu_table)
 heatmap.2(as.matrix(t(seq.sz.rel)),Rowv=FALSE,Colv=FALSE)
 
 melt.sz.rel <- psmelt(ps.sz.rel)
@@ -1726,6 +1811,8 @@ ggplot(melt.ps.rel.mnw.no0, aes(x = sample_full, y = OTU)) +
   geom_point(aes(size = Abundance, fill = OTU), alpha = 0.75, shape = 21)+
   #facet_grid(indic_res~.,scales="free",space="free")+
   theme_cowplot()
+
+plot_heatmap(ps.sz.rel,sample.order="site_zone",low="blue",high="red",na.value="black",method=NULL,distance=NULL)
 
 ## Presence/absence
 
