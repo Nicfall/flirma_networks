@@ -90,8 +90,8 @@ library(colorspace)
 ```
 
 ```{r working directory, include=FALSE}
-#setwd("~/Google Drive (nicfall@bu.edu)/Flirma/flirma_networks/fl_its2")
-setwd("/Volumes/GoogleDrive-104519233854090018057/My Drive/Flirma/flirma_networks/fl_its2")
+setwd("~/Google Drive (nicfall@bu.edu)/Flirma/flirma_networks/fl_its2")
+#setwd("/Volumes/GoogleDrive-104519233854090018057/My Drive/Flirma/flirma_networks/fl_its2")
 ```
 
 ## Checking for no read samples
@@ -876,7 +876,8 @@ ms.plot.lk1 <- plot_microshades(col.mdf.ps.sid.m.lk1, col.mdf.ps.sid.c.new)+
   facet_wrap(zone~time,scales="free_x")+
   theme_cowplot()+
   theme(axis.text.x=element_blank())+
-  ggtitle("Lower Keys 1")
+  ggtitle("Lower Keys 1")+
+  guides(color=guide_legend("Majority ITS2 sequence"),fill=guide_legend("Majority ITS2 sequence")) 
   #theme(axis.text.x=element_text(angle=45,hjust=1))
 ms.plot.lk1
 
@@ -886,11 +887,84 @@ ms.plot.uk1 <- plot_microshades(col.mdf.ps.sid.m.uk1, col.mdf.ps.sid.c.new)+
   facet_wrap(zone~time,scales="free_x")+
   theme_cowplot()+
   theme(axis.text.x=element_blank())+
-  ggtitle("Upper Keys 1")
-  #theme(axis.text.x=element_text(angle=45,hjust=1))
+  ggtitle("Upper Keys 1")+
+  guides(color=guide_legend("Majority ITS2 sequence"),fill=guide_legend("Majority ITS2 sequence")) 
 ms.plot.uk1
 
+col.mdf.ps.sid.m.uk2 <- subset(col.mdf.ps.sid.m,site=="UK2")
 
+ms.plot.uk2 <- plot_microshades(col.mdf.ps.sid.m.uk2, col.mdf.ps.sid.c.new)+
+  facet_wrap(zone~time,scales="free_x")+
+  theme_cowplot()+
+  theme(axis.text.x=element_blank())+
+  ggtitle("Upper Keys 2")+
+  guides(color=guide_legend("Majority ITS2 sequence"),fill=guide_legend("Majority ITS2 sequence")) 
+ms.plot.uk2
+
+ms.plot.sid <- ggarrange(ms.plot.lk1,ms.plot.uk1,ms.plot.uk2,nrow=3,ncol=1,labels="AUTO")
+annotate_figure(ms.plot.sid,top=text_grob("S. siderea",face="italic",size=16))
+
+#ggsave("ms.plot.sid.pdf",height=10,width=8)
+```
+
+#### Microshades plot - rads
+
+```{r}
+# Use microshades function prep_mdf to agglomerate, normalize, and melt the phyloseq object
+mdf.ps.rad <- prep_mdf(ps.rad.no0,subgroup_level="Majority_ITS2_collapsed")
+
+type_groups <- c(unique(mdf.ps.rad$Clade))
+
+# Create a color object for the specified data
+col.mdf.ps.rad <- create_color_dfs(mdf.ps.rad, top_orientation = FALSE,group_level="Clade",subgroup_level="Majority_ITS2_collapsed",selected_groups=c("A","B","C","D"),cvd=TRUE)
+
+# Extract
+col.mdf.ps.rad.m <- col.mdf.ps.rad$mdf
+col.mdf.ps.rad.c <- col.mdf.ps.rad$cdf
+
+col.mdf.ps.rad.m$zone <- sub("I","Inshore",col.mdf.ps.rad.m$zone)
+col.mdf.ps.rad.m$zone <- sub("O","Offshore",col.mdf.ps.rad.m$zone)
+
+col.mdf.ps.rad.m$time <- factor(col.mdf.ps.rad.m$time,levels=c("Pre","Irma","Post"))
+
+col.mdf.ps.rad.c.new <- color_reassign(col.mdf.ps.rad.c,
+                          group_assignment = c("A","B","C","D"),
+                          color_assignment = c("micro_gray","micro_cvd_blue","micro_cvd_green","micro_brown"),group_level="Clade")
+
+col.mdf.ps.rad.m.lk1 <- subset(col.mdf.ps.rad.m,site=="LK1")
+
+ms.plot.lk1 <- plot_microshades(col.mdf.ps.rad.m.lk1, col.mdf.ps.rad.c.new)+
+  facet_wrap(zone~time,scales="free_x")+
+  theme_cowplot()+
+  theme(axis.text.x=element_blank())+
+  ggtitle("Lower Keys 1")+
+  guides(color=guide_legend("Majority ITS2 sequence"),fill=guide_legend("Majority ITS2 sequence")) 
+ms.plot.lk1
+
+col.mdf.ps.rad.m.uk1 <- subset(col.mdf.ps.rad.m,site=="UK1")
+
+ms.plot.uk1 <- plot_microshades(col.mdf.ps.rad.m.uk1, col.mdf.ps.rad.c.new)+
+  facet_wrap(zone~time,scales="free_x")+
+  theme_cowplot()+
+  theme(axis.text.x=element_blank())+
+  ggtitle("Upper Keys 1")+
+  guides(color=guide_legend("Majority ITS2 sequence"),fill=guide_legend("Majority ITS2 sequence")) 
+ms.plot.uk1
+
+col.mdf.ps.rad.m.uk2 <- subset(col.mdf.ps.rad.m,site=="UK2")
+
+ms.plot.uk2 <- plot_microshades(col.mdf.ps.rad.m.uk2, col.mdf.ps.rad.c.new)+
+  facet_wrap(zone~time,scales="free_x")+
+  theme_cowplot()+
+  theme(axis.text.x=element_blank())+
+  ggtitle("Upper Keys 1")+
+  guides(color=guide_legend("Majority ITS2 sequence"),fill=guide_legend("Majority ITS2 sequence")) 
+ms.plot.uk2
+
+ms.plot.rad <- ggarrange(ms.plot.lk1,ms.plot.uk1,ms.plot.uk2,nrow=3,ncol=1)
+annotate_figure(ms.plot.rad,top=text_grob("S. radians",face="italic",size=16))
+
+#ggsave("ms.plot.rad.pdf",height=10,width=8)
 ```
 
 ```{r}
@@ -1098,319 +1172,31 @@ bub.genus.mnw
 
 ```
 
-## PCAs{.tabset}
+## PCoAs{.tabset}
+
+```{r no uk3 for pcoas}
+ps <- subset_samples(ps,site!="UK3")
+ps.sid <- subset_samples(ps,spp=="ssid")
+
+```
 
 ### Type profiles
 
 ```{r type profiles by site}
-ps.ord <- ordinate(ps,"PCoA",distance="bray")
-plot_ordination(ps, ps.ord, color ="site", shape="zone")+
+ps.sid.ord <- ordinate(ps.sid,"PCoA",distance="bray")
+plot_ordination(ps.sid, ps.sid.ord, color ="zone")+
   geom_point(alpha=0.5)+
-  scale_color_manual(values=c("darkslategray3","darkslategray4","#000004"))+
-  scale_shape_manual(values=c(16,15))+
-  stat_ellipse(aes(linetype=zone))+
-  theme_cowplot()
+  #scale_color_manual(values=c("darkslategray3","darkslategray4","#000004"))+
+  #scale_shape_manual(values=c(16,15))+
+  stat_ellipse()+
+  theme_cowplot()+
+  facet_grid(~site)
+  #facet_grid(site~zone)
 
 #ggsave(filename="pcoa.types.site.pdf")
 ```
 
-```{r pcoa type profiles}
-#just cladocopium
-# ps.c <- subset_taxa(ps,Clade=="C")
-# ps.c.no0 <- subset_samples(ps.c,sample_sums(ps.c)!=0)
-# 
-# ps.ord.c <- ordinate(ps.c.no0,"PCoA",distance="bray")
-# plot_ordination(ps.c.no0, ps.ord.c, color ="site")+
-#   geom_point(alpha=0.5)
-# #doesn't really change between C or C+A
-
-ps.mnw <- subset_samples(ps,site=="MNW")
-gg.pc.mnw.types <- plot_ordination(ps.mnw, ordinate(ps.mnw,"PCoA",distance="bray"), color ="zone",shape="zone")+
-  geom_point()+
-  stat_ellipse()+
-  scale_shape_manual(values=c(16,15),labels=c("BR","FR"))+
-  scale_color_manual(values=c("#ED7953FF","#8405A7FF"),labels=c("BR","FR"))+
-  guides(color=guide_legend(title="Reef zone"),shape=guide_legend(title="Reef zone"))+
-  theme_cowplot()+
-  xlab("Axis 1 (61.4%)")+
-  ylab("Axis 2 (12.2%)")+
-  #theme(legend.position="none")+
-  ggtitle("Mo'orea NW")
-gg.pc.mnw.types
-
-ps.mse <- subset_samples(ps,site=="MSE")
-gg.pc.mse.types <- plot_ordination(ps.mse, ordinate(ps.mse,"PCoA",distance="bray"), color ="zone",shape="zone")+
-  geom_point()+
-  stat_ellipse()+
-  scale_shape_manual(values=c(16,15),labels=c("BR","FR"))+
-  scale_color_manual(values=c("#ED7953FF","#8405A7FF"),labels=c("BR","FR"))+
-  guides(color=guide_legend(title="Reef zone"),shape=guide_legend(title="Reef zone"))+
-  theme_cowplot()+
-  ggtitle("Mo'orea SE")+
-  xlab("Axis 1 (52.4%)")+
-  ylab("Axis 2 (23.5%)")
-gg.pc.mse.types
-
-ps.tnw <- subset_samples(ps,site=="TNW")
-gg.pc.tnw.types <- plot_ordination(ps.tnw, ordinate(ps.tnw,"PCoA",distance="bray"), color ="zone",shape="zone")+
-  geom_point()+
-  stat_ellipse()+
-  scale_shape_manual(values=c(16,15),labels=c("BR","FR"))+
-  scale_color_manual(values=c("#ED7953FF","#8405A7FF"),labels=c("BR","FR"))+
-  guides(color=guide_legend(title="Reef zone"),shape=guide_legend(title="Reef zone"))+
-  theme_cowplot()+
-  ggtitle("Tahiti NW")+
-  xlab("Axis 1 (41.1%)")+
-  ylab("Axis 2 (21.5%)")
-gg.pc.tnw.types
-```
-
-### All types
-
-Reading in coordinate files given by SymPortal:
-(done on full suite of sequences, not the type profiles)
-
-```{r pcoa only C genus}
-pcoa.c <- read.csv("symportal_bray_pcoa_cladec.csv")
-#pcoa.c <- read.csv("symportal_bray_pcoa_cladec_sqrt.csv")
-pcoa.c$Sample <- pcoa.c$sample
-pcoa.samdata.c <- merge(pcoa.c,samdf,by="Sample")
-```
-
-### Plot - site & zone
-
-```{r C pcoa plot sz}
-#quick raw plot
-ggplot(pcoa.samdata.c,aes(x=PC1,y=PC2,color=site))+
-  geom_point()
-
-ggplot(pcoa.samdata.c,aes(x=PC1,y=PC2,color=site_zone,shape=site,linetype=zone))+
-  geom_point()+
-  stat_ellipse()+
-  #scale_shape_manual(values=c(16,15),labels=c("Back reef","Fore reef"))+
-  #scale_color_manual(values=c("#ED7953FF","#8405A7FF"),labels=c("Back reef","Fore reef"))+
-  guides(color=guide_legend(title="Reef zone"),shape=guide_legend(title="Reef zone"))
-```
-
-### Plot - zone summed
-
-```{r C pcoa plot z}
-ggplot(pcoa.samdata.c,aes(x=PC1,y=PC2,color=zone,shape=zone))+
-  geom_point()+
-  stat_ellipse()+
-  scale_shape_manual(values=c(16,15),labels=c("Back reef","Fore reef"))+
-  scale_color_manual(values=c("#ED7953FF","#8405A7FF"),labels=c("Back reef","Fore reef"))+
-  guides(color=guide_legend(title="Reef zone"),shape=guide_legend(title="Reef zone"))
-```
-
-## PCAs by site{.tabset}
-
-### MNW
-
-```{r pcoa mnw}
-pcoa.mnw <- subset(pcoa.samdata.c,site=="MNW")
-
-gg.pc.mnw <- ggplot(pcoa.mnw,aes(x=PC1,y=PC2,color=zone,shape=zone))+
-  geom_point()+
-  stat_ellipse()+
-  scale_shape_manual(values=c(16,15),labels=c("Back reef","Fore reef"))+
-  scale_color_manual(values=c("#ED7953FF","#8405A7FF"),labels=c("Back reef","Fore reef"))+
-  guides(color=guide_legend(title="Reef zone"),shape=guide_legend(title="Reef zone"))+
-  theme_cowplot()+
-  theme(legend.position="none")+
-  ggtitle("Mo'orea NW")+
-  xlab(" ")
-gg.pc.mnw
-```
-
-### MSE
-
-```{r pcoa mse}
-pcoa.mse <- subset(pcoa.samdata.c,site=="MSE")
-
-gg.pc.mse <- ggplot(pcoa.mse,aes(x=PC1,y=PC2,color=zone,shape=zone))+
-  geom_point()+
-  stat_ellipse()+
-  scale_shape_manual(values=c(16,15),labels=c("Back reef","Fore reef"))+
-  scale_color_manual(values=c("#ED7953FF","#8405A7FF"),labels=c("Back reef","Fore reef"))+
-  guides(color=guide_legend(title="Reef zone"),shape=guide_legend(title="Reef zone"))+
-  theme_cowplot()+
-  ggtitle("Mo'orea SE")+
-  theme(legend.position="none")+
-  ylab(" ")
-gg.pc.mse
-```
-
-### TNW
-
-```{r pcoa tnw}
-pcoa.tnw <- subset(pcoa.samdata.c,site=="TNW")
-
-gg.pc.tnw <- ggplot(pcoa.tnw,aes(x=PC1,y=PC2,color=zone,shape=zone))+
-  geom_point()+
-  stat_ellipse()+
-  scale_shape_manual(values=c(16,15),labels=c("Back reef","Fore reef"))+
-  scale_color_manual(values=c("#ED7953FF","#8405A7FF"),labels=c("Back reef","Fore reef"))+
-  guides(color=guide_legend(title="Reef zone"),shape=guide_legend(title="Reef zone"))+
-  theme_cowplot()+
-  ggtitle("Tahiti NW")+
-  ylab(" ")+
-  xlab(" ")
-gg.pc.tnw
-```
-
-## Synthesizing results
-
-```{r multi pca}
-library(ggpubr)
-```
-
-```{r}
-gg.pca <- ggarrange(gg.pc.mnw.types,gg.pc.mse.types,gg.pc.tnw.types,labels=c("(a)","(b)","(c)"),nrow=1,common.legend=T,legend="right")
-gg.pca
-gg.bar <- ggarrange(bar.mnw,bar.mse,bar.tnw,labels=c("(d)","(e)","(f)"),nrow=1,common.legend=TRUE,legend="right")
-gg.bar
-
-ggarrange(gg.pca,gg.bar,nrow=2)
-#ggsave(file="pca.bar.pdf",height=5.5,width=9.5)
-```
-
-## Normalized results
-
-Thank you to Ryan Eckhart for parts of this: [Github here](https://github.com/RyanEckert/Belize_Mcav_Symbiodiniaceae_ITS2)
-
-```{r normalized type profiles}
-#BiocManager::install("edgeR", update = FALSE)
-library(edgeR)
-
-seqs.types <- as.data.frame(ps@otu_table)
-seqs.types.t <- t(seqs.types)
-
-its2SeqList = DGEList(counts = seqs.types.t)
-head(its2SeqList$samples)
-
-its2SeqNorm =  calcNormFactors(its2SeqList, method = "TMM")
-head(its2SeqNorm$samples)
-its2TMM = t(cpm(its2SeqNorm, normalized.lib.sizes = TRUE))
-
-#phyloseq
-row.names(samdf) <- samdf$Sample
-ps.norm <- phyloseq(otu_table(its2TMM, taxa_are_rows=FALSE),
-               sample_data(samdf),
-               tax_table(mtaxa))
-
-ps.norm
-```
-
-
-```{r}
-ps.norm.ord <- ordinate(ps.norm,"PCoA",distance="bray")
-plot_ordination(ps.norm, ps.norm.ord, color ="site")+
-  geom_point(alpha=0.5)
-
-ps.norm.mnw <- subset_samples(ps.norm,site=="MNW")
-
-plot_ordination(ps.norm.mnw, ordinate(ps.norm.mnw,"PCoA","bray"), color ="zone")+
-  geom_point(alpha=0.5)+
-  stat_ellipse()
-
-ps.norm.mse <- subset_samples(ps.norm,site=="MSE")
-
-plot_ordination(ps.norm.mse, ordinate(ps.norm.mse,"PCoA","bray"), color ="zone")+
-  geom_point(alpha=0.5)+
-  stat_ellipse()
-
-ps.norm.tnw <- subset_samples(ps.norm,site=="TNW")
-
-plot_ordination(ps.norm.tnw, ordinate(ps.norm.tnw,"PCoA","bray"), color ="zone")+
-  geom_point(alpha=0.5)+
-  stat_ellipse()
-```
-
-```{norm for all seqs}
-#BiocManager::install("edgeR", update = FALSE)
-library(edgeR)
-
-seqs.all <- as.data.frame(ps.all@otu_table)
-seqs.all.t <- t(seqs.all)
-
-its2SeqList.all = DGEList(counts = seqs.all.t)
-head(its2SeqList.all$samples)
-
-its2SeqNorm.all =  calcNormFactors(its2SeqList.all, method = "TMM")
-head(its2SeqNorm.all$samples)
-its2TMM.all = t(cpm(its2SeqNorm.all, normalized.lib.sizes = TRUE))
-
-#phyloseq
-ps.norm.all <- phyloseq(otu_table(its2TMM.all, taxa_are_rows=FALSE),
-               sample_data(samdf))
-
-ps.norm.all
-
-ps.norm.all.ord <- ordinate(ps.norm.all,"PCoA",distance="bray")
-plot_ordination(ps.norm.all, ps.norm.all.ord, color ="site")+
-  geom_point(alpha=0.5)+
-  stat_ellipse()
-```
-
-# Collapsing type profiles via phylogeny tree
-
-Started with file: "188_20211214_03_DBV_20211215T030311.seqs.fasta" in the post-med seqs folder. Also started with the taxa info 'Majority_ITS2_sequence", removed the slashes between types, & removed duplicates. That left 24 unique ITS2 types, put these in 'names.txt'. Want to extract the relevant sequences from the fasta file now
-
-```{bash, eval=F}
-for word in $(cat names.txt); do echo $word; grep -w -A 1 $word postmedseqs.fasta >> output.fasta; done
-```
-
-*Important notes:* produced a fasta file with '--' in between some desired entries, removed that manually, but I'm sure there's a better way than that. It also gave me an unwanted one (A4.3), took that out manually. Easy to do with 24 types, but would be harder with more than that.. processed file was named _output_types_cleaned.fasta_
-
-Then went to ngphylogeny.fr to plot.
-
-More notes: 
-- A is fine, the majority sequences are pretty disparate. 
-- The Bs are a total mess, will plot below
-- Cs are fine
-- Ds are fine
-
-## Clade B plotted
-
-```{r}
-
-
-p <- ggtree(higher_tree)
-dd <- data.frame(taxa = c("Acroporidae","Pocilloporidae","Astrocoeniidae","Merulinidae","Dendrophylliidae","Caryophylliidae","Agariciidae","Gorgoniidae","Coralliidae"),
-                 strategy = c("mixed","brood",rep("broadcast",2),"brood","broadcast",rep("brood",3)),
-                 prop = c(9,8,1,4,3,1,1,1,2))
-p <- p %<+% dd + geom_tiplab(aes(x=x+6,color=strategy)) +
-  geom_tippoint(aes(x=x+3.2,size=prop,color=strategy),alpha=0.25)+
-  scale_color_manual(values=colorz,name="Spawning mode",labels=c("Broadcasting","Brooding","Mixed"))+
-  theme(legend.position="right")+
-  guides(size=guide_legend("Number of studies"))
-p + ggplot2::xlim(0,90)+geom_treescale()
-```
-
-# Stats
-
-## New phyloseq object
-
-Fuller data counts from Symportal before type profiles identified
-
-First we purge sequences and transpose the data to work with *edgeR*
-```{r, purging outlying sequences and normalizing reads, eval=FALSE}
-goods = purgeOutliers(its2Seq, count.columns = 4:length(its2Seq), otu.cut = 0.0001, sampleZcut = -5)
-```
-
-```{r, seq norm, results = 'hide', eval=FALSE}
-its2SeqTransposed = t(goods[, 4:length(goods[1, ])])
-its2SeqList = DGEList(counts = its2SeqTransposed)
-head(its2SeqList$samples)
-```
-
-Normalize
-
-```{r}
-```
-
-## Stats - type profiles
+# Stats - type profiles
 
 ```{r adonis stats packages}
 library(vegan)
@@ -1420,51 +1206,78 @@ library(dplyr)
 library(edgeR)
 ```
 
+
+```{r}
+ps.sid.rel <- transform_sample_counts(ps.sid, function(x) x / sum(x))
+## Presence/absence
+
+sppAbun <- as.data.frame(ps.sid.rel@otu_table)
+
+sppAbun[sppAbun > 0] <- 1 #converts from abundance to P/A
+sppAbun
+
+rowSums(sppAbun)
+
+morethan1 <- sppAbun[rowSums(sppAbun)>1,]
+
+find.top.taxa <- function(x,taxa){
+  require(phyloseq)
+  top.taxa <- tax_glom(x, taxa)
+  otu <- otu_table(t(top.taxa)) # remove the transformation if using a merge_sample object
+  tax <- tax_table(top.taxa)
+  j<-apply(otu,1,which.max)
+  k <- j[!duplicated(j)]
+  l <- data.frame(tax[k,])
+  m <- data.frame(otu[,k])
+  s <- as.name(taxa)
+  colnames(m) = l[,taxa]
+  n <- colnames(m)[apply(m,1,which.max)]
+  m[,taxa] <- n
+  return(m)
+}
+find.top.taxa(top.pdy,"Phylum")
+
+#chi-square, top vs side
+chisq.test(SymPortalDataK_1$variable, SymPortalDataK_1$label, correct=FALSE)
+#Pearson's Chi-squared test
+
+#data:  SymPortalDataK_1$variable and SymPortalDataK_1$label
+#X-squared = 5.5824, df = 6, p-value = 0.4716
+
+
+```
 Raw
 
 ```{r by site}
-seq.ps <- data.frame(ps@otu_table)
-samdf.ps <- data.frame(ps@sam_data)
+ps.sid <- subset_samples(ps,spp="ssid")
 
-dist.ps <- vegdist(seq.ps)
-bet.ps <- betadisper(dist.ps,samdf.ps$site)
-#anova(bet.ps) #ns
-permutest(bet.ps,pairwise=TRUE,permutations=999)
-plot(bet.ps)
+seq.sid <- data.frame(ps.sid@otu_table)
+samdf.sid <- data.frame(ps.sid@sam_data)
 
-adonis(seq.ps ~ site/zone, data=samdf.ps, permutations=999) #p<001***
+dist.sid <- vegdist(seq.sid)
+##zone
+bet.sid <- betadisper(dist.sid,samdf.sid$zone)
+#anova(bet.ps)
+permutest(bet.sid,pairwise=TRUE,permutations=999)
+plot(bet.ps) #0.07, trend
 
-pairwise.adonis(seq.ps, factors=samdf.ps$site, permutations=999) #tahiti different from other two
-#        pairs    F.Model         R2 p.value p.adjusted
-# 1 MSE vs MNW  0.8174161 0.01344049   0.445      0.445
-# 2 MSE vs TNW 13.6939515 0.18333414   0.001      0.001
-# 3 MNW vs TNW 12.1951261 0.17129159   0.001      0.001
-```
+adonis2(seq.sid ~ zone, data=samdf.sid, permutations=999) #p<0.01**
 
-Normalized
+##time
+bet.sid <- betadisper(dist.sid,samdf.sid$time)
+#anova(bet.ps)
+permutest(bet.sid,pairwise=TRUE,permutations=999)
+plot(bet.ps) #ns
 
-```{r stats by site norm}
-seq.ps.norm <- data.frame(ps.norm@otu_table)
-samdf.ps.norm <- data.frame(ps.norm@sam_data)
+adonis2( ~ time, data=samdf.sid, permutations=999) #p<0.001***
 
-dist.ps.norm <- vegdist(seq.ps.norm)
-bet.ps.norm <- betadisper(dist.ps.norm,samdf.ps.norm$site)
-anova(bet.ps.norm) #ns
-plot(bet.ps.norm)
-
-adonis(seq.ps.norm ~ site/zone, data=samdf.ps.norm, permutations=999) #p<001***
-
-pairwise.adonis(seq.ps.norm, factors=samdf.ps.norm$site, permutations=999) #tahiti different from other two
-#        pairs    F.Model         R2 p.value p.adjusted
-# 1 MSE vs MNW  0.8174161 0.01344049   0.445      0.445
-# 2 MSE vs TNW 13.6939515 0.18333414   0.001      0.001
-# 3 MNW vs TNW 12.1951261 0.17129159   0.001      0.001
+pairwise.adonis(seq.sid, factors=samdf.sid$time, permutations=999)
 ```
 
 Relative abundance
 
 ```{r stats by site rel}
-seq.ps.rel <- data.frame(ps.rel@otu_table)
+seq.ps.rel <- data.frame(ps.sid@otu_table)
 samdf.ps.rel <- data.frame(ps.rel@sam_data)
 
 dist.ps.rel <- vegdist(seq.ps.rel)
@@ -1848,4 +1661,25 @@ plot_heatmap(ps.bin,sample.order="site_zone")
 dev.off()
 
 ```
+
+
+# Flirma scripts scraps
+
+## Collapsing type profiles via phylogeny tree
+
+Started with file: "188_20211214_03_DBV_20211215T030311.seqs.fasta" in the post-med seqs folder. Also started with the taxa info 'Majority_ITS2_sequence", removed the slashes between types, & removed duplicates. That left 24 unique ITS2 types, put these in 'names.txt'. Want to extract the relevant sequences from the fasta file now
+
+```{bash, eval=F}
+for word in $(cat names.txt); do echo $word; grep -w -A 1 $word postmedseqs.fasta >> output.fasta; done
+```
+
+*Important notes:* produced a fasta file with '--' in between some desired entries, removed that manually, but I'm sure there's a better way than that. It also gave me an unwanted one (A4.3), took that out manually. Easy to do with 24 types, but would be harder with more than that.. processed file was named _output_types_cleaned.fasta_
+
+Then went to ngphylogeny.fr to plot.
+
+More notes: 
+- A is fine, the majority sequences are pretty disparate. 
+- The Bs are a total mess, will plot below
+- Cs are fine
+- Ds are fine
 

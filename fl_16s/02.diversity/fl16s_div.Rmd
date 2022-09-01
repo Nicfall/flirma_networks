@@ -23,10 +23,10 @@ library("Rmisc")
 library(car)
 
 #home
-setwd("/Volumes/GoogleDrive/My Drive/Flirma/flirma_networks/fl_16s/02.diversity")
+#setwd("/Volumes/GoogleDrive/My Drive/Flirma/flirma_networks/fl_16s/02.diversity")
 
 #work
-#setwd("/Volumes/GoogleDrive-104519233854090018057/My Drive/Flirma/flirma_networks/fl_16s/02.diversity")
+setwd("/Volumes/GoogleDrive-104519233854090018057/My Drive/Flirma/flirma_networks/fl_16s/02.diversity")
 ```
 
 ## Read in data
@@ -491,7 +491,7 @@ pairwise.wilcox.test(df.div.rad.uk2.off$Observed, df.div.rad.uk2.off$time, p.adj
 
 ```{r evenness plot sids}
 gg.ev.sid.yr <- ggplot(df.div.sid,aes(x=time,y=even,fill=time,color=time,shape=zone))+
-  facet_grid(site~.)+  
+  facet_grid(site~zone)+  
   #facet_grid(site~.,scales="free_y")+  
   geom_jitter(aes(alpha=zone),position = position_jitterdodge())+
   #add color="black" here for outlines
@@ -506,12 +506,11 @@ gg.ev.sid.yr <- ggplot(df.div.sid,aes(x=time,y=even,fill=time,color=time,shape=z
   theme(plot.title=element_text(face = "italic"),axis.text.x=element_text(angle=45,vjust=1.1,hjust=1))+
   ggtitle("S. siderea")+
   scale_alpha_manual(values=c(0.45,0.75),name="Reef zone")+
-  guides(fill="none",color="none")+
+  guides(fill="none",color="none",alpha="none",shape="none")+
   scale_x_discrete(labels=c("Pre","Disturb.","Post"))
-  
-gg.ev.sid.yr
+gg.ev.sid.yr  
 
-#ggsave(gg.ev.sid.yr,file="gg.sids.even.pdf",width=3.5,height=4)
+#ggsave(gg.ev.sid.yr,file="gg.sids.even.new.pdf",width=2.5,height=4)
 ```
 
 ### Evenness sids stats - zone
@@ -561,12 +560,12 @@ pairwise.wilcox.test(df.div.sid.uk2.off$even, df.div.sid.uk2.off$time, p.adjust.
 
 ```{r}
 gg.ev.rad.yr <- ggplot(df.div.rad,aes(x=time,y=even,fill=time,color=time,shape=zone))+
-  facet_grid(site~.)+  
+  facet_grid(site~zone)+  
   #facet_grid(site~.,scales="free_y")+  
   geom_jitter(aes(alpha=zone),position = position_jitterdodge())+
   #add color="black" here for outlines
   geom_boxplot(outlier.shape=NA,color="black",aes(alpha=zone))+
-  ylab("Bacterial community evenness")+
+  ylab(" ")+
   xlab("Time point")+
   ylim(0,1.05)+
   theme_bw()+
@@ -576,12 +575,12 @@ gg.ev.rad.yr <- ggplot(df.div.rad,aes(x=time,y=even,fill=time,color=time,shape=z
   theme(plot.title=element_text(face = "italic"),axis.text.x=element_text(angle=45,vjust=1.1,hjust=1))+
   ggtitle("S. radians")+
   scale_alpha_manual(values=c(0.45,0.75),name="Reef zone")+
-  guides(fill="none",color="none")+
+  guides(fill="none",color="none",alpha="none",shape="none")+
   scale_x_discrete(labels=c("Pre","Disturb.","Post"))
   
 gg.ev.rad.yr
 
-#ggsave(gg.ev.rad.yr,file="gg.rads.even.pdf",width=3.5,height=4)
+ggsave(gg.ev.rad.yr,file="gg.rads.even.new.pdf",width=2.5,height=4)
 ```
 
 ### Evenness rads stats - zone

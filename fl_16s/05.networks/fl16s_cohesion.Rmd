@@ -67,6 +67,8 @@ source("cohesion.R")
 ### Post time point - sids
 
 ```{r}
+b <- readRDS("./files/seq.tables/seq.sid.pos.lk1.in.no2.rds")
+
 #b <- readRDS("./files/seq.tables/seq.fam.sid.pos.lk1.in.no2.rds")
 #saveRDS(out.df, file="./files/cohesion/df.cohesion.sid.pos.lk1i.rds")
 
@@ -256,21 +258,24 @@ row.names(coh.neg)==row.names(coh.pos)
 out.df <- data.frame(coh.neg,coh.pos)
 ```
 
-## Cohesion results
+# Cohesion results
+
+## Initial setup
 
 ```{r}
 library(ggplot2)
 library(cowplot)
 library(ggpubr)
 
-setwd("/Volumes/GoogleDrive/My Drive/Flirma/flirma_networks/fl_16s/05.networks/files/cohesion")
+#setwd("/Volumes/GoogleDrive/My Drive/Flirma/flirma_networks/fl_16s/05.networks/files/cohesion")
+setwd("/Volumes/GoogleDrive/My Drive/Flirma/flirma_networks/fl_16s/05.networks")
 ```
 
-### Creating data frame from outputs above {.tabset}
+## Creating data frame from outputs above - FAMILY {.tabset}
 
 Ran once then re-read in later
 
-#### Pre time point up first - sids
+### Pre time point up first - sids
 
 ```{r cohesion results pre, eval=F}
 #LOWER KEYS 1
@@ -313,7 +318,7 @@ df.coh.sid.pre.uk2$time <- rep("Pre",nrow(df.coh.sid.pre.uk2))
 df.coh.sid.pre.uk2$site <- rep("UK2",nrow(df.coh.sid.pre.uk2))
 ```
 
-#### Irma time point - sids
+### Irma time point - sids
 
 ```{r cohesion results irma, eval=F}
 #LOWER KEYS 1
@@ -353,7 +358,7 @@ df.coh.sid.irm.uk2$time <- rep("Irma",nrow(df.coh.sid.irm.uk2))
 df.coh.sid.irm.uk2$site <- rep("UK2",nrow(df.coh.sid.irm.uk2))
 ```
 
-#### Post - sids
+### Post - sids
 
 ```{r cohesion results post, eval=F}
 #LOWER KEYS 1
@@ -397,21 +402,168 @@ df.coh.sid.pos.uk2$site <- rep("UK2",nrow(df.coh.sid.pos.uk2))
 
 ```{r, eval=F}
 df.coh.sid <- rbind(df.coh.sid.pre.lk1,df.coh.sid.pre.uk1,df.coh.sid.pre.uk2,df.coh.sid.irm.lk1,df.coh.sid.irm.uk1,df.coh.sid.irm.uk2,df.coh.sid.pos.lk1,df.coh.sid.pos.uk1,df.coh.sid.pos.uk2)
+
+#saveRDS(df.coh.sid,file="df.cohesion.sids.rds")
 ```
+
+## Creating data frame from outputs above - ASV {.tabset}
+
+Ran once then re-read in later
+
+### Pre time point up first - sids
+
+```{r cohesion results pre, eval=F}
+#LOWER KEYS 1
+df.coh.sid.pre.lk1i <- readRDS("./files/cohesion/df.cohesion.asv.sid.pre.lk1i.rds")
+df.coh.sid.pre.lk1o <- readRDS("./files/cohesion/df.cohesion.asv.sid.pre.lk1o.rds")
+
+df.coh.sid.pre.lk1i$zone <- rep("Inshore",nrow(df.coh.sid.pre.lk1i))
+df.coh.sid.pre.lk1o$zone <- rep("Offshore",nrow(df.coh.sid.pre.lk1o))
+
+df.coh.sid.pre.lk1 <- rbind(df.coh.sid.pre.lk1i,df.coh.sid.pre.lk1o)
+
+df.coh.sid.pre.lk1$time <- rep("Pre",nrow(df.coh.sid.pre.lk1))
+df.coh.sid.pre.lk1$site <- rep("LK1",nrow(df.coh.sid.pre.lk1))
+
+ggplot(df.coh.sid.pre.lk1,aes(x=zone,y=coh.pos))+
+  geom_boxplot()
+
+#UPPER KEYS 1
+df.coh.sid.pre.uk1i <- readRDS("./files/cohesion/df.cohesion.asv.sid.pre.uk1i.rds")
+df.coh.sid.pre.uk1o <- readRDS("./files/cohesion/df.cohesion.asv.sid.pre.uk1o.rds")
+
+df.coh.sid.pre.uk1i$zone <- rep("Inshore",nrow(df.coh.sid.pre.uk1i))
+df.coh.sid.pre.uk1o$zone <- rep("Offshore",nrow(df.coh.sid.pre.uk1o))
+
+df.coh.sid.pre.uk1 <- rbind(df.coh.sid.pre.uk1i,df.coh.sid.pre.uk1o)
+
+df.coh.sid.pre.uk1$time <- rep("Pre",nrow(df.coh.sid.pre.uk1))
+df.coh.sid.pre.uk1$site <- rep("UK1",nrow(df.coh.sid.pre.uk1))
+
+ggplot(df.coh.sid.pre.uk1,aes(x=zone,y=coh.pos))+
+  geom_boxplot()
+
+#UPPER KEYS 2
+df.coh.sid.pre.uk2i <- readRDS("./files/cohesion/df.cohesion.asv.sid.pre.uk2i.rds")
+df.coh.sid.pre.uk2o <- readRDS("./files/cohesion/df.cohesion.asv.sid.pre.uk2o.rds")
+
+df.coh.sid.pre.uk2i$zone <- rep("Inshore",nrow(df.coh.sid.pre.uk2i))
+df.coh.sid.pre.uk2o$zone <- rep("Offshore",nrow(df.coh.sid.pre.uk2o))
+
+df.coh.sid.pre.uk2 <- rbind(df.coh.sid.pre.uk2i,df.coh.sid.pre.uk2o)
+
+df.coh.sid.pre.uk2$time <- rep("Pre",nrow(df.coh.sid.pre.uk2))
+df.coh.sid.pre.uk2$site <- rep("UK2",nrow(df.coh.sid.pre.uk2))
+
+ggplot(df.coh.sid.pre.uk2,aes(x=zone,y=coh.pos))+
+  geom_boxplot()
+```
+
+### Irma time point - sids
+
+```{r cohesion results irma, eval=F}
+#LOWER KEYS 1
+df.coh.sid.irm.lk1i <- readRDS("./files/cohesion/df.cohesion.asv.sid.irm.lk1i.rds")
+df.coh.sid.irm.lk1o <- readRDS("./files/cohesion/df.cohesion.asv.sid.irm.lk1o.rds")
+
+df.coh.sid.irm.lk1i$zone <- rep("Inshore",nrow(df.coh.sid.irm.lk1i))
+df.coh.sid.irm.lk1o$zone <- rep("Offshore",nrow(df.coh.sid.irm.lk1o))
+
+df.coh.sid.irm.lk1 <- rbind(df.coh.sid.irm.lk1i,df.coh.sid.irm.lk1o)
+
+df.coh.sid.irm.lk1$time <- rep("Irma",nrow(df.coh.sid.irm.lk1))
+df.coh.sid.irm.lk1$site <- rep("LK1",nrow(df.coh.sid.irm.lk1))
+
+#UPPER KEYS 1
+df.coh.sid.irm.uk1i <- readRDS("./files/cohesion/df.cohesion.asv.sid.irm.uk1i.rds")
+df.coh.sid.irm.uk1o <- readRDS("./files/cohesion/df.cohesion.asv.sid.irm.uk1o.rds")
+
+df.coh.sid.irm.uk1i$zone <- rep("Inshore",nrow(df.coh.sid.irm.uk1i))
+df.coh.sid.irm.uk1o$zone <- rep("Offshore",nrow(df.coh.sid.irm.uk1o))
+
+df.coh.sid.irm.uk1 <- rbind(df.coh.sid.irm.uk1i,df.coh.sid.irm.uk1o)
+
+df.coh.sid.irm.uk1$time <- rep("Irma",nrow(df.coh.sid.irm.uk1))
+df.coh.sid.irm.uk1$site <- rep("UK1",nrow(df.coh.sid.irm.uk1))
+
+#UPPER KEYS 2
+df.coh.sid.irm.uk2i <- readRDS("./files/cohesion/df.cohesion.asv.sid.irm.uk2i.rds")
+df.coh.sid.irm.uk2o <- readRDS("./files/cohesion/df.cohesion.asv.sid.irm.uk2o.rds")
+
+df.coh.sid.irm.uk2i$zone <- rep("Inshore",nrow(df.coh.sid.irm.uk2i))
+df.coh.sid.irm.uk2o$zone <- rep("Offshore",nrow(df.coh.sid.irm.uk2o))
+
+df.coh.sid.irm.uk2 <- rbind(df.coh.sid.irm.uk2i,df.coh.sid.irm.uk2o)
+
+df.coh.sid.irm.uk2$time <- rep("Irma",nrow(df.coh.sid.irm.uk2))
+df.coh.sid.irm.uk2$site <- rep("UK2",nrow(df.coh.sid.irm.uk2))
+```
+
+### Post - sids
+
+```{r cohesion results post, eval=F}
+#LOWER KEYS 1
+df.coh.sid.pos.lk1i <- readRDS("./files/cohesion/df.cohesion.asv.sid.pos.lk1i.rds")
+df.coh.sid.pos.lk1o <- readRDS("./files/cohesion/df.cohesion.asv.sid.pos.lk1o.rds")
+
+df.coh.sid.pos.lk1i$zone <- rep("Inshore",nrow(df.coh.sid.pos.lk1i))
+df.coh.sid.pos.lk1o$zone <- rep("Offshore",nrow(df.coh.sid.pos.lk1o))
+
+df.coh.sid.pos.lk1 <- rbind(df.coh.sid.pos.lk1i,df.coh.sid.pos.lk1o)
+
+df.coh.sid.pos.lk1$time <- rep("Post",nrow(df.coh.sid.pos.lk1))
+df.coh.sid.pos.lk1$site <- rep("LK1",nrow(df.coh.sid.pos.lk1))
+
+#UPPER KEYS 1
+df.coh.sid.pos.uk1i <- readRDS("./files/cohesion/df.cohesion.asv.sid.pos.uk1i.rds")
+df.coh.sid.pos.uk1o <- readRDS("./files/cohesion/df.cohesion.asv.sid.pos.uk1o.rds")
+
+df.coh.sid.pos.uk1i$zone <- rep("Inshore",nrow(df.coh.sid.pos.uk1i))
+df.coh.sid.pos.uk1o$zone <- rep("Offshore",nrow(df.coh.sid.pos.uk1o))
+
+df.coh.sid.pos.uk1 <- rbind(df.coh.sid.pos.uk1i,df.coh.sid.pos.uk1o)
+
+df.coh.sid.pos.uk1$time <- rep("Post",nrow(df.coh.sid.pos.uk1))
+df.coh.sid.pos.uk1$site <- rep("UK1",nrow(df.coh.sid.pos.uk1))
+
+#UPPER KEYS 2
+df.coh.sid.pos.uk2i <- readRDS("./files/cohesion/df.cohesion.asv.sid.pos.uk2i.rds")
+df.coh.sid.pos.uk2o <- readRDS("./files/cohesion/df.cohesion.asv.sid.pos.uk2o.rds")
+
+df.coh.sid.pos.uk2i$zone <- rep("Inshore",nrow(df.coh.sid.pos.uk2i))
+df.coh.sid.pos.uk2o$zone <- rep("Offshore",nrow(df.coh.sid.pos.uk2o))
+
+df.coh.sid.pos.uk2 <- rbind(df.coh.sid.pos.uk2i,df.coh.sid.pos.uk2o)
+
+df.coh.sid.pos.uk2$time <- rep("Post",nrow(df.coh.sid.pos.uk2))
+df.coh.sid.pos.uk2$site <- rep("UK2",nrow(df.coh.sid.pos.uk2))
+```
+
+### All together - sids
+
+```{r, eval=F}
+df.coh.sid <- rbind(df.coh.sid.pre.lk1,df.coh.sid.pre.uk1,df.coh.sid.pre.uk2,df.coh.sid.irm.lk1,df.coh.sid.irm.uk1,df.coh.sid.irm.uk2,df.coh.sid.pos.lk1,df.coh.sid.pos.uk1,df.coh.sid.pos.uk2)
+
+#saveRDS(df.coh.sid,file="df.cohesion.asv.sids.rds")
+```
+
+## Setup for plotting
 
 ```{r}
 library(ggplot2)
 library(cowplot)
 
 setwd("/Volumes/GoogleDrive/My Drive/Flirma/flirma_networks/fl_16s/05.networks")
-#saveRDS(df.coh.sid,file="df.cohesion.sids.rds")
+#ASV
+#df.coh.sid <- readRDS("df.cohesion.asv.sids.rds")
+#family
 df.coh.sid <- readRDS("./files/df.cohesion.sids.rds")
 
 df.coh.sid$zone <- as.factor(df.coh.sid$zone)
 df.coh.sid$time <- factor(df.coh.sid$time,levels=c("Pre","Irma","Post"))
 ```
 
-### Plotting time - sids
+## Plotting time - sids
 
 ```{r}
 gg.coh.pos.sids.yr <- ggplot(df.coh.sid,aes(x=time,y=coh.pos,fill=time,color=time,shape=zone))+
@@ -432,7 +584,7 @@ gg.coh.pos.sids.yr <- ggplot(df.coh.sid,aes(x=time,y=coh.pos,fill=time,color=tim
   scale_x_discrete(labels=c("Pre","Disturb.","Post"))
 gg.coh.pos.sids.yr
 
-ggsave(gg.coh.pos.sids.yr,file="plot.cohesion.sids.pdf",width=3.5,height=3.5)
+#ggsave(gg.coh.pos.sids.yr,file="plot.cohesion.sids.pdf",width=3.5,height=3.5)
 
 ##point & error bars - not using!
 #df.coh.sid.se <- summarySE(df.coh.sid,groupvars=c("time","zone","site"),measurevar="coh.pos")
