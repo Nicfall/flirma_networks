@@ -119,163 +119,23 @@ ps.clean.rad.no0 <- readRDS("./files/ps.clean.rad.no0")
 ```
 
 ```{r family glom, eval=F}
-#family
-ps.clean.fam <- tax_glom(ps.clean,"Family")
-
-ps.clean.fam.sid <- subset_samples(ps.clean.fam,spp=="ssid")
-ps.clean.fam.rad <- subset_samples(ps.clean.fam,spp=="srad")
-
-ps.clean.fam.sid.no0 <- prune_taxa(taxa_sums(ps.clean.fam.sid) > 0, ps.clean.fam.sid) 
-# otu_table()   OTU Table:         [ 486 taxa and 166 samples ]
-# sample_data() Sample Data:       [ 166 samples by 11 sample variables ]
-# tax_table()   Taxonomy Table:    [ 486 taxa by 7 taxonomic ranks ]
-ps.clean.fam.rad.no0 <- prune_taxa(taxa_sums(ps.clean.fam.rad) > 0, ps.clean.fam.rad) 
-# otu_table()   OTU Table:         [ 483 taxa and 132 samples ]
-# sample_data() Sample Data:       [ 132 samples by 11 sample variables ]
-# tax_table()   Taxonomy Table:    [ 483 taxa by 7 taxonomic ranks ]
-
-#saveRDS(ps.clean.fam.sid.no0,file="./files/ps.clean.fam.sid.no0")
-#saveRDS(ps.clean.fam.rad.no0,file="./files/ps.clean.fam.rad.no0")
-```
-
-## Subset for sites/years - FAMILY{.tabset}
-
-### S. siderea
-
-```{r}
-#subset by timepoint
-ps.fam.sid.pre <- subset_samples(ps.clean.fam.sid.no0,time=="Pre")
-ps.fam.sid.irm <- subset_samples(ps.clean.fam.sid.no0,time=="Irma")
-ps.fam.sid.pos <- subset_samples(ps.clean.fam.sid.no0,time=="Post")
-
-#within each timepoint, separate by sites
-#lower keys 1
-ps.fam.sid.pre.lk1 <- subset_samples(ps.fam.sid.pre,site=="LK1")
-ps.fam.sid.irm.lk1 <- subset_samples(ps.fam.sid.irm,site=="LK1")
-ps.fam.sid.pos.lk1 <- subset_samples(ps.fam.sid.pos,site=="LK1")
-
-#upper keys 1
-ps.fam.sid.pre.uk1 <- subset_samples(ps.fam.sid.pre,site=="UK1")
-ps.fam.sid.irm.uk1 <- subset_samples(ps.fam.sid.irm,site=="UK1")
-ps.fam.sid.pos.uk1 <- subset_samples(ps.fam.sid.pos,site=="UK1")
-
-#upper keys 2
-ps.fam.sid.pre.uk2 <- subset_samples(ps.fam.sid.pre,site=="UK2")
-ps.fam.sid.irm.uk2 <- subset_samples(ps.fam.sid.irm,site=="UK2")
-ps.fam.sid.pos.uk2 <- subset_samples(ps.fam.sid.pos,site=="UK2")
-
-#inshore & offshore
-#lower keys 1
-ps.fam.sid.pre.lk1.in <- subset_samples(ps.fam.sid.pre.lk1,zone=="Inshore")
-ps.fam.sid.pre.lk1.off <- subset_samples(ps.fam.sid.pre.lk1,zone=="Offshore")
-ps.fam.sid.irm.lk1.in <- subset_samples(ps.fam.sid.irm.lk1,zone=="Inshore")
-ps.fam.sid.irm.lk1.off <- subset_samples(ps.fam.sid.irm.lk1,zone=="Offshore")
-ps.fam.sid.pos.lk1.in <- subset_samples(ps.fam.sid.pos.lk1,zone=="Inshore")
-ps.fam.sid.pos.lk1.off <- subset_samples(ps.fam.sid.pos.lk1,zone=="Offshore")
-
-#upper keys 1
-ps.fam.sid.pre.uk1.in <- subset_samples(ps.fam.sid.pre.uk1,zone=="Inshore")
-ps.fam.sid.pre.uk1.off <- subset_samples(ps.fam.sid.pre.uk1,zone=="Offshore")
-ps.fam.sid.irm.uk1.in <- subset_samples(ps.fam.sid.irm.uk1,zone=="Inshore")
-ps.fam.sid.irm.uk1.off <- subset_samples(ps.fam.sid.irm.uk1,zone=="Offshore")
-ps.fam.sid.pos.uk1.in <- subset_samples(ps.fam.sid.pos.uk1,zone=="Inshore")
-ps.fam.sid.pos.uk1.off <- subset_samples(ps.fam.sid.pos.uk1,zone=="Offshore")
-
-#upper keys 2
-ps.fam.sid.pre.uk2.in <- subset_samples(ps.fam.sid.pre.uk2,zone=="Inshore")
-ps.fam.sid.pre.uk2.off <- subset_samples(ps.fam.sid.pre.uk2,zone=="Offshore")
-ps.fam.sid.irm.uk2.in <- subset_samples(ps.fam.sid.irm.uk2,zone=="Inshore")
-ps.fam.sid.irm.uk2.off <- subset_samples(ps.fam.sid.irm.uk2,zone=="Offshore")
-ps.fam.sid.pos.uk2.in <- subset_samples(ps.fam.sid.pos.uk2,zone=="Inshore")
-ps.fam.sid.pos.uk2.off <- subset_samples(ps.fam.sid.pos.uk2,zone=="Offshore")
-
-#retrieving seq tables
-#lower keys 1
-seq.fam.sid.pre.lk1.in <- data.frame(ps.fam.sid.pre.lk1.in@otu_table)
-seq.fam.sid.irm.lk1.in <- data.frame(ps.fam.sid.irm.lk1.in@otu_table)
-seq.fam.sid.pos.lk1.in <- data.frame(ps.fam.sid.pos.lk1.in@otu_table)
-
-seq.fam.sid.pre.lk1.off <- data.frame(ps.fam.sid.pre.lk1.off@otu_table)
-seq.fam.sid.irm.lk1.off <- data.frame(ps.fam.sid.irm.lk1.off@otu_table)
-seq.fam.sid.pos.lk1.off <- data.frame(ps.fam.sid.pos.lk1.off@otu_table)
-
-#upper keys 1
-seq.fam.sid.pre.uk1.in <- data.frame(ps.fam.sid.pre.uk1.in@otu_table)
-seq.fam.sid.irm.uk1.in <- data.frame(ps.fam.sid.irm.uk1.in@otu_table)
-seq.fam.sid.pos.uk1.in <- data.frame(ps.fam.sid.pos.uk1.in@otu_table)
-
-seq.fam.sid.pre.uk1.off <- data.frame(ps.fam.sid.pre.uk1.off@otu_table)
-seq.fam.sid.irm.uk1.off <- data.frame(ps.fam.sid.irm.uk1.off@otu_table)
-seq.fam.sid.pos.uk1.off <- data.frame(ps.fam.sid.pos.uk1.off@otu_table)
-
-#upper keys 2
-seq.fam.sid.pre.uk2.in <- data.frame(ps.fam.sid.pre.uk2.in@otu_table)
-seq.fam.sid.irm.uk2.in <- data.frame(ps.fam.sid.irm.uk2.in@otu_table)
-seq.fam.sid.pos.uk2.in <- data.frame(ps.fam.sid.pos.uk2.in@otu_table)
-
-seq.fam.sid.pre.uk2.off <- data.frame(ps.fam.sid.pre.uk2.off@otu_table)
-seq.fam.sid.irm.uk2.off <- data.frame(ps.fam.sid.irm.uk2.off@otu_table)
-seq.fam.sid.pos.uk2.off <- data.frame(ps.fam.sid.pos.uk2.off@otu_table)
-```
-
-#### Cleaning lower reads
-
-Some data cleaning: authors recommend removing samples with less than an average of 2 reads per column. 
-
-```{r}
-#lower keys 1 inshore
-seq.fam.sid.pre.lk1.in.no2 <- seq.fam.sid.pre.lk1.in[,-which(colMeans(seq.fam.sid.pre.lk1.in) <= 2)]
-ncol(seq.fam.sid.pre.lk1.in.no2) #195
-seq.fam.sid.irm.lk1.in.no2 <- seq.fam.sid.irm.lk1.in[,-which(colMeans(seq.fam.sid.irm.lk1.in) <= 2)]
-ncol(seq.fam.sid.irm.lk1.in.no2) #251
-seq.fam.sid.pos.lk1.in.no2 <- seq.fam.sid.pos.lk1.in[,-which(colMeans(seq.fam.sid.pos.lk1.in) <= 2)]
-ncol(seq.fam.sid.pos.lk1.in.no2) #204
-
-#lower keys 1 offshore
-seq.fam.sid.pre.lk1.off.no2 <- seq.fam.sid.pre.lk1.off[,-which(colMeans(seq.fam.sid.pre.lk1.off) <= 2)]
-ncol(seq.fam.sid.pre.lk1.off.no2) #292
-seq.fam.sid.irm.lk1.off.no2 <- seq.fam.sid.irm.lk1.off[,-which(colMeans(seq.fam.sid.irm.lk1.off) <= 2)]
-ncol(seq.fam.sid.irm.lk1.off.no2) #225
-seq.fam.sid.pos.lk1.off.no2 <- seq.fam.sid.pos.lk1.off[,-which(colMeans(seq.fam.sid.pos.lk1.off) <= 2)]
-ncol(seq.fam.sid.pos.lk1.off.no2) #222
-
-#upper keys 1 inshore
-seq.fam.sid.pre.uk1.in.no2 <- seq.fam.sid.pre.uk1.in[,-which(colMeans(seq.fam.sid.pre.uk1.in) <= 2)]
-ncol(seq.fam.sid.pre.uk1.in.no2) #176
-seq.fam.sid.irm.uk1.in.no2 <- seq.fam.sid.irm.uk1.in[,-which(colMeans(seq.fam.sid.irm.uk1.in) <= 2)]
-ncol(seq.fam.sid.irm.uk1.in.no2) #215
-seq.fam.sid.pos.uk1.in.no2 <- seq.fam.sid.pos.uk1.in[,-which(colMeans(seq.fam.sid.pos.uk1.in) <= 2)]
-ncol(seq.fam.sid.pos.uk1.in.no2) #208
-
-#upper keys 1 offshore
-seq.fam.sid.pre.uk1.off.no2 <- seq.fam.sid.pre.uk1.off[,-which(colMeans(seq.fam.sid.pre.uk1.off) <= 2)]
-ncol(seq.fam.sid.pre.uk1.off.no2) #235
-seq.fam.sid.irm.uk1.off.no2 <- seq.fam.sid.irm.uk1.off[,-which(colMeans(seq.fam.sid.irm.uk1.off) <= 2)]
-ncol(seq.fam.sid.irm.uk1.off.no2) #243
-seq.fam.sid.pos.uk1.off.no2 <- seq.fam.sid.pos.uk1.off[,-which(colMeans(seq.fam.sid.pos.uk1.off) <= 2)]
-ncol(seq.fam.sid.pos.uk1.off.no2) #213
-
-#upper keys 1 inshore
-seq.fam.sid.pre.uk2.in.no2 <- seq.fam.sid.pre.uk2.in[,-which(colMeans(seq.fam.sid.pre.uk2.in) <= 2)]
-ncol(seq.fam.sid.pre.uk2.in.no2) #184
-seq.fam.sid.irm.uk2.in.no2 <- seq.fam.sid.irm.uk2.in[,-which(colMeans(seq.fam.sid.irm.uk2.in) <= 2)]
-ncol(seq.fam.sid.irm.uk2.in.no2) #208
-seq.fam.sid.pos.uk2.in.no2 <- seq.fam.sid.pos.uk2.in[,-which(colMeans(seq.fam.sid.pos.uk2.in) <= 2)]
-ncol(seq.fam.sid.pos.uk2.in.no2) #232
-
-#upper keys 1 offshore
-seq.fam.sid.pre.uk2.off.no2 <- seq.fam.sid.pre.uk2.off[,-which(colMeans(seq.fam.sid.pre.uk2.off) <= 2)]
-ncol(seq.fam.sid.pre.uk2.off.no2) #244
-seq.fam.sid.irm.uk2.off.no2 <- seq.fam.sid.irm.uk2.off[,-which(colMeans(seq.fam.sid.irm.uk2.off) <= 2)]
-ncol(seq.fam.sid.irm.uk2.off.no2) #260
-seq.fam.sid.pos.uk2.off.no2 <- seq.fam.sid.pos.uk2.off[,-which(colMeans(seq.fam.sid.pos.uk2.off) <= 2)]
-ncol(seq.fam.sid.pos.uk2.off.no2) #179
-```
-
-### S. radians
-
-```{r}
-#just copy paste above when ready & replace with rads
+# #family
+# ps.clean.fam <- tax_glom(ps.clean,"Family")
+# 
+# ps.clean.fam.sid <- subset_samples(ps.clean.fam,spp=="ssid")
+# ps.clean.fam.rad <- subset_samples(ps.clean.fam,spp=="srad")
+# 
+# ps.clean.fam.sid.no0 <- prune_taxa(taxa_sums(ps.clean.fam.sid) > 0, ps.clean.fam.sid) 
+# # otu_table()   OTU Table:         [ 486 taxa and 166 samples ]
+# # sample_data() Sample Data:       [ 166 samples by 11 sample variables ]
+# # tax_table()   Taxonomy Table:    [ 486 taxa by 7 taxonomic ranks ]
+# ps.clean.fam.rad.no0 <- prune_taxa(taxa_sums(ps.clean.fam.rad) > 0, ps.clean.fam.rad) 
+# # otu_table()   OTU Table:         [ 483 taxa and 132 samples ]
+# # sample_data() Sample Data:       [ 132 samples by 11 sample variables ]
+# # tax_table()   Taxonomy Table:    [ 483 taxa by 7 taxonomic ranks ]
+# 
+# #saveRDS(ps.clean.fam.sid.no0,file="./files/ps.clean.fam.sid.no0")
+# #saveRDS(ps.clean.fam.rad.no0,file="./files/ps.clean.fam.rad.no0")
 ```
 
 ## Subset for sites/years - ASV LEVEL {.tabset}
