@@ -14,7 +14,7 @@ setwd("/Volumes/GoogleDrive/My Drive/Flirma/flirma_networks/fl_16s/05.networks/"
 source("cohesion.R")
 ```
 
-### Pre time point - sids
+### Seq tables
 
 ```{r}
 # Read in dataset
@@ -25,70 +25,9 @@ source("cohesion.R")
 
 #b <- readRDS("./files/seq.tables/seq.fam.sid.pre.lk1.in.no2.rds")
 #saveRDS(out.df, file="./files/cohesion/df.cohesion.sid.pre.lk1i.rds")
-
-# b <- readRDS("./files/seq.tables/seq.fam.sid.pre.lk1.off.no2.rds")
-# saveRDS(out.df, file="./files/cohesion/df.cohesion.sid.pre.lk1o.rds")
-
-#b <- readRDS("./files/seq.tables/seq.fam.sid.pre.uk1.in.no2.rds")
-#saveRDS(out.df, file="./files/cohesion/df.cohesion.sid.pre.uk1i.rds")
-
-#b <- readRDS("./files/seq.tables/seq.fam.sid.pre.uk1.off.no2.rds")
-#saveRDS(out.df, file="./files/cohesion/df.cohesion.sid.pre.uk1o.rds")
-
-#b <- readRDS("./files/seq.tables/seq.fam.sid.pre.uk2.in.no2.rds")
-#saveRDS(out.df, file="./files/cohesion/df.cohesion.sid.pre.uk2i.rds")
-
-#b <- readRDS("./files/seq.tables/seq.fam.sid.pre.uk2.off.no2.rds")
-#saveRDS(out.df, file="./files/cohesion/df.cohesion.sid.pre.uk2o.rds")
 ```
 
-### Irma time point - sids
-
-```{r}
-#b <- readRDS("./files/seq.tables/seq.fam.sid.irm.lk1.in.no2.rds")
-#saveRDS(out.df, file="./files/cohesion/df.cohesion.sid.irm.lk1i.rds")
-
-#b <- readRDS("./files/seq.tables/seq.fam.sid.irm.lk1.off.no2.rds")
-#saveRDS(out.df, file="./files/cohesion/df.cohesion.sid.irm.lk1o.rds")
-
-#b <- readRDS("./files/seq.tables/seq.fam.sid.irm.uk1.in.no2.rds")
-#saveRDS(out.df, file="./files/cohesion/df.cohesion.sid.irm.uk1i.rds")
-
-#b <- readRDS("./files/seq.tables/seq.fam.sid.irm.uk1.off.no2.rds")
-#saveRDS(out.df, file="./files/cohesion/df.cohesion.sid.irm.uk1o.rds")
-
-#b <- readRDS("./files/seq.tables/seq.fam.sid.irm.uk2.in.no2.rds")
-#saveRDS(out.df, file="./files/cohesion/df.cohesion.sid.irm.uk2i.rds")
-
-#b <- readRDS("./files/seq.tables/seq.fam.sid.irm.uk2.off.no2.rds")
-#saveRDS(out.df, file="./files/cohesion/df.cohesion.sid.irm.uk2o.rds")
-```
-
-### Post time point - sids
-
-```{r}
-b <- readRDS("./files/seq.tables/seq.sid.pos.lk1.in.no2.rds")
-
-#b <- readRDS("./files/seq.tables/seq.fam.sid.pos.lk1.in.no2.rds")
-#saveRDS(out.df, file="./files/cohesion/df.cohesion.sid.pos.lk1i.rds")
-
-#b <- readRDS("./files/seq.tables/seq.fam.sid.pos.lk1.off.no2.rds")
-#saveRDS(out.df, file="./files/cohesion/df.cohesion.sid.pos.lk1o.rds")
-
-#b <- readRDS("./files/seq.tables/seq.fam.sid.pos.uk1.in.no2.rds")
-#saveRDS(out.df, file="./files/cohesion/df.cohesion.sid.pos.uk1i.rds")
-
-#b <- readRDS("./files/seq.tables/seq.fam.sid.pos.uk1.off.no2.rds")
-#saveRDS(out.df, file="./files/cohesion/df.cohesion.sid.pos.uk1o.rds")
-
-#b <- readRDS("./files/seq.tables/seq.fam.sid.pos.uk2.in.no2.rds")
-#saveRDS(out.df, file="./files/cohesion/df.cohesion.sid.pos.uk2i.rds")
-
-#b <- readRDS("./files/seq.tables/seq.fam.sid.pos.uk2.off.no2.rds")
-#saveRDS(out.df, file="./files/cohesion/df.cohesion.sid.pos.uk2o.rds")
-```
-
-### Cohesion code chunk
+## Cohesion code chunk
 
 ```{r, eval=F}
 ## Choose a persistence cutoff (min. fraction of taxon presence) for retaining taxa in the analysis
@@ -271,141 +210,6 @@ library(ggpubr)
 setwd("/Volumes/GoogleDrive/My Drive/Flirma/flirma_networks/fl_16s/05.networks")
 ```
 
-## Creating data frame from outputs above - FAMILY {.tabset}
-
-Ran once then re-read in later
-
-### Pre time point up first - sids
-
-```{r cohesion results pre, eval=F}
-#LOWER KEYS 1
-df.coh.sid.pre.lk1i <- readRDS("df.cohesion.sid.pre.lk1i.rds")
-df.coh.sid.pre.lk1o <- readRDS("df.cohesion.sid.pre.lk1o.rds")
-
-df.coh.sid.pre.lk1i$zone <- rep("Inshore",nrow(df.coh.sid.pre.lk1i))
-df.coh.sid.pre.lk1o$zone <- rep("Offshore",nrow(df.coh.sid.pre.lk1o))
-
-df.coh.sid.pre.lk1 <- rbind(df.coh.sid.pre.lk1i,df.coh.sid.pre.lk1o)
-
-df.coh.sid.pre.lk1$time <- rep("Pre",nrow(df.coh.sid.pre.lk1))
-df.coh.sid.pre.lk1$site <- rep("LK1",nrow(df.coh.sid.pre.lk1))
-
-ggplot(df.coh.sid.pre.lk1,aes(x=zone,y=coh.pos))+
-  geom_boxplot()
-
-#UPPER KEYS 1
-df.coh.sid.pre.uk1i <- readRDS("df.cohesion.sid.pre.uk1i.rds")
-df.coh.sid.pre.uk1o <- readRDS("df.cohesion.sid.pre.uk1o.rds")
-
-df.coh.sid.pre.uk1i$zone <- rep("Inshore",nrow(df.coh.sid.pre.uk1i))
-df.coh.sid.pre.uk1o$zone <- rep("Offshore",nrow(df.coh.sid.pre.uk1o))
-
-df.coh.sid.pre.uk1 <- rbind(df.coh.sid.pre.uk1i,df.coh.sid.pre.uk1o)
-
-df.coh.sid.pre.uk1$time <- rep("Pre",nrow(df.coh.sid.pre.uk1))
-df.coh.sid.pre.uk1$site <- rep("UK1",nrow(df.coh.sid.pre.uk1))
-
-#UPPER KEYS 2
-df.coh.sid.pre.uk2i <- readRDS("df.cohesion.sid.pre.uk2i.rds")
-df.coh.sid.pre.uk2o <- readRDS("df.cohesion.sid.pre.uk2o.rds")
-
-df.coh.sid.pre.uk2i$zone <- rep("Inshore",nrow(df.coh.sid.pre.uk2i))
-df.coh.sid.pre.uk2o$zone <- rep("Offshore",nrow(df.coh.sid.pre.uk2o))
-
-df.coh.sid.pre.uk2 <- rbind(df.coh.sid.pre.uk2i,df.coh.sid.pre.uk2o)
-
-df.coh.sid.pre.uk2$time <- rep("Pre",nrow(df.coh.sid.pre.uk2))
-df.coh.sid.pre.uk2$site <- rep("UK2",nrow(df.coh.sid.pre.uk2))
-```
-
-### Irma time point - sids
-
-```{r cohesion results irma, eval=F}
-#LOWER KEYS 1
-df.coh.sid.irm.lk1i <- readRDS("df.cohesion.sid.irm.lk1i.rds")
-df.coh.sid.irm.lk1o <- readRDS("df.cohesion.sid.irm.lk1o.rds")
-
-df.coh.sid.irm.lk1i$zone <- rep("Inshore",nrow(df.coh.sid.irm.lk1i))
-df.coh.sid.irm.lk1o$zone <- rep("Offshore",nrow(df.coh.sid.irm.lk1o))
-
-df.coh.sid.irm.lk1 <- rbind(df.coh.sid.irm.lk1i,df.coh.sid.irm.lk1o)
-
-df.coh.sid.irm.lk1$time <- rep("Irma",nrow(df.coh.sid.irm.lk1))
-df.coh.sid.irm.lk1$site <- rep("LK1",nrow(df.coh.sid.irm.lk1))
-
-#UPPER KEYS 1
-df.coh.sid.irm.uk1i <- readRDS("df.cohesion.sid.irm.uk1i.rds")
-df.coh.sid.irm.uk1o <- readRDS("df.cohesion.sid.irm.uk1o.rds")
-
-df.coh.sid.irm.uk1i$zone <- rep("Inshore",nrow(df.coh.sid.irm.uk1i))
-df.coh.sid.irm.uk1o$zone <- rep("Offshore",nrow(df.coh.sid.irm.uk1o))
-
-df.coh.sid.irm.uk1 <- rbind(df.coh.sid.irm.uk1i,df.coh.sid.irm.uk1o)
-
-df.coh.sid.irm.uk1$time <- rep("Irma",nrow(df.coh.sid.irm.uk1))
-df.coh.sid.irm.uk1$site <- rep("UK1",nrow(df.coh.sid.irm.uk1))
-
-#UPPER KEYS 2
-df.coh.sid.irm.uk2i <- readRDS("df.cohesion.sid.irm.uk2i.rds")
-df.coh.sid.irm.uk2o <- readRDS("df.cohesion.sid.irm.uk2o.rds")
-
-df.coh.sid.irm.uk2i$zone <- rep("Inshore",nrow(df.coh.sid.irm.uk2i))
-df.coh.sid.irm.uk2o$zone <- rep("Offshore",nrow(df.coh.sid.irm.uk2o))
-
-df.coh.sid.irm.uk2 <- rbind(df.coh.sid.irm.uk2i,df.coh.sid.irm.uk2o)
-
-df.coh.sid.irm.uk2$time <- rep("Irma",nrow(df.coh.sid.irm.uk2))
-df.coh.sid.irm.uk2$site <- rep("UK2",nrow(df.coh.sid.irm.uk2))
-```
-
-### Post - sids
-
-```{r cohesion results post, eval=F}
-#LOWER KEYS 1
-df.coh.sid.pos.lk1i <- readRDS("df.cohesion.sid.pos.lk1i.rds")
-df.coh.sid.pos.lk1o <- readRDS("df.cohesion.sid.pos.lk1o.rds")
-
-df.coh.sid.pos.lk1i$zone <- rep("Inshore",nrow(df.coh.sid.pos.lk1i))
-df.coh.sid.pos.lk1o$zone <- rep("Offshore",nrow(df.coh.sid.pos.lk1o))
-
-df.coh.sid.pos.lk1 <- rbind(df.coh.sid.pos.lk1i,df.coh.sid.pos.lk1o)
-
-df.coh.sid.pos.lk1$time <- rep("Post",nrow(df.coh.sid.pos.lk1))
-df.coh.sid.pos.lk1$site <- rep("LK1",nrow(df.coh.sid.pos.lk1))
-
-#UPPER KEYS 1
-df.coh.sid.pos.uk1i <- readRDS("df.cohesion.sid.pos.uk1i.rds")
-df.coh.sid.pos.uk1o <- readRDS("df.cohesion.sid.pos.uk1o.rds")
-
-df.coh.sid.pos.uk1i$zone <- rep("Inshore",nrow(df.coh.sid.pos.uk1i))
-df.coh.sid.pos.uk1o$zone <- rep("Offshore",nrow(df.coh.sid.pos.uk1o))
-
-df.coh.sid.pos.uk1 <- rbind(df.coh.sid.pos.uk1i,df.coh.sid.pos.uk1o)
-
-df.coh.sid.pos.uk1$time <- rep("Post",nrow(df.coh.sid.pos.uk1))
-df.coh.sid.pos.uk1$site <- rep("UK1",nrow(df.coh.sid.pos.uk1))
-
-#UPPER KEYS 2
-df.coh.sid.pos.uk2i <- readRDS("df.cohesion.sid.pos.uk2i.rds")
-df.coh.sid.pos.uk2o <- readRDS("df.cohesion.sid.pos.uk2o.rds")
-
-df.coh.sid.pos.uk2i$zone <- rep("Inshore",nrow(df.coh.sid.pos.uk2i))
-df.coh.sid.pos.uk2o$zone <- rep("Offshore",nrow(df.coh.sid.pos.uk2o))
-
-df.coh.sid.pos.uk2 <- rbind(df.coh.sid.pos.uk2i,df.coh.sid.pos.uk2o)
-
-df.coh.sid.pos.uk2$time <- rep("Post",nrow(df.coh.sid.pos.uk2))
-df.coh.sid.pos.uk2$site <- rep("UK2",nrow(df.coh.sid.pos.uk2))
-```
-
-### All together - sids
-
-```{r, eval=F}
-df.coh.sid <- rbind(df.coh.sid.pre.lk1,df.coh.sid.pre.uk1,df.coh.sid.pre.uk2,df.coh.sid.irm.lk1,df.coh.sid.irm.uk1,df.coh.sid.irm.uk2,df.coh.sid.pos.lk1,df.coh.sid.pos.uk1,df.coh.sid.pos.uk2)
-
-#saveRDS(df.coh.sid,file="df.cohesion.sids.rds")
-```
-
 ## Creating data frame from outputs above - ASV {.tabset}
 
 Ran once then re-read in later
@@ -547,6 +351,131 @@ df.coh.sid <- rbind(df.coh.sid.pre.lk1,df.coh.sid.pre.uk1,df.coh.sid.pre.uk2,df.
 #saveRDS(df.coh.sid,file="df.cohesion.asv.sids.rds")
 ```
 
+### Pre time point up first - rads
+
+```{r cohesion results pre, eval=F}
+#LOWER KEYS 1
+df.coh.rad.pre.lk1i <- readRDS("./files/cohesion/df.cohesion.asv.rad.pre.lk1i.rds")
+df.coh.rad.pre.lk1o <- readRDS("./files/cohesion/df.cohesion.asv.rad.pre.lk1o.rds")
+
+df.coh.rad.pre.lk1i$zone <- rep("Inshore",nrow(df.coh.rad.pre.lk1i))
+df.coh.rad.pre.lk1o$zone <- rep("Offshore",nrow(df.coh.rad.pre.lk1o))
+
+df.coh.rad.pre.lk1 <- rbind(df.coh.rad.pre.lk1i,df.coh.rad.pre.lk1o)
+
+df.coh.rad.pre.lk1$time <- rep("Pre",nrow(df.coh.rad.pre.lk1))
+df.coh.rad.pre.lk1$site <- rep("LK1",nrow(df.coh.rad.pre.lk1))
+
+ggplot(df.coh.rad.pre.lk1,aes(x=zone,y=coh.pos))+
+  geom_boxplot()
+
+#UPPER KEYS 1
+df.coh.rad.pre.uk1i <- readRDS("./files/cohesion/df.cohesion.asv.rad.pre.uk1i.rds")
+df.coh.rad.pre.uk1o <- readRDS("./files/cohesion/df.cohesion.asv.rad.pre.uk1o.rds")
+
+df.coh.rad.pre.uk1i$zone <- rep("Inshore",nrow(df.coh.rad.pre.uk1i))
+df.coh.rad.pre.uk1o$zone <- rep("Offshore",nrow(df.coh.rad.pre.uk1o))
+
+df.coh.rad.pre.uk1 <- rbind(df.coh.rad.pre.uk1i,df.coh.rad.pre.uk1o)
+
+df.coh.rad.pre.uk1$time <- rep("Pre",nrow(df.coh.rad.pre.uk1))
+df.coh.rad.pre.uk1$site <- rep("UK1",nrow(df.coh.rad.pre.uk1))
+
+ggplot(df.coh.rad.pre.uk1,aes(x=zone,y=coh.pos))+
+  geom_boxplot()
+
+#UPPER KEYS 2
+df.coh.rad.pre.uk2i <- readRDS("./files/cohesion/df.cohesion.asv.rad.pre.uk2i.rds")
+df.coh.rad.pre.uk2o <- readRDS("./files/cohesion/df.cohesion.asv.rad.pre.uk2o.rds")
+
+df.coh.rad.pre.uk2i$zone <- rep("Inshore",nrow(df.coh.rad.pre.uk2i))
+df.coh.rad.pre.uk2o$zone <- rep("Offshore",nrow(df.coh.rad.pre.uk2o))
+
+df.coh.rad.pre.uk2 <- rbind(df.coh.rad.pre.uk2i,df.coh.rad.pre.uk2o)
+
+df.coh.rad.pre.uk2$time <- rep("Pre",nrow(df.coh.rad.pre.uk2))
+df.coh.rad.pre.uk2$site <- rep("UK2",nrow(df.coh.rad.pre.uk2))
+
+ggplot(df.coh.rad.pre.uk2,aes(x=zone,y=coh.pos))+
+  geom_boxplot()
+```
+
+### Irma time point - rads
+
+```{r cohesion results irma, eval=F}
+#LOWER KEYS 1
+df.coh.rad.irm.lk1i <- readRDS("./files/cohesion/df.cohesion.asv.rad.irm.lk1i.rds")
+df.coh.rad.irm.lk1o <- readRDS("./files/cohesion/df.cohesion.asv.rad.irm.lk1o.rds")
+
+df.coh.rad.irm.lk1i$zone <- rep("Inshore",nrow(df.coh.rad.irm.lk1i))
+df.coh.rad.irm.lk1o$zone <- rep("Offshore",nrow(df.coh.rad.irm.lk1o))
+
+df.coh.rad.irm.lk1 <- rbind(df.coh.rad.irm.lk1i,df.coh.rad.irm.lk1o)
+
+df.coh.rad.irm.lk1$time <- rep("Irma",nrow(df.coh.rad.irm.lk1))
+df.coh.rad.irm.lk1$site <- rep("LK1",nrow(df.coh.rad.irm.lk1))
+
+#UPPER KEYS 1
+df.coh.rad.irm.uk1i <- readRDS("./files/cohesion/df.cohesion.asv.rad.irm.uk1i.rds")
+
+df.coh.rad.irm.uk1i$zone <- rep("Inshore",nrow(df.coh.rad.irm.uk1i))
+
+df.coh.rad.irm.uk1 <- rbind(df.coh.rad.irm.uk1i)
+
+df.coh.rad.irm.uk1$time <- rep("Irma",nrow(df.coh.rad.irm.uk1))
+df.coh.rad.irm.uk1$site <- rep("UK1",nrow(df.coh.rad.irm.uk1))
+
+#UPPER KEYS 2
+df.coh.rad.irm.uk2i <- readRDS("./files/cohesion/df.cohesion.asv.rad.irm.uk2i.rds")
+df.coh.rad.irm.uk2o <- readRDS("./files/cohesion/df.cohesion.asv.rad.irm.uk2o.rds")
+
+df.coh.rad.irm.uk2i$zone <- rep("Inshore",nrow(df.coh.rad.irm.uk2i))
+df.coh.rad.irm.uk2o$zone <- rep("Offshore",nrow(df.coh.rad.irm.uk2o))
+
+df.coh.rad.irm.uk2 <- rbind(df.coh.rad.irm.uk2i,df.coh.rad.irm.uk2o)
+
+df.coh.rad.irm.uk2$time <- rep("Irma",nrow(df.coh.rad.irm.uk2))
+df.coh.rad.irm.uk2$site <- rep("UK2",nrow(df.coh.rad.irm.uk2))
+```
+
+### Post - rads
+
+```{r cohesion results post, eval=F}
+#LOWER KEYS 1
+df.coh.rad.pos.lk1i <- readRDS("./files/cohesion/df.cohesion.asv.rad.pos.lk1i.rds")
+df.coh.rad.pos.lk1o <- readRDS("./files/cohesion/df.cohesion.asv.rad.pos.lk1o.rds")
+
+df.coh.rad.pos.lk1i$zone <- rep("Inshore",nrow(df.coh.rad.pos.lk1i))
+df.coh.rad.pos.lk1o$zone <- rep("Offshore",nrow(df.coh.rad.pos.lk1o))
+
+df.coh.rad.pos.lk1 <- rbind(df.coh.rad.pos.lk1i,df.coh.rad.pos.lk1o)
+
+df.coh.rad.pos.lk1$time <- rep("Post",nrow(df.coh.rad.pos.lk1))
+df.coh.rad.pos.lk1$site <- rep("LK1",nrow(df.coh.rad.pos.lk1))
+
+#UPPER KEYS 1 - not available
+
+#UPPER KEYS 2
+df.coh.rad.pos.uk2i <- readRDS("./files/cohesion/df.cohesion.asv.rad.pos.uk2i.rds")
+df.coh.rad.pos.uk2o <- readRDS("./files/cohesion/df.cohesion.asv.rad.pos.uk2o.rds")
+
+df.coh.rad.pos.uk2i$zone <- rep("Inshore",nrow(df.coh.rad.pos.uk2i))
+df.coh.rad.pos.uk2o$zone <- rep("Offshore",nrow(df.coh.rad.pos.uk2o))
+
+df.coh.rad.pos.uk2 <- rbind(df.coh.rad.pos.uk2i,df.coh.rad.pos.uk2o)
+
+df.coh.rad.pos.uk2$time <- rep("Post",nrow(df.coh.rad.pos.uk2))
+df.coh.rad.pos.uk2$site <- rep("UK2",nrow(df.coh.rad.pos.uk2))
+```
+
+### All together - rads
+
+```{r, eval=F}
+df.coh.rad <- rbind(df.coh.rad.pre.lk1,df.coh.rad.pre.uk1,df.coh.rad.pre.uk2,df.coh.rad.irm.lk1,df.coh.rad.irm.uk1,df.coh.rad.irm.uk2,df.coh.rad.pos.lk1,df.coh.rad.pos.uk2)
+
+#saveRDS(df.coh.rad,file="df.cohesion.asv.rads.rds")
+```
+
 ## Setup for plotting
 
 ```{r}
@@ -554,16 +483,21 @@ library(ggplot2)
 library(cowplot)
 
 setwd("/Volumes/GoogleDrive/My Drive/Flirma/flirma_networks/fl_16s/05.networks")
-#ASV
-#df.coh.sid <- readRDS("df.cohesion.asv.sids.rds")
-#family
-df.coh.sid <- readRDS("./files/df.cohesion.sids.rds")
-
+#ASV sids
+df.coh.sid <- readRDS("df.cohesion.asv.sids.rds")
 df.coh.sid$zone <- as.factor(df.coh.sid$zone)
 df.coh.sid$time <- factor(df.coh.sid$time,levels=c("Pre","Irma","Post"))
+df.coh.sid$site <- factor(df.coh.sid$site,levels=c("UK2","UK1","LK1"))
+
+df.coh.rad <- readRDS("df.cohesion.asv.rads.rds")
+df.coh.rad$zone <- as.factor(df.coh.rad$zone)
+df.coh.rad$time <- factor(df.coh.rad$time,levels=c("Pre","Irma","Post"))
+df.coh.rad$site <- factor(df.coh.rad$site,levels=c("UK2","UK1","LK1"))
 ```
 
-## Plotting time - sids
+## Plotting time{.tabset}
+
+### Sids plot
 
 ```{r}
 gg.coh.pos.sids.yr <- ggplot(df.coh.sid,aes(x=time,y=coh.pos,fill=time,color=time,shape=zone))+
@@ -580,37 +514,14 @@ gg.coh.pos.sids.yr <- ggplot(df.coh.sid,aes(x=time,y=coh.pos,fill=time,color=tim
   theme(plot.title=element_text(face = "italic"),axis.text.x=element_text(angle=45,vjust=1.1,hjust=1))+
   ggtitle("(a) S. siderea")+
   scale_alpha_manual(values=c(0.45,0.75),name="Reef zone")+
-  guides(fill="none",color="none")+
+  guides(fill="none",color="none",shape="none",alpha="none")+
   scale_x_discrete(labels=c("Pre","Disturb.","Post"))
 gg.coh.pos.sids.yr
 
 #ggsave(gg.coh.pos.sids.yr,file="plot.cohesion.sids.pdf",width=3.5,height=3.5)
 
-##point & error bars - not using!
-#df.coh.sid.se <- summarySE(df.coh.sid,groupvars=c("time","zone","site"),measurevar="coh.pos")
-
-# gg.coh.pos.sids.yr <- ggplot(df.coh.sid.se,aes(x=time,y=coh.pos,fill=time,color=time,shape=zone))+
-#   facet_grid(site~zone)+  
-#   geom_jitter(data=df.coh.sid,aes(x=time,y=coh.pos),alpha=0.5)+
-#   #add color="black" here for outlines
-#   #geom_boxplot(outlier.shape=NA,color="black",aes(alpha=zone))+
-#   geom_point()+
-#   geom_errorbar(aes(ymin=coh.pos-sd,ymax=coh.pos+sd),width=0.1)+
-#   ylab("Cohesion (positive)")+
-#   xlab("Time point")+
-#   theme_bw()+
-#   scale_color_manual(values=c("#3B0F70","#FA7F53","#A8327D"))+
-#   scale_fill_manual(values=c("#3B0F70","#FA7F53","#A8327D"))+
-#   scale_shape_manual(values=c(21,23),name="Reef zone")+
-#   theme(plot.title=element_text(face = "italic"),axis.text.x=element_text(angle=45,vjust=1.1,hjust=1))+
-#   ggtitle("S. siderea")+
-#   #scale_alpha_manual(values=c(0.45,0.75),name="Reef zone")+
-#   guides(fill="none",color="none")+
-#   scale_x_discrete(labels=c("Pre","Disturb.","Post"))
-# gg.coh.pos.sids.yr
-
 gg.coh.neg.sids.yr <- ggplot(df.coh.sid,aes(x=time,y=coh.neg,fill=time,color=time,shape=zone))+
-  facet_grid(site~.)+  
+  facet_grid(site~zone)+  
   geom_jitter(aes(alpha=zone),position = position_jitterdodge())+
   #add color="black" here for outlines
   geom_boxplot(outlier.shape=NA,color="black",aes(alpha=zone))+
@@ -621,57 +532,194 @@ gg.coh.neg.sids.yr <- ggplot(df.coh.sid,aes(x=time,y=coh.neg,fill=time,color=tim
   scale_fill_manual(values=c("#3B0F70","#FA7F53","#A8327D"))+
   scale_shape_manual(values=c(21,23),name="Reef zone")+
   theme(plot.title=element_text(face = "italic"),axis.text.x=element_text(angle=45,vjust=1.1,hjust=1))+
-  ggtitle("S. siderea")+
+  ggtitle("(a) S. siderea")+
   scale_alpha_manual(values=c(0.45,0.75),name="Reef zone")+
-  guides(fill="none",color="none")+
+  guides(fill="none",color="none",shape="none",alpha="none")+
   scale_x_discrete(labels=c("Pre","Disturb.","Post"))
 gg.coh.neg.sids.yr
 ```
 
-### Cohesion stats - sids
+### Rads plot
 
 ```{r}
+gg.coh.pos.rads.yr <- ggplot(df.coh.rad,aes(x=time,y=coh.pos,fill=time,color=time,shape=zone))+
+  facet_grid(site~zone)+  
+  geom_jitter(alpha=0.5)+
+  #add color="black" here for outlines
+  geom_boxplot(outlier.shape=NA,color="black",aes(alpha=zone))+
+  ylab("Cohesion (positive)")+
+  xlab("Time point")+
+  theme_bw()+
+  scale_color_manual(values=c("#3B0F70","#FA7F53","#A8327D"))+
+  scale_fill_manual(values=c("#3B0F70","#FA7F53","#A8327D"))+
+  scale_shape_manual(values=c(21,23),name="Reef zone")+
+  theme(plot.title=element_text(face = "italic"),axis.text.x=element_text(angle=45,vjust=1.1,hjust=1))+
+  ggtitle("(b) S. radians")+
+  scale_alpha_manual(values=c(0.45,0.75),name="Reef zone")+
+  guides(fill="none",color="none",shape="none",alpha="none")+
+  scale_x_discrete(labels=c("Pre","Disturb.","Post"))
+gg.coh.pos.rads.yr
 
+#ggsave(gg.coh.pos.rads.yr,file="plot.cohesion.rads.pdf",width=3.5,height=3.5)
+
+gg.coh.neg.rads.yr <- ggplot(df.coh.rad,aes(x=time,y=coh.neg,fill=time,color=time,shape=zone))+
+  facet_grid(site~zone)+  
+  geom_jitter(aes(alpha=zone),position = position_jitterdodge())+
+  #add color="black" here for outlines
+  geom_boxplot(outlier.shape=NA,color="black",aes(alpha=zone))+
+  ylab("Cohesion (negative)")+
+  xlab("Time point")+
+  theme_bw()+
+  scale_color_manual(values=c("#3B0F70","#FA7F53","#A8327D"))+
+  scale_fill_manual(values=c("#3B0F70","#FA7F53","#A8327D"))+
+  scale_shape_manual(values=c(21,23),name="Reef zone")+
+  theme(plot.title=element_text(face = "italic"),axis.text.x=element_text(angle=45,vjust=1.1,hjust=1))+
+  ggtitle("(b) S. radians")+
+  scale_alpha_manual(values=c(0.45,0.75),name="Reef zone")+
+  guides(fill="none",color="none",shape="none",alpha="none")+
+  scale_x_discrete(labels=c("Pre","Disturb.","Post"))
+gg.coh.neg.rads.yr
 ```
 
-### Plotting time - radians
+## "Final" plot
 
 ```{r}
-
+ggarrange(gg.coh.pos.sids.yr,gg.coh.pos.rads.yr)
 ```
 
-### Cohesion stats - rads
+## Cohesion statistics{.tabset}
 
 ```{r}
+#install.packages("dunn.test")
+library(dunn.test)
 
+df.coh.sid.lk1 <- subset(df.coh.sid,site=="LK1")
+df.coh.sid.lk1i <- subset(df.coh.sid.lk1,zone=="Inshore")
+df.coh.sid.lk1o <- subset(df.coh.sid.lk1,zone=="Offshore")
+
+df.coh.sid.uk1 <- subset(df.coh.sid,site=="UK1")
+df.coh.sid.uk1i <- subset(df.coh.sid.uk1,zone=="Inshore")
+df.coh.sid.uk1o <- subset(df.coh.sid.uk1,zone=="Offshore")
+
+df.coh.sid.uk2 <- subset(df.coh.sid,site=="UK2")
+df.coh.sid.uk2i <- subset(df.coh.sid.uk2,zone=="Inshore")
+df.coh.sid.uk2o <- subset(df.coh.sid.uk2,zone=="Offshore")
 ```
 
-### Cohesion statistics - update
+### Sids
 
 ```{r, eval=F}
-#stats
-neg.all$year <- as.factor(neg.all$year)
+#LK1 - inshore
+kruskal.test(coh.pos~time,data=df.coh.sid.lk1i) #p < 0.01
+dunn.test(df.coh.sid.lk1i$coh.pos,df.coh.sid.lk1i$time,method="bh")
+#PRE & POST ARE NOT DIFFERENT - RESILIENCE!!
+# Kruskal-Wallis rank sum test
+# 
+# data: x and group
+# Kruskal-Wallis chi-squared = 8.9707, df = 2, p-value = 0.01
+# 
+# 
+#                            Comparison of x by group                            
+#                              (Benjamini-Hochberg)                              
+# Col Mean-|
+# Row Mean |       Irma       Post
+# ---------+----------------------
+#     Post |   2.359643
+#          |    0.0137*
+#          |
+#      Pre |   2.750700   0.151603
+#          |    0.0089*     0.4397
 
-shapiro.test(neg.all$cohesion)
-neg.all$coh.log <- log(abs(neg.all$cohesion))
-shapiro.test(neg.all$coh.log)
-kruskal.test(cohesion~year,data=neg.all)
+#LK1 - offshore
+kruskal.test(coh.pos~time,data=df.coh.sid.lk1o) #ns
+dunn.test(df.coh.sid.lk1o$coh.pos,df.coh.sid.lk1o$time,method="bh") #ns
 
-#install.packages("dunn.test")
-#library(dunn.test)
-dunn.test(neg.all$cohesion,neg.all$year,method="bh")
-str(neg.all)
+#UK1 - inshore
+kruskal.test(coh.pos~time,data=df.coh.sid.uk1i) #p = 0 ***
+dunn.test(df.coh.sid.uk1i$coh.pos,df.coh.sid.uk1i$time,method="bh")
+#   Kruskal-Wallis rank sum test
+# 
+# data: x and group
+# Kruskal-Wallis chi-squared = 18.718, df = 2, p-value = 0
+# 
+# 
+#                            Comparison of x by group                            
+#                              (Benjamini-Hochberg)                              
+# Col Mean-|
+# Row Mean |       Irma       Post
+# ---------+----------------------
+#     Post |  -3.487240
+#          |    0.0004*
+#          |
+#      Pre |  -3.658445   0.529050
+#          |    0.0004*     0.2984
+# 
+# alpha = 0.05
+# Reject Ho if p <= alpha/2
 
-#stats pos
-pos.all$year <- as.factor(pos.all$year)
+#uk1 - offshore
+kruskal.test(coh.pos~time,data=df.coh.sid.uk1o) #p < 0.01 **
+dunn.test(df.coh.sid.uk1o$coh.pos,df.coh.sid.uk1o$time,method="bh") #sig!
+#   Kruskal-Wallis rank sum test
+# 
+# data: x and group
+# Kruskal-Wallis chi-squared = 13.5297, df = 2, p-value = 0
+# 
+# 
+#                            Comparison of x by group                            
+#                              (Benjamini-Hochberg)                              
+# Col Mean-|
+# Row Mean |       Irma       Post
+# ---------+----------------------
+#     Post |  -3.484365
+#          |    0.0007*
+#          |
+#      Pre |  -2.515414   0.990289
+#          |    0.0089*     0.1610
 
-shapiro.test(pos.all$cohesion)
-pos.all$coh.log <- log(abs(pos.all$cohesion))
-shapiro.test(pos.all$coh.log)
-kruskal.test(cohesion~year,data=pos.all)
+#UK2 - inshore
+kruskal.test(coh.pos~time,data=df.coh.sid.uk2i) #p = 0 ***
+dunn.test(df.coh.sid.uk2i$coh.pos,df.coh.sid.uk2i$time,method="bh")
+#   Kruskal-Wallis rank sum test
+# 
+# data: x and group
+# Kruskal-Wallis chi-squared = 14.2396, df = 2, p-value = 0
+# 
+# 
+#                            Comparison of x by group                            
+#                              (Benjamini-Hochberg)                              
+# Col Mean-|
+# Row Mean |       Irma       Post
+# ---------+----------------------
+#     Post |  -3.673529
+#          |    0.0004*
+#          |
+#      Pre |  -2.359870   1.511807
+#          |    0.0137*     0.0653
+# 
+# alpha = 0.05
+# Reject Ho if p <= alpha/2
 
-#install.packages("dunn.test")
-#library(dunn.test)
-dunn.test(pos.all$cohesion,pos.all$year,method="bh")
-str(pos.all)
+#UK2 - offshore
+kruskal.test(coh.pos~time,data=df.coh.sid.uk2o) #p < 0.001 ***
+dunn.test(df.coh.sid.uk2o$coh.pos,df.coh.sid.uk2o$time,method="bh")
+#  Kruskal-Wallis rank sum test
+# 
+# data: x and group
+# Kruskal-Wallis chi-squared = 16.6155, df = 2, p-value = 0
+# 
+# 
+#                            Comparison of x by group                            
+#                              (Benjamini-Hochberg)                              
+# Col Mean-|
+# Row Mean |       Irma       Post
+# ---------+----------------------
+#     Post |  -3.280346
+#          |    0.0008*
+#          |
+#      Pre |  -3.663319  -0.274695
+#          |    0.0004*     0.3918
+# 
+# alpha = 0.05
+# Reject Ho if p <= alpha/2
 ```

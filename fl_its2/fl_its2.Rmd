@@ -1172,25 +1172,66 @@ bub.genus.mnw
 
 ```
 
-## PCoAs{.tabset}
+# PCoAs{.tabset}
 
-```{r no uk3 for pcoas}
-ps <- subset_samples(ps,site!="UK3")
-ps.sid <- subset_samples(ps,spp=="ssid")
-
+```{r}
+library(cowplot)
+library(phyloseq)
+library(vegan)
+library(ggplot2)
 ```
 
-### Type profiles
+```{r no uk3 for pcoas}
+setwd("/Volumes/GoogleDrive/My Drive/Flirma/flirma_networks/fl_its2")
+#ps <- readRDS("ps.its2.rds")
+#ps.rel <- transform_sample_counts(ps, function(x) x / sum(x))
+#saveRDS(ps.rel,"ps.its2.rel.rds")
+ps1 <- readRDS("ps.its2.rel.rds")
+ps <- subset_samples(ps1,site!="UK3")
+
+ps.sid <- subset_samples(ps,spp=="ssid")
+
+ps.sid.pre <- subset_samples(ps.sid,time=="Pre")
+ps.sid.irm <- subset_samples(ps.sid,time=="Irma")
+ps.sid.pos <- subset_samples(ps.sid,time=="Post")
+
+ps.sid.pre.lk1 <- subset_samples(ps.sid.pre,site=="LK1")
+ps.sid.pre.uk1 <- subset_samples(ps.sid.pre,site=="UK1")
+ps.sid.pre.uk2 <- subset_samples(ps.sid.pre,site=="UK2")
+
+ps.sid.irm.lk1 <- subset_samples(ps.sid.irm,site=="LK1")
+ps.sid.irm.uk1 <- subset_samples(ps.sid.irm,site=="UK1")
+ps.sid.irm.uk2 <- subset_samples(ps.sid.irm,site=="UK2")
+
+ps.sid.pos.lk1 <- subset_samples(ps.sid.pos,site=="LK1")
+ps.sid.pos.uk1 <- subset_samples(ps.sid.pos,site=="UK1")
+ps.sid.pos.uk2 <- subset_samples(ps.sid.pos,site=="UK2")
+
+##for time stats
+ps.sid.lk1 <- subset_samples(ps.sid,site=="LK1")
+ps.sid.uk1 <- subset_samples(ps.sid,site=="UK1")
+ps.sid.uk2 <- subset_samples(ps.sid,site=="UK2")
+
+ps.sid.lk1i <- subset_samples(ps.sid.lk1,zone=="I")
+ps.sid.lk1o <- subset_samples(ps.sid.lk1,zone=="O")
+
+ps.sid.uk1i <- subset_samples(ps.sid.uk1,zone=="I")
+ps.sid.uk1o <- subset_samples(ps.sid.uk1,zone=="O")
+
+ps.sid.uk2i <- subset_samples(ps.sid.uk2,zone=="I")
+ps.sid.uk2o <- subset_samples(ps.sid.uk2,zone=="O")
+```
+
+### Reef zones
 
 ```{r type profiles by site}
-ps.sid.ord <- ordinate(ps.sid,"PCoA",distance="bray")
-plot_ordination(ps.sid, ps.sid.ord, color ="zone")+
-  geom_point(alpha=0.5)+
+ord.sid.pre.lk1 <- ordinate(ps.sid.pre.lk1,"PCoA",distance="bray")
+plot_ordination(ps.sid.pre.lk1, ord.sid.pre.lk1, color ="zone")+
+  #geom_point(alpha=0.5)+
   #scale_color_manual(values=c("darkslategray3","darkslategray4","#000004"))+
   #scale_shape_manual(values=c(16,15))+
   stat_ellipse()+
-  theme_cowplot()+
-  facet_grid(~site)
+  theme_cowplot()
   #facet_grid(site~zone)
 
 #ggsave(filename="pcoa.types.site.pdf")
@@ -1198,13 +1239,263 @@ plot_ordination(ps.sid, ps.sid.ord, color ="zone")+
 
 # Stats - type profiles
 
+## Setup
+
 ```{r adonis stats packages}
 library(vegan)
 #remotes::install_github("Jtrachsel/funfuns")
 library(funfuns)
 library(dplyr)
 library(edgeR)
+
+setwd("/Volumes/GoogleDrive/My Drive/Flirma/flirma_networks/fl_its2")
+ps <- readRDS("ps.its2.rds")
+
+ps <- subset_samples(ps,site!="UK3")
 ```
+
+## Subset
+
+```{r subset by site}
+ps.sid <- subset_samples(ps,spp="ssid")
+ps.sid <- transform_sample_counts(ps.sid, function(x) x / sum(x))
+
+##for in v off stats
+ps.sid.pre <- subset_samples(ps.sid,time=="Pre")
+ps.sid.irm <- subset_samples(ps.sid,time=="Irma")
+ps.sid.pos <- subset_samples(ps.sid,time=="Post")
+
+ps.sid.pre.lk1 <- subset_samples(ps.sid.pre,site=="LK1")
+ps.sid.pre.uk1 <- subset_samples(ps.sid.pre,site=="UK1")
+ps.sid.pre.uk2 <- subset_samples(ps.sid.pre,site=="UK2")
+
+ps.sid.irm.lk1 <- subset_samples(ps.sid.irm,site=="LK1")
+ps.sid.irm.uk1 <- subset_samples(ps.sid.irm,site=="UK1")
+ps.sid.irm.uk2 <- subset_samples(ps.sid.irm,site=="UK2")
+
+ps.sid.pos.lk1 <- subset_samples(ps.sid.pos,site=="LK1")
+ps.sid.pos.uk1 <- subset_samples(ps.sid.pos,site=="UK1")
+ps.sid.pos.uk2 <- subset_samples(ps.sid.pos,site=="UK2")
+
+##for time stats
+ps.sid.lk1 <- subset_samples(ps.sid,site=="LK1")
+ps.sid.uk1 <- subset_samples(ps.sid,site=="UK1")
+ps.sid.uk2 <- subset_samples(ps.sid,site=="UK2")
+
+ps.sid.lk1i <- subset_samples(ps.sid.lk1,zone=="I")
+ps.sid.lk1o <- subset_samples(ps.sid.lk1,zone=="O")
+
+ps.sid.uk1i <- subset_samples(ps.sid.uk1,zone=="I")
+ps.sid.uk1o <- subset_samples(ps.sid.uk1,zone=="O")
+
+ps.sid.uk2i <- subset_samples(ps.sid.uk2,zone=="I")
+ps.sid.uk2o <- subset_samples(ps.sid.uk2,zone=="O")
+```
+
+## Adonises{.tabset}
+
+### Lower Keys 1
+
+```{r stats lk1 rel}
+##reef zone pre
+seq.sid.pre.lk1 <- data.frame(ps.sid.pre.lk1@otu_table)
+samdf.sid.pre.lk1 <- data.frame(ps.sid.pre.lk1@sam_data)
+
+dist.sid.pre.lk1 <- vegdist(seq.sid.pre.lk1)
+##zone
+bet.sid.pre.lk1 <- betadisper(dist.sid.pre.lk1,samdf.sid.pre.lk1$zone)
+#anova(bet.ps)
+permutest(bet.sid.pre.lk1,pairwise=FALSE,permutations=999) #ns
+plot(bet.sid.pre.lk1) #ns
+
+adonis2(seq.sid.pre.lk1 ~ zone, data=samdf.sid.pre.lk1, permutations=999) #ns
+
+##reef zone irm
+seq.sid.irm.lk1 <- data.frame(ps.sid.irm.lk1@otu_table)
+samdf.sid.irm.lk1 <- data.frame(ps.sid.irm.lk1@sam_data)
+
+dist.sid.irm.lk1 <- vegdist(seq.sid.irm.lk1)
+##zone
+bet.sid.irm.lk1 <- betadisper(dist.sid.irm.lk1,samdf.sid.irm.lk1$zone)
+#anova(bet.ps)
+permutest(bet.sid.irm.lk1,pairwise=FALSE,permutations=999) #ns
+plot(bet.sid.irm.lk1) #ns
+
+adonis2(seq.sid.irm.lk1 ~ zone, data=samdf.sid.irm.lk1, permutations=999)
+#adonis2(formula = seq.sid.irm.lk1 ~ zone, data = samdf.sid.irm.lk1, permutations = 999)
+#          Df SumOfSqs      R2     F Pr(>F)  
+# zone      1   0.8368 0.06787 1.966  0.038 *
+# Residual 27  11.4929 0.93213               
+# Total    28  12.3298 1.00000               
+# ---
+# Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+##reef zone post
+seq.sid.pos.lk1 <- data.frame(ps.sid.pos.lk1@otu_table)
+samdf.sid.pos.lk1 <- data.frame(ps.sid.pos.lk1@sam_data)
+
+dist.sid.pos.lk1 <- vegdist(seq.sid.pos.lk1)
+##zone
+bet.sid.pos.lk1 <- betadisper(dist.sid.pos.lk1,samdf.sid.pos.lk1$zone)
+#anova(bet.ps)
+permutest(bet.sid.pos.lk1,pairwise=FALSE,permutations=999) #ns
+plot(bet.sid.pos.lk1) #ns
+
+adonis2(seq.sid.pos.lk1 ~ zone, data=samdf.sid.pos.lk1, permutations=999) #ns
+
+##time - inshore
+seq.sid.lk1i <- data.frame(ps.sid.lk1i@otu_table)
+samdf.sid.lk1i <- data.frame(ps.sid.lk1i@sam_data)
+
+dist.sid.lk1i <- vegdist(seq.sid.lk1i)
+
+bet.sid.lk1i <- betadisper(dist.sid.lk1i,samdf.sid.lk1i$time)
+#anova(bet.ps)
+permutest(bet.sid.lk1i,pairwise=TRUE,permutations=999)
+#post different than other two, looks more constrained
+# Permutation test for homogeneity of multivariate dispersions
+# Permutation: free
+# Number of permutations: 999
+# 
+# Response: Distances
+#           Df  Sum Sq   Mean Sq      F N.Perm Pr(>F)  
+# Groups     2 0.05045 0.0252251 4.4942    999  0.016 *
+# Residuals 46 0.25819 0.0056128                       
+# ---
+# Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+# 
+# Pairwise comparisons:
+# (Observed p-value below diagonal, permuted p-value above diagonal)
+#           Irma      Post   Pre
+# Irma           0.0240000 0.349
+# Post 0.0239826           0.006
+# Pre  0.3359886 0.0082901  
+plot(bet.sid.lk1i) 
+
+adonis2(seq.sid.lk1i ~ time, data=samdf.sid.lk1i, permutations=999) #p<0.001***
+
+pairwise.adonis(seq.sid.lk1i, factors=samdf.sid.lk1i$time, permutations=999)
+##pre diff than post
+#          pairs  F.Model         R2 p.value p.adjusted
+# 1  Pre vs Irma 1.273944 0.04208053   0.272      0.272
+# 2  Pre vs Post 3.211953 0.08869871   0.001      0.001
+# 3 Irma vs Post 1.507718 0.04785234   0.124      0.124
+
+##time - offshore
+seq.sid.lk1o <- data.frame(ps.sid.lk1o@otu_table)
+samdf.sid.lk1o <- data.frame(ps.sid.lk1o@sam_data)
+
+dist.sid.lk1o <- vegdist(seq.sid.lk1o)
+
+bet.sid.lk1o <- betadisper(dist.sid.lk1o,samdf.sid.lk1o$time)
+#anova(bet.ps)
+permutest(bet.sid.lk1o,pairwise=TRUE,permutations=999)
+# Response: Distances
+#           Df  Sum Sq Mean Sq      F N.Perm Pr(>F)  
+# Groups     2 0.75134 0.37567 4.6472    999  0.013 *
+# Residuals 23 1.85927 0.08084                       
+# ---
+# Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+# 
+# Pairwise comparisons:
+# (Observed p-value below diagonal, permuted p-value above diagonal)
+#          Irma     Post   Pre
+# Irma          0.023000 0.258
+# Post 0.016582          0.016
+# Pre  0.244461 0.012564      
+plot(bet.sid.lk1o) 
+
+adonis2(seq.sid.lk1o ~ time, data=samdf.sid.lk1o, permutations=999) #p<0.001***
+
+pairwise.adonis(seq.sid.lk1o, factors=samdf.sid.lk1o$time, permutations=999)
+#all different 
+#          pairs  F.Model        R2 p.value p.adjusted
+# 1  Post vs Pre 4.748312 0.2288529   0.004      0.004
+# 2 Post vs Irma 3.634191 0.1950281   0.001      0.001
+# 3  Pre vs Irma 2.850122 0.1596696   0.048      0.048
+```
+
+### Upper Keys 1
+
+```{r stats uk1 rel}
+##reef zone pre
+seq.sid.pre.uk1 <- data.frame(ps.sid.pre.uk1@otu_table)
+samdf.sid.pre.uk1 <- data.frame(ps.sid.pre.uk1@sam_data)
+
+dist.sid.pre.uk1 <- vegdist(seq.sid.pre.uk1)
+##zone
+bet.sid.pre.uk1 <- betadisper(dist.sid.pre.uk1,samdf.sid.pre.uk1$zone)
+#anova(bet.ps)
+permutest(bet.sid.pre.uk1,pairwise=FALSE,permutations=999)
+plot(bet.sid.pre.uk1)
+#          Df SumOfSqs      R2      F Pr(>F)  
+# zone      1    0.914 0.06604 2.0507  0.023 *
+# Residual 29   12.925 0.93396                
+# Total    30   13.839 1.00000                
+
+adonis2(seq.sid.pre.uk1 ~ zone, data=samdf.sid.pre.uk1, permutations=999) 
+# adonis2(formula = seq.sid.pre.uk1 ~ zone, data = samdf.sid.pre.uk1, permutations = 999)
+#          Df SumOfSqs      R2      F Pr(>F)  
+# zone      1    0.914 0.06604 2.0507  0.021 *
+# Residual 29   12.925 0.93396                
+# Total    30   13.839 1.00000                
+# ---
+
+##reef zone irm
+seq.sid.irm.uk1 <- data.frame(ps.sid.irm.uk1@otu_table)
+samdf.sid.irm.uk1 <- data.frame(ps.sid.irm.uk1@sam_data)
+
+dist.sid.irm.uk1 <- vegdist(seq.sid.irm.uk1)
+##zone
+bet.sid.irm.uk1 <- betadisper(dist.sid.irm.uk1,samdf.sid.irm.uk1$zone)
+#anova(bet.ps)
+permutest(bet.sid.irm.uk1,pairwise=FALSE,permutations=999) #ns
+plot(bet.sid.irm.uk1) #ns
+
+adonis2(seq.sid.irm.uk1 ~ zone, data=samdf.sid.irm.uk1, permutations=999)
+# adonis2(formula = seq.sid.irm.uk1 ~ zone, data = samdf.sid.irm.uk1, permutations = 999)
+#          Df SumOfSqs      R2      F Pr(>F)   
+# zone      1   1.3958 0.09887 3.2915  0.002 **
+# Residual 30  12.7216 0.90113                 
+# Total    31  14.1174 1.00000          
+
+##reef zone post
+seq.sid.pos.uk1 <- data.frame(ps.sid.pos.uk1@otu_table)
+samdf.sid.pos.uk1 <- data.frame(ps.sid.pos.uk1@sam_data)
+
+dist.sid.pos.uk1 <- vegdist(seq.sid.pos.uk1)
+##zone
+bet.sid.pos.uk1 <- betadisper(dist.sid.pos.uk1,samdf.sid.pos.uk1$zone)
+#anova(bet.ps)
+permutest(bet.sid.pos.uk1,pairwise=FALSE,permutations=999) #ns
+plot(bet.sid.pos.uk1) #ns
+
+adonis2(seq.sid.pos.uk1 ~ zone, data=samdf.sid.pos.uk1, permutations=999) #ns
+
+##time
+seq.sid.uk1i <- data.frame(ps.sid.uk1i@otu_table)
+samdf.sid.uk1i <- data.frame(ps.sid.uk1i@sam_data)
+
+dist.sid.uk1i <- vegdist(seq.sid.uk1i)
+
+bet.sid.uk1i <- betadisper(dist.sid.uk1i,samdf.sid.uk1i$time)
+#anova(bet.ps)
+permutest(bet.sid.uk1i,pairwise=TRUE,permutations=999) #ns
+plot(bet.sid.uk1i) 
+
+adonis2(seq.sid.uk1i ~ time, data=samdf.sid.uk1i, permutations=999) #p<0.01**
+
+pairwise.adonis(seq.sid.uk1i, factors=samdf.sid.uk1i$time, permutations=999)
+#          pairs  F.Model         R2 p.value p.adjusted
+# 1  Post vs Pre 1.903144 0.07347155   0.016      0.016
+# 2 Post vs Irma 2.306884 0.08149552   0.009      0.009
+# 3  Pre vs Irma 1.898341 0.05600101   0.054      0.054
+
+#almost all different, but pre v irma not bt
+```
+
+
+
 
 
 ```{r}
@@ -1246,272 +1537,10 @@ chisq.test(SymPortalDataK_1$variable, SymPortalDataK_1$label, correct=FALSE)
 
 
 ```
-Raw
 
-```{r by site}
-ps.sid <- subset_samples(ps,spp="ssid")
 
-seq.sid <- data.frame(ps.sid@otu_table)
-samdf.sid <- data.frame(ps.sid@sam_data)
 
-dist.sid <- vegdist(seq.sid)
-##zone
-bet.sid <- betadisper(dist.sid,samdf.sid$zone)
-#anova(bet.ps)
-permutest(bet.sid,pairwise=TRUE,permutations=999)
-plot(bet.ps) #0.07, trend
 
-adonis2(seq.sid ~ zone, data=samdf.sid, permutations=999) #p<0.01**
-
-##time
-bet.sid <- betadisper(dist.sid,samdf.sid$time)
-#anova(bet.ps)
-permutest(bet.sid,pairwise=TRUE,permutations=999)
-plot(bet.ps) #ns
-
-adonis2( ~ time, data=samdf.sid, permutations=999) #p<0.001***
-
-pairwise.adonis(seq.sid, factors=samdf.sid$time, permutations=999)
-```
-
-Relative abundance
-
-```{r stats by site rel}
-seq.ps.rel <- data.frame(ps.sid@otu_table)
-samdf.ps.rel <- data.frame(ps.rel@sam_data)
-
-dist.ps.rel <- vegdist(seq.ps.rel)
-bet.ps.rel <- betadisper(dist.ps.rel,samdf.ps.rel$site)
-anova(bet.ps.rel) #ns
-plot(bet.ps.rel)
-
-adonis(seq.ps.rel ~ site/zone, data=samdf.ps.rel, permutations=999) #p<001***
-
-pairwise.adonis(seq.ps.rel, factors=samdf.ps.rel$site, permutations=999) #tahiti different from other two
-#        pairs    F.Model         R2 p.value p.adjusted
-# 1 MSE vs MNW  0.8174161 0.01344049   0.445      0.445
-# 2 MSE vs TNW 13.6939515 0.18333414   0.001      0.001
-# 3 MNW vs TNW 12.1951261 0.17129159   0.001      0.001
-```
-
-```{r subset by site}
-ps.mnw <- subset_samples(ps,site=="MNW")
-ps.mnw.rel <- subset_samples(ps.rel,site=="MNW")
-ps.mnw.norm <- subset_samples(ps.norm,site=="MNW")
-
-ps.mse <- subset_samples(ps,site=="MSE")
-ps.mse.rel <- subset_samples(ps.rel,site=="MSE")
-ps.mse.norm <- subset_samples(ps.norm,site=="MSE")
-
-ps.tnw <- subset_samples(ps,site=="TNW")
-ps.tnw.rel <- subset_samples(ps.rel,site=="TNW")
-ps.tnw.norm <- subset_samples(ps.norm,site=="TNW")
-```
-
-Mo'orea NW
-
-```{r mnw stats}
-seq.ps.mnw <- data.frame(otu_table(ps.mnw))
-samdf.ps.mnw <- data.frame(sample_data(ps.mnw))
-row.names(seq.ps.mnw)==row.names(samdf.ps.mnw)
-
-dist.ps.mnw <- vegdist(seq.ps.mnw)
-bet.ps.mnw <- betadisper(dist.ps.mnw,samdf.ps.mnw$zone)
-anova(bet.ps.mnw) #ns
-plot(bet.ps.mnw)
-
-adonis(seq.ps.mnw ~ zone, data=samdf.ps.mnw, permutations=999) #p<01**
-```
-
-Normalized
-
-```{r normalized mnw stats}
-seq.ps.mnw.norm <- data.frame(otu_table(ps.mnw.norm))
-samdf.ps.mnw.norm <- data.frame(sample_data(ps.mnw.norm))
-row.names(seq.ps.mnw.norm)==row.names(samdf.ps.mnw.norm)
-
-dist.ps.mnw.norm <- vegdist(seq.ps.mnw.norm)
-bet.ps.mnw.norm <- betadisper(dist.ps.mnw.norm,samdf.ps.mnw.norm$zone)
-anova(bet.ps.mnw.norm) #ns
-plot(bet.ps.mnw.norm)
-
-adonis(seq.ps.mnw.norm ~ zone, data=samdf.ps.mnw.norm, permutations=999) #p<01**
-```
-
-Rel abundance
-
-```{r mnw rel}
-seq.ps.mnw.rel <- data.frame(otu_table(ps.mnw.rel))
-
-dist.ps.mnw <- vegdist(seq.ps.mnw.rel)
-bet.ps.mnw <- betadisper(dist.ps.mnw,samdf.ps.mnw$zone)
-anova(bet.ps.mnw) #ns
-permutest(bet.ps.mnw, permutations = 999,pairwise=F)
-plot(bet.ps.mnw) #ns
-
-adonis(seq.ps.mnw.rel ~ zone, data=samdf.ps.mnw, permutations=999) #sig p < 0.01
-```
-
-Mo'orea SE
-
-```{r mse stats}
-seq.ps.mse <- data.frame(otu_table(ps.mse))
-samdf.ps.mse <- data.frame(sample_data(ps.mse))
-row.names(seq.ps.mse)==row.names(samdf.ps.mse)
-
-dist.ps.mse <- vegdist(seq.ps.mse)
-bet.ps.mse <- betadisper(dist.ps.mse,samdf.ps.mse$zone)
-anova(bet.ps.mse) #ns
-plot(bet.ps.mse)
-
-adonis(seq.ps.mse ~ zone, data=samdf.ps.mse, permutations=999) #p<01**
-```
-
-Normalized
-
-```{r normalized mse stats}
-seq.ps.mse.norm <- data.frame(otu_table(ps.mse.norm))
-samdf.ps.mse.norm <- data.frame(sample_data(ps.mse.norm))
-row.names(seq.ps.mse.norm)==row.names(samdf.ps.mse.norm)
-
-dist.ps.mse.norm <- vegdist(seq.ps.mse.norm)
-bet.ps.mse.norm <- betadisper(dist.ps.mse.norm,samdf.ps.mse.norm$zone)
-anova(bet.ps.mse.norm) #ns
-plot(bet.ps.mse.norm)
-
-adonis(seq.ps.mse.norm ~ zone, data=samdf.ps.mse.norm, permutations=999) #p<01**
-```
-
-Rel abundance
-
-```{r mse rel}
-seq.ps.mse.rel <- data.frame(otu_table(ps.mse.rel))
-
-dist.ps.mse <- vegdist(seq.ps.mse.rel)
-bet.ps.mse <- betadisper(dist.ps.mse,samdf.ps.mse$zone)
-anova(bet.ps.mse) #ns
-permutest(bet.ps.mse, permutations = 999,pairwise=F)
-plot(bet.ps.mse) #ns
-
-adonis(seq.ps.mse.rel ~ zone, data=samdf.ps.mse, permutations=999) #sig p < 0.01
-```
-
-Tahiti NW
-
-```{r tnw stats}
-seq.ps.tnw <- data.frame(otu_table(ps.tnw))
-samdf.ps.tnw <- data.frame(sample_data(ps.tnw))
-row.names(seq.ps.tnw)==row.names(samdf.ps.tnw)
-
-dist.ps.tnw <- vegdist(seq.ps.tnw)
-bet.ps.tnw <- betadisper(dist.ps.tnw,samdf.ps.tnw$zone)
-anova(bet.ps.tnw) #ns
-plot(bet.ps.tnw)
-
-adonis(seq.ps.tnw ~ zone, data=samdf.ps.tnw, permutations=999) #p<01**
-```
-
-Normalized
-
-```{r normalized tnw stats}
-seq.ps.tnw.norm <- data.frame(otu_table(ps.tnw.norm))
-samdf.ps.tnw.norm <- data.frame(sample_data(ps.tnw.norm))
-row.names(seq.ps.tnw.norm)==row.names(samdf.ps.tnw.norm)
-
-dist.ps.tnw.norm <- vegdist(seq.ps.tnw.norm)
-bet.ps.tnw.norm <- betadisper(dist.ps.tnw.norm,samdf.ps.tnw.norm$zone)
-anova(bet.ps.tnw.norm) #ns
-plot(bet.ps.tnw.norm)
-
-adonis(seq.ps.tnw.norm ~ zone, data=samdf.ps.tnw.norm, permutations=999) #p<01**
-```
-
-Rel abundance
-
-```{r tnw rel}
-seq.ps.tnw.rel <- data.frame(otu_table(ps.tnw.rel))
-
-dist.ps.tnw <- vegdist(seq.ps.tnw.rel)
-bet.ps.tnw <- betadisper(dist.ps.tnw,samdf.ps.tnw$zone)
-anova(bet.ps.tnw) #ns
-permutest(bet.ps.tnw, permutations = 999,pairwise=F)
-plot(bet.ps.tnw) #ns
-
-adonis(seq.ps.tnw.rel ~ zone, data=samdf.ps.tnw, permutations=999) #sig p < 0.01
-```
-
-All syms
-
-```{r all syms stats, eval=FALSE}
-seq.all <- data.frame(otu_table(ps.all))
-samdf.ps.all <- data.frame(sample_data(ps.all))
-row.names(seq.all)==row.names(samdf.ps.all)
-
-dist.all <- vegdist(seq.all)
-bet.mnw.c <- betadisper(dist.all,samdf.ps.all$zone)
-anova(bet.mnw.c) #ns
-plot(bet.mnw.c) #very much overlap, not sig
-adonis(otu.mnw.c ~ site*zone, data=samdf.mnw.c, permutations=999)
-```
-
-```{r, eval=FALSE}
-seq.a <- select(seq.all,contains('A')) 
-#get rid of column 29 - it's a C
-seq.a.clean <- seq.a[,1:28]
-
-seq.c <- select(seq.all,contains('C')) 
-#get rid of column 1, it's an A
-seq.c.clean <- seq.c[,2:129]
-
-seq.ac <- seq.all %>%
-  select(contains('A')) %>%
-  select(contains('C'))
-#just those two
-
-seq.ac <- select(seq.all,!contains(c('C','A'))) 
-#there's a B1 in there haha
-
-seq.c.clean2 <- seq.c.clean[!rowSums(seq.c.clean)==0,]
-
-ps.all.c <- phyloseq(otu_table(as.matrix(seq.c.clean2), taxa_are_rows=FALSE),
-               sample_data(samdf))
-
-ps.all.c
-
-seq.a.clean2 <- seq.a.clean[!rowSums(seq.a.clean)==0,]
-
-ps.all.a <- phyloseq(otu_table(as.matrix(seq.a.clean2), taxa_are_rows=FALSE),
-               sample_data(samdf))
-
-ps.all.a
-
-#stats time - CLADOCOPIUM
-dist.c <- vegdist(seq.c.clean2)
-samdf.ps.c <- data.frame(sample_data(ps.all.c))
-row.names(samdf.ps.c)==row.names(seq.c.clean2)
-
-bet.c <- betadisper(dist.c,samdf.ps.c$site)
-anova(bet.c) #ns
-plot(bet.c) #very much overlap, not sig
-
-adonis(seq.c.clean2 ~ site/zone, data=samdf.ps.c, permutations=999)
-
-pairwise.adonis(seq.c.clean2, factors = samdf.ps.c$site, permutations = 999)
-#Tahiti different from other two
-
-ps.mnw.c <- subset_samples(ps.all.c,site=="MNW")
-otu.mnw.c <- data.frame(otu_table(ps.mnw.c))
-samdf.mnw.c <- data.frame(sample_data(ps.mnw.c))
-row.names(otu.mnw.c)==row.names(samdf.mnw.c)
-
-dist.mnw.c <- vegdist(otu.mnw.c)
-bet.mnw.c <- betadisper(dist.mnw.c,samdf.mnw.c$zone)
-anova(bet.mnw.c) #ns
-plot(bet.mnw.c) #very much overlap, not sig
-adonis(otu.mnw.c ~ zone, data=samdf.mnw.c, permutations=999)
-
-
-```
 
 ## Find "most frequent" sym
 
