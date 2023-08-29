@@ -9,6 +9,8 @@ output:
     toc_float: yes
     highlight: haddock
     number_sections: true
+editor_options: 
+  chunk_output_type: console
 ---
 
 # Raw 16s processing
@@ -428,6 +430,7 @@ sessionInfo()
 ```{r packages data etc., eval=FALSE}
 library('phyloseq')
 library('ggplot2')
+library("vegan")
 #install.packages("Rmisc")
 library('Rmisc')
 library(cowplot)
@@ -435,7 +438,7 @@ library(cowplot)
 library(ShortRead)
 
 #### Read in previously saved datafiles ####
-setwd("/Volumes/GoogleDrive/My Drive/Flirma/flirma_networks/fl_16s/01.generate_asv_table")
+setwd("~/nicfall@bu.edu - Google Drive/My Drive/Flirma/flirma_networks/fl_16s/01.generate_asv_table")
 ```
 
 ## Remove chloroplasts etc. 
@@ -444,7 +447,6 @@ setwd("/Volumes/GoogleDrive/My Drive/Flirma/flirma_networks/fl_16s/01.generate_a
 samdf <- read.csv("fl_sample_info - 16s_all_newvars.csv")
 row.names(samdf) <- samdf$sample_num
 
-#taxa <- readRDS("fl16s.rd3.taxa.newids.rds")
 taxa <- readRDS("fl16s.23.taxid.newids.rds")
 
 #seq.trim.newids <- readRDS("fl16s.rd3.seqtab.nochim.newids.rds")
@@ -454,36 +456,38 @@ taxa <- readRDS("fl16s.23.taxid.newids.rds")
 seq.newids <- readRDS("fl16s.23.seqtab.nochim.newids.rds")
 
 #phyloseq object with new taxa ids
-ps <- phyloseq(otu_table(seq.newids, taxa_are_rows=FALSE), 
+ps.raw <- phyloseq(otu_table(seq.newids, taxa_are_rows=FALSE), 
                sample_data(samdf), 
                tax_table(taxa))
 
-ps #12836
+ps.raw
 #75430, 360 samples untrimmed
 
-# #### first look at data ####
-# ps_glom <- tax_glom(ps.clean, "Family")
-# plot_bar(ps_glom, x="site", fill="Family")+
-#   theme(legend.position="none")
+##don't want UK3 samples for read count things
+ps.raw.nouk3 <- subset_samples(ps.raw,site!="UK3")
+ps <- prune_taxa(taxa_sums(ps.raw.nouk3) > 0, ps.raw.nouk3)
+ps
+#72110, 320 samples
+sum(sample_sums(ps)) #15,222,260 raw reads
 
 #### remove mitochondria, chloroplasts, non-bacteria #### 
 ps.mito <- subset_taxa(ps, (family=="Mitochondria"))
-ps.mito #17 taxa to remove
+ps.mito #15 taxa to remove
 ps.chlor <- subset_taxa(ps, (order=="Chloroplast"))
-ps.chlor #541 taxa to remove
+ps.chlor #503 taxa to remove
 ps.notbact <- subset_taxa(ps, (domain!="Bacteria") | is.na(domain))
-ps.notbact #23591 taxa to remove
+ps.notbact #22412 taxa to remove
 
 ps.nomito <- subset_taxa(ps, (family!="Mitochondria") | is.na(family))
-ps.nomito #75413 taxa
+ps.nomito #72095 taxa
 ps.nochlor <- subset_taxa(ps.nomito, (order!="Chloroplast") | is.na(order))
-ps.nochlor #74872 taxa
+ps.nochlor #71592 taxa
 ps.clean <- subset_taxa(ps.nochlor, (domain=="Bacteria"))
-ps.clean #51281 taxa
+ps.clean #49180 taxa
 
 #just archaea
 ps.arch <- subset_taxa(ps.nomito, (domain=="Archaea"))
-ps.arch #485 taxa
+ps.arch #463 taxa
 ```
 
 ## Remove contamination from negative controls
@@ -503,7 +507,7 @@ sample_data(ps.clean)$is.neg <- sample_data(ps.clean)$full_site == "neg"
 contamdf.prev <- isContaminant(ps.clean, neg="is.neg",threshold=0.5)
 table(contamdf.prev$contaminant)
 # FALSE  TRUE - without trimming
-# 51181   100 
+# 49080   100 
 
 # Make phyloseq object of presence-absence in negative controls and true samples
 ps.pa <- transform_sample_counts(ps.clean, function(abund) 1*(abund>0))
@@ -518,79 +522,85 @@ ggplot(data=df.pa, aes(x=pa.neg, y=pa.pos, color=contaminant)) + geom_point() +
 #remove from ps.clean:
 ps.clean1 <- prune_taxa(!contamdf.prev$contaminant,ps.clean)
 #also remove negative controls, don't need them anymore I think
-ps.cleaner <- subset_samples(ps.clean1,(full_site!="neg"))
+ps.clean.noneg <- subset_samples(ps.clean1,(full_site!="neg"))
+ps.clean.noneg
 
-ps.cleaner 
-#otu_table()   OTU Table:         [ 51181 taxa and 356 samples ]
-#saveRDS(ps.cleaner,file="fl16s.ps.cleaner.rd3_newvars.rds")
-#saveRDS(ps.cleaner,file="fl16s.23.ps.cleaner.rds")
+#saveRDS(ps.clean.noneg,file="fl16s.23.ps.clean.noneg.rds")
+
+#also remove singletons
+ps.clean.nosing <- filter_taxa(ps.clean.noneg, function (x) {sum(x > 0) > 1}, prune=TRUE)
+ps.clean.nosing 
+#otu_table()   OTU Table:         [ 19948 taxa and 316 samples ]
+
+sum(sample_sums(ps.clean.nosing))
+#11,185,208
+#~112 reads
+
+ps.trim <- prune_taxa(taxa_sums(ps.clean.nosing) >= 112, ps.clean.nosing)
+ps.trim #7423 taxa and 316 samples
+sum(sample_sums(ps.trim))
+#10,623,208
+
+#saveRDS(ps.trim,file="fl16s.23.ps.clean.trim.rds")
 ```
 
 # Rarefy
 
 ```{r rarefy raw - do once then save, eval=FALSE}
-seqtab.cleaner <- data.frame(ps.cleaner@otu_table)
+seqtab.trim <- data.frame(ps.trim@otu_table)
 
-rarecurve(seqtab.cleaner,step=500,label=FALSE) #after removing contaminants
+rarecurve(seqtab.trim,step=500,label=FALSE) #after removing contaminants
 
-total <- rowSums(seqtab.cleaner)
-fewer <- subset(total, total <5500)
-#18 samples to remove, that's ~95% of samples which seems good
-fewer
+#df.t <- data.frame(t(df))
+seqtab.trim$lib_size <- rowSums(seqtab.trim)
 
-row.names.remove <- c("1192","1196","1200","1206","1207","1238","1143","1145","1146","1149","1171","1176","1071","1086","1088","827","850","1119")
-#row.names.remove <- c("1196","1200","1206","1207","1236","1238","1143","1145","1146","1149","1171","1176","1071","1086","1088","827","850","1119")
-seqtab.less <- seqtab.cleaner[!(row.names(seqtab.cleaner) %in% row.names.remove),]
-#298 left
+seqtab.trim2 <- seqtab.trim[order(seqtab.trim$lib_size),]
 
-seqtab.rare <- rrarefy(seqtab.less,sample=5500)
-rarecurve(seqtab.rare,step=500,label=FALSE)
+seqtab.trim2$Index <- seq(nrow(seqtab.trim2))
+##all of them:
+ggplot(data=seqtab.trim2, aes(x=Index, y=lib_size))+
+  geom_point()
 
-#phyloseq object but rarefied
-ps.rare <- phyloseq(otu_table(seqtab.rare, taxa_are_rows=FALSE), 
-                    sample_data(samdf), 
-                    tax_table(taxa))
-ps.rare 
-#[ 51181 taxa and 298 samples ]
+##lower ones:
+ggplot(data=seqtab.trim2, aes(x=Index, y=lib_size))+
+  geom_point()+
+  xlim(0,100)+
+  ylim(0,20000)
 
-#removing missing taxa - lost after rarefying
-ps.rare <- prune_taxa(taxa_sums(ps.rare) > 0, ps.rare)
-ps.rare #11897
-#[ 39334 taxa and 298 samples ]
+head(seqtab.trim2$lib_size,n=19) 
+tail(seqtab.trim2$lib_size) #doesn't actually jump magnitudes for a while
 
-#saveRDS(ps.rare,file="fl16s.23.ps.cleaner.rare5500.rds")
-ps.rare <- readRDS("fl16s.23.ps.cleaner.rare5500.rds")
+table(sample_data(ps.trim)$site_zone)
+table(sample_data(ps.trim)$year)
+ps.trimmer <- prune_samples(sample_sums(ps.trim)>5000,ps.trim)
+ps.trimmer
+table(sample_data(ps.trimmer)$site_zone)
+table(sample_data(ps.trimmer)$year)
 
-#remove samples from cleaner that were removed in rarefaction
-ps.less <- phyloseq(otu_table(seqtab.less, taxa_are_rows=FALSE), 
-                    sample_data(samdf), 
-                    tax_table(taxa))
-ps.less
-#otu_table()   OTU Table:         [ 51181 taxa and 298 samples ]
+set.seed(2939)
 
-#removing missing taxa - lost after removing samples
-ps.less <- prune_taxa(taxa_sums(ps.less) > 0, ps.less)
-ps.less #11907
-#otu_table()   OTU Table:         [ 48606 taxa and 298 samples ]
+ps.trim.rare <- rarefy_even_depth(ps.trim,sample.size=5000,replace=FALSE)
+ps.trim.rare
 
-#saveRDS(ps.less,file="fl16s.23.ps.cleaner.less.rds")
+#saveRDS(ps.trim.rare,"fl16s.23.ps.clean.trim.rare5k.rds")
+#saveRDS(ps.trimmer,file="fl16s.23.ps.clean.trim.less.rds")
 ```
 
 Checking read depths after all this processing
 
 ```{r, eval=F}
-ps.less <- readRDS("fl16s.23.ps.cleaner.less.rds")
-sum(sample_sums(ps.less))
-mean(sample_sums(ps.less))
-#39593.51
-sd(sample_sums(ps.less))
-#27896.41
+#ps.less <- readRDS("fl16s.23.ps.cleaner.less.rds")
+sum(sample_sums(ps.trimmer))
+mean(sample_sums(ps.trimmer))
+#35456.26
+sd(sample_sums(ps.trimmer))
+#24520.16
 
-#saving some other info
-samdf.cleaner <- data.frame(ps.cleaner@sam_data)
-row.names(seqtab.cleaner)==row.names(samdf.cleaner)
-samdf.cleaner$depth <- rowSums(seqtab.cleaner)
-#write.csv(samdf.cleaner,file="samdf.cleaner.csv")
+# #saving some other info
+# samdf.cleaner <- data.frame(ps.cleaner@sam_data)
+# row.names(seqtab.cleaner)==row.names(samdf.cleaner)
+# samdf.cleaner$depth <- rowSums(seqtab.cleaner)
+# #write.csv(samdf.cleaner,file="samdf.cleaner.csv")
 ```
 
 

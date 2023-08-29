@@ -1,0 +1,3500 @@
+---
+title: "fl16s_networks_revised"
+author: "Nicola Kriefall"
+date: "11/20/2022"
+output: html_document
+---
+
+```{r setup packages}
+#library(devtools)
+#install_github("zdk123/SpiecEasi")
+library(SpiecEasi)
+library("stringr")
+library("igraph")
+library("MCMC.OTU")
+library("phyloseq")
+
+setwd("/Volumes/GoogleDrive/My Drive/Flirma/flirma_networks/fl_16s/04.networks")
+#setwd("/Volumes/GoogleDrive-104519233854090018057/My Drive/Flirma/flirma_networks/fl_16s/04.networks")
+```
+
+Read-read in files made below
+
+```{r}
+#### phyloseeq files ####
+
+##sids
+##inshore
+ps.sid.in.pre.go <- readRDS("./nets_thesis/ps.sid.in.pre.go.rds")
+ps.sid.in.irm.go <- readRDS("./nets_thesis/ps.sid.in.irm.go.rds")
+ps.sid.in.pos.go <- readRDS("./nets_thesis/ps.sid.in.pos.go.rds")
+##offshore
+ps.sid.off.pre.go <- readRDS("./nets_thesis/ps.sid.off.pre.go.rds")
+ps.sid.off.irm.go <- readRDS("./nets_thesis/ps.sid.off.irm.go.rds")
+ps.sid.off.pos.go <- readRDS("./nets_thesis/ps.sid.off.pos.go.rds")
+
+##rads
+##inshore
+ps.rad.in.pre.go <- readRDS("./nets_thesis/ps.rad.in.pre.go.rds")
+ps.rad.in.irm.go <- readRDS("./nets_thesis/ps.rad.in.irm.go.rds")
+ps.rad.in.pos.go <- readRDS("./nets_thesis/ps.rad.in.pos.go.rds")
+##offshore
+ps.rad.off.pre.go <- readRDS("./nets_thesis/ps.rad.off.pre.go.rds")
+ps.rad.off.irm.go <- readRDS("./nets_thesis/ps.rad.off.irm.go.rds")
+ps.rad.off.pos.go <- readRDS("./nets_thesis/ps.rad.off.pos.go.rds")
+
+#### igraph files ####
+ig.sid.in.pre <- readRDS("./nets_thesis/ig.sid.in.pre.rds")
+ig.sid.in.irm <- readRDS("./nets_thesis/ig.sid.in.irm.rds")
+ig.sid.in.pos <- readRDS("./nets_thesis/ig.sid.in.pos.rds")
+##offshore
+ig.sid.off.pre <- readRDS("./nets_thesis/ig.sid.off.pre.rds")
+ig.sid.off.irm <- readRDS("./nets_thesis/ig.sid.off.irm.rds")
+ig.sid.off.pos <- readRDS("./nets_thesis/ig.sid.off.pos.rds")
+
+##rads
+##inshore
+ig.rad.in.pre <- readRDS("./nets_thesis/ig.rad.in.pre.rds")
+ig.rad.in.irm <- readRDS("./nets_thesis/ig.rad.in.irm.rds")
+ig.rad.in.pos <- readRDS("./nets_thesis/ig.rad.in.pos.rds")
+##offshore
+ig.rad.off.pre <- readRDS("./nets_thesis/ig.rad.off.pre.rds")
+ig.rad.off.irm <- readRDS("./nets_thesis/ig.rad.off.irm.rds")
+ig.rad.off.pos <- readRDS("./nets_thesis/ig.rad.off.pos.rds")
+
+#### network metrics ####
+tran.sid.df <- read.csv("tran.sid.df.csv")
+tran.rad.df <- read.csv("tran.rad.df.csv")
+
+```
+
+# Rarefied run-through
+
+Ran once then saved output then skipping
+
+```{r, eval=F}
+ps.rare <- readRDS("../01.generate_asv_table/ps.cleanest.rare6000.rds")
+
+tax <- as.data.frame(ps.rare@tax_table@.Data)
+
+tax.clean <- data.frame(row.names = row.names(tax),
+                        Kingdom = str_replace(tax[,1], "D_0__",""),
+                        Phylum = str_replace(tax[,2], "D_1__",""),
+                        Class = str_replace(tax[,3], "D_2__",""),
+                        Order = str_replace(tax[,4], "D_3__",""),
+                        Family = str_replace(tax[,5], "D_4__",""),
+                        Genus = str_replace(tax[,6], "D_5__",""),
+                        Species = str_replace(tax[,7], "D_6__",""),
+                        stringsAsFactors = FALSE)
+tax.clean[is.na(tax.clean)] <- ""
+
+for (i in 1:7){ tax.clean[,i] <- as.character(tax.clean[,i])}
+####### Fill holes in the tax table
+tax.clean[is.na(tax.clean)] <- ""
+for (i in 1:nrow(tax.clean)){
+  if (tax.clean[i,2] == ""){
+    kingdom <- paste("Kingdom_", tax.clean[i,1], sep = "")
+    tax.clean[i, 2:7] <- kingdom
+  } else if (tax.clean[i,3] == ""){
+    phylum <- paste("Phylum_", tax.clean[i,2], sep = "")
+    tax.clean[i, 3:7] <- phylum
+  } else if (tax.clean[i,4] == ""){
+    class <- paste("Class_", tax.clean[i,3], sep = "")
+    tax.clean[i, 4:7] <- class
+  } else if (tax.clean[i,5] == ""){
+    order <- paste("Order_", tax.clean[i,4], sep = "")
+    tax.clean[i, 5:7] <- order
+  } else if (tax.clean[i,6] == ""){
+    family <- paste("Family_", tax.clean[i,5], sep = "")
+    tax.clean[i, 6:7] <- family
+  } else if (tax.clean[i,7] == ""){
+    tax.clean$Species[i] <- paste("Genus",tax.clean$Genus[i], sep = "_")
+  }
+}
+
+tax_table(ps.rare) <- as.matrix(tax.clean)
+
+#saveRDS(ps.rare,file="./nets_revised/ps.rare.asvsnamed.rds")
+```
+
+# Data processing
+
+```{r}
+ps.rare <- readRDS("./nets_revised/ps.rare.asvsnamed.genus.rds")
+
+ps.sid <- subset_samples(ps.rare,spp=="ssid")
+
+ps.rare.rad <- subset_samples(ps.rare,spp=="srad")
+
+#radians is missing too many samples at UK1 to include that site
+ps.rad <- subset_samples(ps.rare.rad,site=="UK2"|site=="LK1")
+
+ps.sid.in <- subset_samples(ps.sid,zone=="Inshore")
+ps.sid.off <- subset_samples(ps.rad,zone=="Offshore")
+
+ps.rad.in <- subset_samples(ps.sid,zone=="Inshore")
+ps.rad.off <- subset_samples(ps.rad,zone=="Offshore")
+```
+
+## Subsetting genera to analyze{.tabset}
+
+### Sids
+
+```{r}
+ps.sid.in <- subset_samples(ps.sid,zone=="Inshore")
+ps.sid.in.pre <- subset_samples(ps.sid.in,time=="Pre")
+ps.sid.in.irm <- subset_samples(ps.sid.in,time=="Irma")
+ps.sid.in.pos <- subset_samples(ps.sid.in,time=="Post")
+
+ps.sid.off <- subset_samples(ps.sid,zone=="Offshore")
+ps.sid.off.pre <- subset_samples(ps.sid.off,time=="Pre")
+ps.sid.off.irm <- subset_samples(ps.sid.off,time=="Irma")
+ps.sid.off.pos <- subset_samples(ps.sid.off,time=="Post")
+
+ps.sid.in.pre.no0 <- prune_taxa(taxa_sums(ps.sid.in.pre) > 0, ps.sid.in.pre)
+ps.sid.in.pre.no0
+
+ps.sid.in.irm.no0 <- prune_taxa(taxa_sums(ps.sid.in.irm) > 0, ps.sid.in.irm)
+ps.sid.in.irm.no0
+
+ps.sid.in.pos.no0 <- prune_taxa(taxa_sums(ps.sid.in.pos) > 0, ps.sid.in.pos)
+ps.sid.in.pos.no0
+
+ps.sid.off.pre.no0 <- prune_taxa(taxa_sums(ps.sid.off.pre) > 0, ps.sid.off.pre)
+ps.sid.off.pre.no0
+
+ps.sid.off.irm.no0 <- prune_taxa(taxa_sums(ps.sid.off.irm) > 0, ps.sid.off.irm)
+ps.sid.off.irm.no0
+
+ps.sid.off.pos.no0 <- prune_taxa(taxa_sums(ps.sid.off.pos) > 0, ps.sid.off.pos)
+ps.sid.off.pos.no0
+
+seq.sid.in.pre <- data.frame(ps.sid.in.pre.no0@otu_table)
+seq.sid.in.irm <- data.frame(ps.sid.in.irm.no0@otu_table)
+seq.sid.in.pos <- data.frame(ps.sid.in.pos.no0@otu_table)
+
+seq.sid.off.pre <- data.frame(ps.sid.off.pre.no0@otu_table)
+seq.sid.off.irm <- data.frame(ps.sid.off.irm.no0@otu_table)
+seq.sid.off.pos <- data.frame(ps.sid.off.pos.no0@otu_table)
+
+seq.sid.in.pre.trim <- seq.sid.in.pre[,-which(colMeans(seq.sid.in.pre) <= 2)]
+ncol(seq.sid.in.pre.trim) #106
+
+seq.sid.in.irm.trim <- seq.sid.in.irm[,-which(colMeans(seq.sid.in.irm) <= 2)]
+ncol(seq.sid.in.irm.trim) #120
+
+seq.sid.in.pos.trim <- seq.sid.in.pos[,-which(colMeans(seq.sid.in.pos) <= 2)]
+ncol(seq.sid.in.pos.trim) #127
+
+seq.sid.off.pre.trim <- seq.sid.off.pre[,-which(colMeans(seq.sid.off.pre) <= 2)]
+ncol(seq.sid.off.pre.trim) #152
+
+seq.sid.off.irm.trim <- seq.sid.off.irm[,-which(colMeans(seq.sid.off.irm) <= 2)]
+ncol(seq.sid.off.irm.trim) #120
+
+seq.sid.off.pos.trim <- seq.sid.off.pos[,-which(colMeans(seq.sid.off.pos) <= 2)]
+ncol(seq.sid.off.pos.trim) #117
+
+list.sid.in.pre.trim <- colnames(seq.sid.in.pre.trim)
+list.sid.in.irm.trim <- colnames(seq.sid.in.irm.trim)
+list.sid.in.pos.trim <- colnames(seq.sid.in.pos.trim)
+
+list.sid.off.pre.trim <- colnames(seq.sid.off.pre.trim)
+list.sid.off.irm.trim <- colnames(seq.sid.off.irm.trim)
+list.sid.off.pos.trim <- colnames(seq.sid.off.pos.trim)
+
+list.sid1 <- list.sid.in.irm.trim[c(list.sid.in.irm.trim) %in% c(list.sid.in.pre.trim)]
+list.sid2 <- list.sid.in.pos.trim[c(list.sid.in.pos.trim) %in% c(list.sid1)]
+list.sid3 <- list.sid.off.pre.trim[c(list.sid.off.pre.trim) %in% c(list.sid2)]
+list.sid4 <- list.sid.off.irm.trim[c(list.sid.off.irm.trim) %in% c(list.sid3)]
+list.sid5 <- list.sid.off.pos.trim[c(list.sid.off.pos.trim) %in% c(list.sid4)]
+list.sid5
+#41
+
+#double checking it worked
+c(list.sid5) %in% list.sid.in.pre.trim
+c(list.sid5) %in% list.sid.in.irm.trim
+c(list.sid5) %in% list.sid.in.pos.trim
+c(list.sid5) %in% list.sid.off.pre.trim
+c(list.sid5) %in% list.sid.in.irm.trim
+c(list.sid5) %in% list.sid.in.pos.trim
+
+seq.sid.in.pre.list.sid5 <- seq.sid.in.pre.trim[,c(colnames(seq.sid.in.pre.trim) %in% c(list.sid5))]
+ncol(seq.sid.in.pre.list.sid5) #41
+ps.sid.in.pre.no0@otu_table <- otu_table(seq.sid.in.pre.list.sid5,taxa_are_rows=F)
+ps.sid.in.pre.no0
+ps.sid.in.pre.go <- prune_taxa(taxa_sums(ps.sid.in.pre.no0) > 0, ps.sid.in.pre.no0)
+ps.sid.in.pre.go
+
+seq.sid.in.irm.list.sid5 <- seq.sid.in.irm.trim[,c(colnames(seq.sid.in.irm.trim) %in% c(list.sid5))]
+ncol(seq.sid.in.irm.list.sid5) #41
+ps.sid.in.irm.no0@otu_table <- otu_table(seq.sid.in.irm.list.sid5,taxa_are_rows=F)
+ps.sid.in.irm.no0
+ps.sid.in.irm.go <- prune_taxa(taxa_sums(ps.sid.in.irm.no0) > 0, ps.sid.in.irm.no0)
+ps.sid.in.irm.go
+
+seq.sid.in.pos.list.sid5 <- seq.sid.in.pos.trim[,c(colnames(seq.sid.in.pos.trim) %in% c(list.sid5))]
+ncol(seq.sid.in.pos.list.sid5) #41
+ps.sid.in.pos.no0@otu_table <- otu_table(seq.sid.in.pos.list.sid5,taxa_are_rows=F)
+ps.sid.in.pos.no0
+ps.sid.in.pos.go <- prune_taxa(taxa_sums(ps.sid.in.pos.no0) > 0, ps.sid.in.pos.no0)
+ps.sid.in.pos.go
+
+seq.sid.off.pre.list.sid5 <- seq.sid.off.pre.trim[,c(colnames(seq.sid.off.pre.trim) %in% c(list.sid5))]
+ncol(seq.sid.off.pre.list.sid5) #41
+ps.sid.off.pre.no0@otu_table <- otu_table(seq.sid.off.pre.list.sid5,taxa_are_rows=F)
+ps.sid.off.pre.no0
+ps.sid.off.pre.go <- prune_taxa(taxa_sums(ps.sid.off.pre.no0) > 0, ps.sid.off.pre.no0)
+ps.sid.off.pre.go
+
+seq.sid.off.irm.list.sid5 <- seq.sid.off.irm.trim[,c(colnames(seq.sid.off.irm.trim) %in% c(list.sid5))]
+ncol(seq.sid.off.irm.list.sid5) #41
+ps.sid.off.irm.no0@otu_table <- otu_table(seq.sid.off.irm.list.sid5,taxa_are_rows=F)
+ps.sid.off.irm.no0
+ps.sid.off.irm.go <- prune_taxa(taxa_sums(ps.sid.off.irm.no0) > 0, ps.sid.off.irm.no0)
+ps.sid.off.irm.go
+
+seq.sid.off.pos.list.sid5 <- seq.sid.off.pos.trim[,c(colnames(seq.sid.off.pos.trim) %in% c(list.sid5))]
+ncol(seq.sid.off.pos.list.sid5) #41
+ps.sid.off.pos.no0@otu_table <- otu_table(seq.sid.off.pos.list.sid5,taxa_are_rows=F)
+ps.sid.off.pos.no0
+ps.sid.off.pos.go <- prune_taxa(taxa_sums(ps.sid.off.pos.no0) > 0, ps.sid.off.pos.no0)
+ps.sid.off.pos.go
+```
+
+```{r}
+# saveRDS(ps.sid.in.pre.go,file="./nets_thesis/ps.sid.in.pre.go.rds")
+# saveRDS(ps.sid.in.irm.go,file="./nets_thesis/ps.sid.in.irm.go.rds")
+# saveRDS(ps.sid.in.pos.go,file="./nets_thesis/ps.sid.in.pos.go.rds")
+# 
+# saveRDS(ps.sid.off.pre.go,file="./nets_thesis/ps.sid.off.pre.go.rds")
+# saveRDS(ps.sid.off.irm.go,file="./nets_thesis/ps.sid.off.irm.go.rds")
+# saveRDS(ps.sid.off.pos.go,file="./nets_thesis/ps.sid.off.pos.go.rds")
+```
+
+### Rads
+
+```{r}
+ps.rad.in <- subset_samples(ps.rad,zone=="Inshore")
+ps.rad.in.pre <- subset_samples(ps.rad.in,time=="Pre")
+ps.rad.in.irm <- subset_samples(ps.rad.in,time=="Irma")
+ps.rad.in.pos <- subset_samples(ps.rad.in,time=="Post")
+
+ps.rad.off <- subset_samples(ps.rad,zone=="Offshore")
+ps.rad.off.pre <- subset_samples(ps.rad.off,time=="Pre")
+ps.rad.off.irm <- subset_samples(ps.rad.off,time=="Irma")
+ps.rad.off.pos <- subset_samples(ps.rad.off,time=="Post")
+
+ps.rad.in.pre.no0 <- prune_taxa(taxa_sums(ps.rad.in.pre) > 0, ps.rad.in.pre)
+ps.rad.in.pre.no0
+
+ps.rad.in.irm.no0 <- prune_taxa(taxa_sums(ps.rad.in.irm) > 0, ps.rad.in.irm)
+ps.rad.in.irm.no0
+
+ps.rad.in.pos.no0 <- prune_taxa(taxa_sums(ps.rad.in.pos) > 0, ps.rad.in.pos)
+ps.rad.in.pos.no0
+
+ps.rad.off.pre.no0 <- prune_taxa(taxa_sums(ps.rad.off.pre) > 0, ps.rad.off.pre)
+ps.rad.off.pre.no0
+
+ps.rad.off.irm.no0 <- prune_taxa(taxa_sums(ps.rad.off.irm) > 0, ps.rad.off.irm)
+ps.rad.off.irm.no0
+
+ps.rad.off.pos.no0 <- prune_taxa(taxa_sums(ps.rad.off.pos) > 0, ps.rad.off.pos)
+ps.rad.off.pos.no0
+
+seq.rad.in.pre <- data.frame(ps.rad.in.pre.no0@otu_table)
+seq.rad.in.irm <- data.frame(ps.rad.in.irm.no0@otu_table)
+seq.rad.in.pos <- data.frame(ps.rad.in.pos.no0@otu_table)
+
+seq.rad.off.pre <- data.frame(ps.rad.off.pre.no0@otu_table)
+seq.rad.off.irm <- data.frame(ps.rad.off.irm.no0@otu_table)
+seq.rad.off.pos <- data.frame(ps.rad.off.pos.no0@otu_table)
+
+seq.rad.in.pre.trim <- seq.rad.in.pre[,-which(colMeans(seq.rad.in.pre) <= 2)]
+ncol(seq.rad.in.pre.trim) #150
+
+seq.rad.in.irm.trim <- seq.rad.in.irm[,-which(colMeans(seq.rad.in.irm) <= 2)]
+ncol(seq.rad.in.irm.trim) #119
+
+seq.rad.in.pos.trim <- seq.rad.in.pos[,-which(colMeans(seq.rad.in.pos) <= 2)]
+ncol(seq.rad.in.pos.trim) #138
+
+seq.rad.off.pre.trim <- seq.rad.off.pre[,-which(colMeans(seq.rad.off.pre) <= 2)]
+ncol(seq.rad.off.pre.trim) #177
+
+seq.rad.off.irm.trim <- seq.rad.off.irm[,-which(colMeans(seq.rad.off.irm) <= 2)]
+ncol(seq.rad.off.irm.trim) #130
+
+seq.rad.off.pos.trim <- seq.rad.off.pos[,-which(colMeans(seq.rad.off.pos) <= 2)]
+ncol(seq.rad.off.pos.trim) #94
+
+list.rad.in.pre.trim <- colnames(seq.rad.in.pre.trim)
+list.rad.in.irm.trim <- colnames(seq.rad.in.irm.trim)
+list.rad.in.pos.trim <- colnames(seq.rad.in.pos.trim)
+
+list.rad.off.pre.trim <- colnames(seq.rad.off.pre.trim)
+list.rad.off.irm.trim <- colnames(seq.rad.off.irm.trim)
+list.rad.off.pos.trim <- colnames(seq.rad.off.pos.trim)
+
+list.rad1 <- list.rad.in.irm.trim[c(list.rad.in.irm.trim) %in% c(list.rad.in.pre.trim)]
+list.rad2 <- list.rad.in.pos.trim[c(list.rad.in.pos.trim) %in% c(list.rad1)]
+list.rad3 <- list.rad.off.pre.trim[c(list.rad.off.pre.trim) %in% c(list.rad2)]
+list.rad4 <- list.rad.off.irm.trim[c(list.rad.off.irm.trim) %in% c(list.rad3)]
+list.rad5 <- list.rad.off.pos.trim[c(list.rad.off.pos.trim) %in% c(list.rad4)]
+list.rad5
+#41
+
+#double checking it worked
+c(list.rad5) %in% list.rad.in.pre.trim
+c(list.rad5) %in% list.rad.in.irm.trim
+c(list.rad5) %in% list.rad.in.pos.trim
+c(list.rad5) %in% list.rad.off.pre.trim
+c(list.rad5) %in% list.rad.in.irm.trim
+c(list.rad5) %in% list.rad.in.pos.trim
+
+seq.rad.in.pre.list.rad5 <- seq.rad.in.pre.trim[,c(colnames(seq.rad.in.pre.trim) %in% c(list.rad5))]
+ncol(seq.rad.in.pre.list.rad5) #41
+ps.rad.in.pre.no0@otu_table <- otu_table(seq.rad.in.pre.list.rad5,taxa_are_rows=F)
+ps.rad.in.pre.no0
+ps.rad.in.pre.go <- prune_taxa(taxa_sums(ps.rad.in.pre.no0) > 0, ps.rad.in.pre.no0)
+ps.rad.in.pre.go
+
+seq.rad.in.irm.list.rad5 <- seq.rad.in.irm.trim[,c(colnames(seq.rad.in.irm.trim) %in% c(list.rad5))]
+ncol(seq.rad.in.irm.list.rad5) #41
+ps.rad.in.irm.no0@otu_table <- otu_table(seq.rad.in.irm.list.rad5,taxa_are_rows=F)
+ps.rad.in.irm.no0
+ps.rad.in.irm.go <- prune_taxa(taxa_sums(ps.rad.in.irm.no0) > 0, ps.rad.in.irm.no0)
+ps.rad.in.irm.go
+
+seq.rad.in.pos.list.rad5 <- seq.rad.in.pos.trim[,c(colnames(seq.rad.in.pos.trim) %in% c(list.rad5))]
+ncol(seq.rad.in.pos.list.rad5) #41
+ps.rad.in.pos.no0@otu_table <- otu_table(seq.rad.in.pos.list.rad5,taxa_are_rows=F)
+ps.rad.in.pos.no0
+ps.rad.in.pos.go <- prune_taxa(taxa_sums(ps.rad.in.pos.no0) > 0, ps.rad.in.pos.no0)
+ps.rad.in.pos.go
+
+seq.rad.off.pre.list.rad5 <- seq.rad.off.pre.trim[,c(colnames(seq.rad.off.pre.trim) %in% c(list.rad5))]
+ncol(seq.rad.off.pre.list.rad5) #41
+ps.rad.off.pre.no0@otu_table <- otu_table(seq.rad.off.pre.list.rad5,taxa_are_rows=F)
+ps.rad.off.pre.no0
+ps.rad.off.pre.go <- prune_taxa(taxa_sums(ps.rad.off.pre.no0) > 0, ps.rad.off.pre.no0)
+ps.rad.off.pre.go
+
+seq.rad.off.irm.list.rad5 <- seq.rad.off.irm.trim[,c(colnames(seq.rad.off.irm.trim) %in% c(list.rad5))]
+ncol(seq.rad.off.irm.list.rad5) #41
+ps.rad.off.irm.no0@otu_table <- otu_table(seq.rad.off.irm.list.rad5,taxa_are_rows=F)
+ps.rad.off.irm.no0
+ps.rad.off.irm.go <- prune_taxa(taxa_sums(ps.rad.off.irm.no0) > 0, ps.rad.off.irm.no0)
+ps.rad.off.irm.go
+
+seq.rad.off.pos.list.rad5 <- seq.rad.off.pos.trim[,c(colnames(seq.rad.off.pos.trim) %in% c(list.rad5))]
+ncol(seq.rad.off.pos.list.rad5) #41
+ps.rad.off.pos.no0@otu_table <- otu_table(seq.rad.off.pos.list.rad5,taxa_are_rows=F)
+ps.rad.off.pos.no0
+ps.rad.off.pos.go <- prune_taxa(taxa_sums(ps.rad.off.pos.no0) > 0, ps.rad.off.pos.no0)
+ps.rad.off.pos.go
+```
+
+```{r}
+# saveRDS(ps.rad.in.pre.go,file="./nets_thesis/ps.rad.in.pre.go.rds")
+# saveRDS(ps.rad.in.irm.go,file="./nets_thesis/ps.rad.in.irm.go.rds")
+# saveRDS(ps.rad.in.pos.go,file="./nets_thesis/ps.rad.in.pos.go.rds")
+# 
+# saveRDS(ps.rad.off.pre.go,file="./nets_thesis/ps.rad.off.pre.go.rds")
+# saveRDS(ps.rad.off.irm.go,file="./nets_thesis/ps.rad.off.irm.go.rds")
+# saveRDS(ps.rad.off.pos.go,file="./nets_thesis/ps.rad.off.pos.go.rds")
+```
+
+# Checking spatial relationship
+
+## Setup
+
+Using this page [here](https://jkzorz.github.io/2019/07/08/mantel-test.html)
+
+```{r}
+#library("ade4")
+library(vegan)
+#install.packages("geosphere")
+library(geosphere)
+```
+
+## Lat/lon info
+
+```{r}
+##constructing site info data frame
+lat <- c(24.535409, 24.495846,  24.90383722, 24.89525025, 25.2179648, 25.2012167)
+lon <- c(-81.6223756, -81.6485388, -80.60967778, -80.57261263, -80.2760984, -80.2268668)
+site_zone <- c("LK1-I","LK1-O","UK1-I","UK1-O","UK2-I","UK2-O")
+df.site <- data.frame(lat,lon,site_zone)
+```
+
+## Siderea
+
+### Pre inshore
+
+```{r}
+##transferring lat lon info to sample data frame
+#ps.sid.pre <- readRDS("./nets_revised/ps.sid.pre.gen.1")
+#ps.sid.pre <- readRDS("./nets_revised/maybe not using/ps.sid.pre.gen.2")
+
+samdf.sid.in.pre <- data.frame(ps.sid.in.pre.go@sam_data)
+otu.sid.in.pre <- data.frame(ps.sid.in.pre.go@otu_table)
+
+samdf.sid.in.pre.lat <- merge(samdf.sid.in.pre,df.site)
+row.names(samdf.sid.in.pre.lat) <- samdf.sid.in.pre.lat$sample_num
+row.names(otu.sid.in.pre)==row.names(samdf.sid.in.pre.lat)
+
+##calculating distances between sites
+geo.sid.in.pre <- data.frame(samdf.sid.in.pre.lat$lat, samdf.sid.in.pre.lat$lon)
+d.geo.sid.in.pre = distm(geo.sid.in.pre, fun = distHaversine)
+dist.geo.sid.in.pre = as.dist(d.geo.sid.in.pre)
+
+##distances between samples
+dist.sid.in.pre = vegdist(otu.sid.in.pre, method = "bray")
+
+##mantel comparison
+otu.geo.sid.in.pre <- mantel(dist.sid.in.pre, dist.geo.sid.in.pre, method = "spearman", permutations = 999, na.rm = TRUE)
+otu.geo.sid.in.pre
+# Mantel statistic r: 0.1494 
+#       Significance: 0.011 
+```
+
+### Irma inshore
+
+```{r}
+samdf.sid.in.irm <- data.frame(ps.sid.in.irm.go@sam_data)
+otu.sid.in.irm <- data.frame(ps.sid.in.irm.go@otu_table)
+
+samdf.sid.in.irm.lat <- merge(samdf.sid.in.irm,df.site)
+row.names(samdf.sid.in.irm.lat) <- samdf.sid.in.irm.lat$sample_num
+row.names(otu.sid.in.irm)==row.names(samdf.sid.in.irm.lat)
+
+##calculating distances between sites
+geo.sid.in.irm <- data.frame(samdf.sid.in.irm.lat$lat, samdf.sid.in.irm.lat$lon)
+d.geo.sid.in.irm = distm(geo.sid.in.irm, fun = distHaversine)
+dist.geo.sid.in.irm = as.dist(d.geo.sid.in.irm)
+
+##distances between samples
+dist.sid.in.irm = vegdist(otu.sid.in.irm, method = "bray")
+
+##mantel comparison
+otu.geo.sid.in.irm <- mantel(dist.sid.in.irm, dist.geo.sid.in.irm, method = "spearman", permutations = 999, na.rm = TRUE)
+otu.geo.sid.in.irm
+# Mantel statistic r: 0.1125 
+#       Significance: 0.052 
+```
+
+### Post inshore
+
+```{r}
+samdf.sid.in.pos <- data.frame(ps.sid.in.pos.go@sam_data)
+otu.sid.in.pos <- data.frame(ps.sid.in.pos.go@otu_table)
+
+samdf.sid.in.pos.lat <- merge(samdf.sid.in.pos,df.site)
+row.names(samdf.sid.in.pos.lat) <- samdf.sid.in.pos.lat$sample_num
+row.names(otu.sid.in.pos)==row.names(samdf.sid.in.pos.lat)
+
+##calculating distances between sites
+geo.sid.in.pos <- data.frame(samdf.sid.in.pos.lat$lat, samdf.sid.in.pos.lat$lon)
+d.geo.sid.in.pos = distm(geo.sid.in.pos, fun = distHaversine)
+dist.geo.sid.in.pos = as.dist(d.geo.sid.in.pos)
+
+##distances between samples
+dist.sid.in.pos = vegdist(otu.sid.in.pos, method = "bray")
+
+##mantel comparison
+otu.geo.sid.in.pos <- mantel(dist.sid.in.pos, dist.geo.sid.in.pos, method = "spearman", permutations = 999, na.rm = TRUE)
+otu.geo.sid.in.pos
+# Mantel statistic r: 0.09863 
+#       Significance: 0.097 
+```
+
+### Pre offshore
+
+```{r}
+samdf.sid.off.pre <- data.frame(ps.sid.off.pre.go@sam_data)
+otu.sid.off.pre <- data.frame(ps.sid.off.pre.go@otu_table)
+
+samdf.sid.off.pre.lat <- merge(samdf.sid.off.pre,df.site)
+row.names(samdf.sid.off.pre.lat) <- samdf.sid.off.pre.lat$sample_num
+row.names(otu.sid.off.pre)==row.names(samdf.sid.off.pre.lat)
+
+##calculatoffg distances between sites
+geo.sid.off.pre <- data.frame(samdf.sid.off.pre.lat$lat, samdf.sid.off.pre.lat$lon)
+d.geo.sid.off.pre = distm(geo.sid.off.pre, fun = distHaversine)
+dist.geo.sid.off.pre = as.dist(d.geo.sid.off.pre)
+
+##distances between samples
+dist.sid.off.pre = vegdist(otu.sid.off.pre, method = "bray")
+
+##mantel comparison
+otu.geo.sid.off.pre <- mantel(dist.sid.off.pre, dist.geo.sid.off.pre, method = "spearman", permutations = 999, na.rm = TRUE)
+otu.geo.sid.off.pre
+# Mantel statistic r: 0.2625 
+#       Significance: 0.003 
+```
+
+### Irma offshore
+
+```{r}
+samdf.sid.off.irm <- data.frame(ps.sid.off.irm.go@sam_data)
+otu.sid.off.irm <- data.frame(ps.sid.off.irm.go@otu_table)
+
+samdf.sid.off.irm.lat <- merge(samdf.sid.off.irm,df.site)
+row.names(samdf.sid.off.irm.lat) <- samdf.sid.off.irm.lat$sample_num
+row.names(otu.sid.off.irm)==row.names(samdf.sid.off.irm.lat)
+
+##calculatoffg distances between sites
+geo.sid.off.irm <- data.frame(samdf.sid.off.irm.lat$lat, samdf.sid.off.irm.lat$lon)
+d.geo.sid.off.irm = distm(geo.sid.off.irm, fun = distHaversine)
+dist.geo.sid.off.irm = as.dist(d.geo.sid.off.irm)
+
+##distances between samples
+dist.sid.off.irm = vegdist(otu.sid.off.irm, method = "bray")
+
+##mantel comparison
+otu.geo.sid.off.irm <- mantel(dist.sid.off.irm, dist.geo.sid.off.irm, method = "spearman", permutations = 999, na.rm = TRUE)
+otu.geo.sid.off.irm
+# Mantel statistic r: 0.07324 
+#       Significance: 0.112 
+```
+
+### Post offshore
+
+```{r}
+samdf.sid.off.pos <- data.frame(ps.sid.off.pos.go@sam_data)
+otu.sid.off.pos <- data.frame(ps.sid.off.pos.go@otu_table)
+
+samdf.sid.off.pos.lat <- merge(samdf.sid.off.pos,df.site)
+row.names(samdf.sid.off.pos.lat) <- samdf.sid.off.pos.lat$sample_num
+row.names(otu.sid.off.pos)==row.names(samdf.sid.off.pos.lat)
+
+##calculatoffg distances between sites
+geo.sid.off.pos <- data.frame(samdf.sid.off.pos.lat$lat, samdf.sid.off.pos.lat$lon)
+d.geo.sid.off.pos = distm(geo.sid.off.pos, fun = distHaversine)
+dist.geo.sid.off.pos = as.dist(d.geo.sid.off.pos)
+
+##distances between samples
+dist.sid.off.pos = vegdist(otu.sid.off.pos, method = "bray")
+
+##mantel comparison
+otu.geo.sid.off.pos <- mantel(dist.sid.off.pos, dist.geo.sid.off.pos, method = "spearman", permutations = 999, na.rm = TRUE)
+otu.geo.sid.off.pos
+# Mantel statistic r: 0.05419 
+#       Significance: 0.162 
+```
+
+## Radians
+
+### Pre inshore
+
+```{r}
+samdf.rad.in.pre <- data.frame(ps.rad.in.pre.go@sam_data)
+otu.rad.in.pre <- data.frame(ps.rad.in.pre.go@otu_table)
+
+samdf.rad.in.pre.lat <- merge(samdf.rad.in.pre,df.site)
+row.names(samdf.rad.in.pre.lat) <- samdf.rad.in.pre.lat$sample_num
+row.names(otu.rad.in.pre)==row.names(samdf.rad.in.pre.lat)
+
+##calculating distances between sites
+geo.rad.in.pre <- data.frame(samdf.rad.in.pre.lat$lat, samdf.rad.in.pre.lat$lon)
+d.geo.rad.in.pre = distm(geo.rad.in.pre, fun = distHaversine)
+dist.geo.rad.in.pre = as.dist(d.geo.rad.in.pre)
+
+##distances between samples
+dist.rad.in.pre = vegdist(otu.rad.in.pre, method = "bray")
+
+##mantel comparison
+otu.geo.rad.in.pre <- mantel(dist.rad.in.pre, dist.geo.rad.in.pre, method = "spearman", permutations = 999, na.rm = TRUE)
+otu.geo.rad.in.pre
+# Mantel statistic r: 0.125 
+#       Significance: 0.029 
+```
+
+### Irma inshore
+
+```{r}
+samdf.rad.in.irm <- data.frame(ps.rad.in.irm.go@sam_data)
+otu.rad.in.irm <- data.frame(ps.rad.in.irm.go@otu_table)
+
+samdf.rad.in.irm.lat <- merge(samdf.rad.in.irm,df.site)
+row.names(samdf.rad.in.irm.lat) <- samdf.rad.in.irm.lat$sample_num
+row.names(otu.rad.in.irm)==row.names(samdf.rad.in.irm.lat)
+
+##calculating distances between sites
+geo.rad.in.irm <- data.frame(samdf.rad.in.irm.lat$lat, samdf.rad.in.irm.lat$lon)
+d.geo.rad.in.irm = distm(geo.rad.in.irm, fun = distHaversine)
+dist.geo.rad.in.irm = as.dist(d.geo.rad.in.irm)
+
+##distances between samples
+dist.rad.in.irm = vegdist(otu.rad.in.irm, method = "bray")
+
+##mantel comparison
+otu.geo.rad.in.irm <- mantel(dist.rad.in.irm, dist.geo.rad.in.irm, method = "spearman", permutations = 999, na.rm = TRUE)
+otu.geo.rad.in.irm
+# Mantel statistic r: 0.5416 
+#       Significance: 0.002 
+```
+
+### Post inshore
+
+```{r}
+samdf.rad.in.pos <- data.frame(ps.rad.in.pos.go@sam_data)
+otu.rad.in.pos <- data.frame(ps.rad.in.pos.go@otu_table)
+
+samdf.rad.in.pos.lat <- merge(samdf.rad.in.pos,df.site)
+row.names(samdf.rad.in.pos.lat) <- samdf.rad.in.pos.lat$sample_num
+row.names(otu.rad.in.pos)==row.names(samdf.rad.in.pos.lat)
+
+##calculating distances between sites
+geo.rad.in.pos <- data.frame(samdf.rad.in.pos.lat$lat, samdf.rad.in.pos.lat$lon)
+d.geo.rad.in.pos = distm(geo.rad.in.pos, fun = distHaversine)
+dist.geo.rad.in.pos = as.dist(d.geo.rad.in.pos)
+
+##distances between samples
+dist.rad.in.pos = vegdist(otu.rad.in.pos, method = "bray")
+
+##mantel comparison
+otu.geo.rad.in.pos <- mantel(dist.rad.in.pos, dist.geo.rad.in.pos, method = "spearman", permutations = 999, na.rm = TRUE)
+otu.geo.rad.in.pos
+# Mantel statistic r: 0.09863 
+#       Significance: 0.097 
+```
+
+### Pre offshore
+
+```{r}
+samdf.rad.off.pre <- data.frame(ps.rad.off.pre.go@sam_data)
+otu.rad.off.pre <- data.frame(ps.rad.off.pre.go@otu_table)
+
+samdf.rad.off.pre.lat <- merge(samdf.rad.off.pre,df.site)
+row.names(samdf.rad.off.pre.lat) <- samdf.rad.off.pre.lat$sample_num
+row.names(otu.rad.off.pre)==row.names(samdf.rad.off.pre.lat)
+
+##calculatoffg distances between sites
+geo.rad.off.pre <- data.frame(samdf.rad.off.pre.lat$lat, samdf.rad.off.pre.lat$lon)
+d.geo.rad.off.pre = distm(geo.rad.off.pre, fun = distHaversine)
+dist.geo.rad.off.pre = as.dist(d.geo.rad.off.pre)
+
+##distances between samples
+dist.rad.off.pre = vegdist(otu.rad.off.pre, method = "bray")
+
+##mantel comparison
+otu.geo.rad.off.pre <- mantel(dist.rad.off.pre, dist.geo.rad.off.pre, method = "spearman", permutations = 999, na.rm = TRUE)
+otu.geo.rad.off.pre
+# Mantel statistic r: 0.2625 
+#       Significance: 0.003 
+```
+
+### Irma offshore
+
+```{r}
+samdf.rad.off.irm <- data.frame(ps.rad.off.irm.go@sam_data)
+otu.rad.off.irm <- data.frame(ps.rad.off.irm.go@otu_table)
+
+samdf.rad.off.irm.lat <- merge(samdf.rad.off.irm,df.site)
+row.names(samdf.rad.off.irm.lat) <- samdf.rad.off.irm.lat$sample_num
+row.names(otu.rad.off.irm)==row.names(samdf.rad.off.irm.lat)
+
+##calculatoffg distances between sites
+geo.rad.off.irm <- data.frame(samdf.rad.off.irm.lat$lat, samdf.rad.off.irm.lat$lon)
+d.geo.rad.off.irm = distm(geo.rad.off.irm, fun = distHaversine)
+dist.geo.rad.off.irm = as.dist(d.geo.rad.off.irm)
+
+##distances between samples
+dist.rad.off.irm = vegdist(otu.rad.off.irm, method = "bray")
+
+##mantel comparison
+otu.geo.rad.off.irm <- mantel(dist.rad.off.irm, dist.geo.rad.off.irm, method = "spearman", permutations = 999, na.rm = TRUE)
+otu.geo.rad.off.irm
+# Mantel statistic r: -0.01044 
+#       Significance: 0.52 
+```
+
+### Post offshore
+
+```{r}
+samdf.rad.off.pos <- data.frame(ps.rad.off.pos.go@sam_data)
+otu.rad.off.pos <- data.frame(ps.rad.off.pos.go@otu_table)
+
+samdf.rad.off.pos.lat <- merge(samdf.rad.off.pos,df.site)
+row.names(samdf.rad.off.pos.lat) <- samdf.rad.off.pos.lat$sample_num
+row.names(otu.rad.off.pos)==row.names(samdf.rad.off.pos.lat)
+
+##calculatoffg distances between sites
+geo.rad.off.pos <- data.frame(samdf.rad.off.pos.lat$lat, samdf.rad.off.pos.lat$lon)
+d.geo.rad.off.pos = distm(geo.rad.off.pos, fun = distHaversine)
+dist.geo.rad.off.pos = as.dist(d.geo.rad.off.pos)
+
+##distances between samples
+dist.rad.off.pos = vegdist(otu.rad.off.pos, method = "bray")
+
+##mantel comparison
+otu.geo.rad.off.pos <- mantel(dist.rad.off.pos, dist.geo.rad.off.pos, method = "spearman", permutations = 999, na.rm = TRUE)
+otu.geo.rad.off.pos
+# Mantel statistic r: -0.01427 
+#       Significance: 0.468 
+```
+
+# Constructing networks
+
+Stabilities: 
+
+## Siderea inshore
+
+```{r}
+set.seed(10010)
+
+###pre
+se.sid.in.pre <- spiec.easi(as.matrix(otu.sid.in.pre), method='mb', lambda.min.ratio=1e-1,nlambda=100, pulsar.params=list(rep.num=50))
+getStability(se.sid.in.pre) #
+
+## Create igraph objects
+ig.sid.in.pre <- adj2igraph(getRefit(se.sid.in.pre))
+
+## set size of vertex proportional to clr-mean
+vsize.sid.in.pre    <- rowMeans(clr(otu.sid.in.pre, 1))+6
+coord.sid.in.pre <- igraph::layout.fruchterman.reingold(ig.sid.in.pre)
+
+par(mfrow=c(1,3))
+plot(ig.sid.in.pre, layout=coord.sid.in.pre, vertex.size=vsize.sid.in.pre, vertex.label=NA, main="MB")
+
+###irm
+se.sid.in.irm <- spiec.easi(as.matrix(otu.sid.in.irm), method='mb', lambda.min.ratio=1e-1,nlambda=100, pulsar.params=list(rep.num=50))
+getStability(se.sid.in.irm) #0.04968976
+
+## Create igraph objects
+ig.sid.in.irm <- adj2igraph(getRefit(se.sid.in.irm))
+
+## set size of vertex proportional to clr-mean
+vsize.sid.in.irm    <- rowMeans(clr(otu.sid.in.irm, 1))+6
+coord.sid.in.irm <- igraph::layout.fruchterman.reingold(ig.sid.in.irm)
+
+par(mfrow=c(1,3))
+plot(ig.sid.in.irm, layout=coord.sid.in.irm, vertex.size=vsize.sid.in.irm, vertex.label=NA, main="MB")
+
+###pos
+se.sid.in.pos <- spiec.easi(as.matrix(otu.sid.in.pos), method='mb', lambda.min.ratio=1e-1,nlambda=100, pulsar.params=list(rep.num=50))
+getStability(se.sid.in.pos)
+
+## Create igraph objects
+ig.sid.in.pos <- adj2igraph(getRefit(se.sid.in.pos))
+
+## set size of vertex proportional to clr-mean
+vsize.sid.in.pos    <- rowMeans(clr(otu.sid.in.pos, 1))+6
+coord.sid.in.pos <- igraph::layout.fruchterman.reingold(ig.sid.in.pos)
+
+plot(ig.sid.in.pos, layout=coord.sid.in.pos, vertex.size=vsize.sid.in.pos, vertex.label=NA, main="MB")
+
+coords <- igraph::layout.fruchterman.reingold(ig.sid.in.pre)
+coords <- igraph::layout.circle(ig.sid.in.pre)
+
+par(mfrow=c(1,3))
+#plot(ig.rad.pre, layout=coord.rad.pre, vertex.size=vsize.rad.pre, vertex.label=NA, main="MB")
+
+plot.igraph(ig.sid.in.pre, layout = coords, main = "pre")
+plot.igraph(ig.sid.in.irm, layout = coords, main = "irma")
+plot.igraph(ig.sid.in.pos, layout = coords, main = "post")
+
+#saveRDS(se.sid.in.pre,file="./nets_thesis/se.sid.in.pre.rds")
+#saveRDS(se.sid.in.irm,file="./nets_thesis/se.sid.in.irm.rds")
+#saveRDS(se.sid.in.pos,file="./nets_thesis/se.sid.in.pos.rds")
+```
+
+## Siderea offshore
+
+```{r}
+set.seed(10010)
+
+###pre
+se.sid.off.pre <- spiec.easi(as.matrix(otu.sid.off.pre), method='mb', lambda.min.ratio=1e-1,nlambda=100, pulsar.params=list(rep.num=50))
+getStability(se.sid.off.pre) #0.04965463
+
+## Create igraph objects
+ig.sid.off.pre <- adj2igraph(getRefit(se.sid.off.pre))
+
+## set size of vertex proportional to clr-mean
+vsize.sid.off.pre    <- rowMeans(clr(otu.sid.off.pre, 1))+6
+coord.sid.off.pre <- igraph::layout.fruchterman.reingold(ig.sid.off.pre)
+
+par(mfrow=c(1,3))
+plot(ig.sid.off.pre, layout=coord.sid.off.pre, vertex.size=vsize.sid.off.pre, vertex.label=NA, maoff="MB")
+
+###irm
+se.sid.off.irm <- spiec.easi(as.matrix(otu.sid.off.irm), method='mb', lambda.min.ratio=1e-1,nlambda=100, pulsar.params=list(rep.num=50))
+getStability(se.sid.off.irm) #0.04814244
+
+## Create igraph objects
+ig.sid.off.irm <- adj2igraph(getRefit(se.sid.off.irm))
+
+## set size of vertex proportional to clr-mean
+vsize.sid.off.irm    <- rowMeans(clr(otu.sid.off.irm, 1))+6
+coord.sid.off.irm <- igraph::layout.fruchterman.reingold(ig.sid.off.irm)
+
+plot(ig.sid.off.irm, layout=coord.sid.off.irm, vertex.size=vsize.sid.off.irm, vertex.label=NA, maoff="MB")
+
+###pos
+se.sid.off.pos <- spiec.easi(as.matrix(otu.sid.off.pos), method='mb', lambda.min.ratio=1e-1,nlambda=100, pulsar.params=list(rep.num=50))
+getStability(se.sid.off.pos)
+
+## Create igraph objects
+ig.sid.off.pos <- adj2igraph(getRefit(se.sid.off.pos))
+
+## set size of vertex proportional to clr-mean
+vsize.sid.off.pos    <- rowMeans(clr(otu.sid.off.pos, 1))+6
+coord.sid.off.pos <- igraph::layout.fruchterman.reingold(ig.sid.off.pos)
+
+plot(ig.sid.off.pos, layout=coord.sid.off.pos, vertex.size=vsize.sid.off.pos, vertex.label=NA, maoff="MB")
+
+coords <- igraph::layout.fruchterman.reingold(ig.sid.off.pre)
+coords <- igraph::layout.circle(ig.sid.off.pre)
+
+par(mfrow=c(1,3))
+#plot(ig.rad.pre, layout=coord.rad.pre, vertex.size=vsize.rad.pre, vertex.label=NA, maoff="MB")
+
+plot.igraph(ig.sid.off.pre, layout = coords, main = "pre")
+plot.igraph(ig.sid.off.irm, layout = coords, main = "irma")
+plot.igraph(ig.sid.off.pos, layout = coords, main = "post")
+
+# saveRDS(se.sid.off.pre,file="./nets_thesis/se.sid.off.pre.rds")
+# saveRDS(se.sid.off.irm,file="./nets_thesis/se.sid.off.irm.rds")
+# saveRDS(se.sid.off.pos,file="./nets_thesis/se.sid.off.pos.rds")
+```
+
+## Radians inshore
+
+```{r}
+set.seed(10010)
+
+###pre
+se.rad.in.pre <- spiec.easi(as.matrix(otu.rad.in.pre), method='mb', lambda.min.ratio=1e-1,nlambda=100, pulsar.params=list(rep.num=50))
+getStability(se.rad.in.pre) #0.04561171
+
+## Create igraph objects
+ig.rad.in.pre <- adj2igraph(getRefit(se.rad.in.pre))
+
+## set size of vertex proportional to clr-mean
+vsize.rad.in.pre    <- rowMeans(clr(otu.rad.in.pre, 1))+6
+coord.rad.in.pre <- igraph::layout.fruchterman.reingold(ig.rad.in.pre)
+
+par(mfrow=c(1,3))
+plot(ig.rad.in.pre, layout=coord.rad.in.pre, vertex.size=vsize.rad.in.pre, vertex.label=NA, main="MB")
+
+###irm
+se.rad.in.irm <- spiec.easi(as.matrix(otu.rad.in.irm), method='mb', lambda.min.ratio=1e-1,nlambda=100, pulsar.params=list(rep.num=50))
+getStability(se.rad.in.irm) #0.04531122
+
+## Create igraph objects
+ig.rad.in.irm <- adj2igraph(getRefit(se.rad.in.irm))
+
+## set size of vertex proportional to clr-mean
+vsize.rad.in.irm    <- rowMeans(clr(otu.rad.in.irm, 1))+6
+coord.rad.in.irm <- igraph::layout.fruchterman.reingold(ig.rad.in.irm)
+
+#par(mfrow=c(1,3))
+plot(ig.rad.in.irm, layout=coord.rad.in.irm, vertex.size=vsize.rad.in.irm, vertex.label=NA, main="MB")
+
+###pos
+se.rad.in.pos <- spiec.easi(as.matrix(otu.rad.in.pos), method='mb', lambda.min.ratio=1e-1,nlambda=100, pulsar.params=list(rep.num=50))
+getStability(se.rad.in.pos)
+
+## Create igraph objects
+ig.rad.in.pos <- adj2igraph(getRefit(se.rad.in.pos))
+
+## set size of vertex proportional to clr-mean
+vsize.rad.in.pos    <- rowMeans(clr(otu.rad.in.pos, 1))+6
+coord.rad.in.pos <- igraph::layout.fruchterman.reingold(ig.rad.in.pos)
+
+plot(ig.rad.in.pos, layout=coord.rad.in.pos, vertex.size=vsize.rad.in.pos, vertex.label=NA, main="MB")
+
+coords <- igraph::layout.fruchterman.reingold(ig.rad.in.pre)
+coords <- igraph::layout.circle(ig.rad.in.pre)
+
+par(mfrow=c(1,3))
+#plot(ig.rad.pre, layout=coord.rad.pre, vertex.size=vsize.rad.pre, vertex.label=NA, main="MB")
+
+plot.igraph(ig.rad.in.pre, layout = coords, main = "pre")
+plot.igraph(ig.rad.in.irm, layout = coords, main = "irma")
+plot.igraph(ig.rad.in.pos, layout = coords, main = "post")
+
+# saveRDS(se.rad.in.pre,file="./nets_thesis/se.rad.in.pre.rds")
+# saveRDS(se.rad.in.irm,file="./nets_thesis/se.rad.in.irm.rds")
+# saveRDS(se.rad.in.pos,file="./nets_thesis/se.rad.in.pos.rds")
+```
+
+## Radians offshore
+
+```{r}
+set.seed(10010)
+
+###pre
+se.rad.off.pre <- spiec.easi(as.matrix(otu.rad.off.pre), method='mb', lambda.min.ratio=1e-1,nlambda=100, pulsar.params=list(rep.num=50))
+getStability(se.rad.off.pre) #0.04634341
+
+## Create igraph objects
+ig.rad.off.pre <- adj2igraph(getRefit(se.rad.off.pre))
+
+## set size of vertex proportional to clr-mean
+vsize.rad.off.pre    <- rowMeans(clr(otu.rad.off.pre, 1))+6
+coord.rad.off.pre <- igraph::layout.fruchterman.reingold(ig.rad.off.pre)
+
+par(mfrow=c(1,3))
+plot(ig.rad.off.pre, layout=coord.rad.off.pre, vertex.size=vsize.rad.off.pre, vertex.label=NA, maoff="MB")
+
+###irm
+se.rad.off.irm <- spiec.easi(as.matrix(otu.rad.off.irm), method='mb', lambda.min.ratio=1e-1,nlambda=100, pulsar.params=list(rep.num=50))
+getStability(se.rad.off.irm) #0.04371902
+
+## Create igraph objects
+ig.rad.off.irm <- adj2igraph(getRefit(se.rad.off.irm))
+
+## set size of vertex proportional to clr-mean
+vsize.rad.off.irm    <- rowMeans(clr(otu.rad.off.irm, 1))+6
+coord.rad.off.irm <- igraph::layout.fruchterman.reingold(ig.rad.off.irm)
+
+plot(ig.rad.off.irm, layout=coord.rad.off.irm, vertex.size=vsize.rad.off.irm, vertex.label=NA, maoff="MB")
+
+###pos
+se.rad.off.pos <- spiec.easi(as.matrix(otu.rad.off.pos), method='mb', lambda.min.ratio=1e-1,nlambda=100, pulsar.params=list(rep.num=50))
+getStability(se.rad.off.pos) #0.0470361
+
+## Create igraph objects
+ig.rad.off.pos <- adj2igraph(getRefit(se.rad.off.pos))
+
+## set size of vertex proportional to clr-mean
+vsize.rad.off.pos    <- rowMeans(clr(otu.rad.off.pos, 1))+6
+coord.rad.off.pos <- igraph::layout.fruchterman.reingold(ig.rad.off.pos)
+
+plot(ig.rad.off.pos, layout=coord.rad.off.pos, vertex.size=vsize.rad.off.pos, vertex.label=NA, maoff="MB")
+
+coords <- igraph::layout.fruchterman.reingold(ig.rad.off.pre)
+coords <- igraph::layout.circle(ig.rad.off.pre)
+
+par(mfrow=c(1,3))
+#plot(ig.rad.pre, layout=coord.rad.pre, vertex.size=vsize.rad.pre, vertex.label=NA, maoff="MB")
+
+plot.igraph(ig.rad.off.pre, layout = coords, main = "pre")
+plot.igraph(ig.rad.off.irm, layout = coords, main = "irma")
+plot.igraph(ig.rad.off.pos, layout = coords, main = "post")
+
+# saveRDS(se.rad.off.pre,file="./nets_thesis/se.rad.off.pre.rds")
+# saveRDS(se.rad.off.irm,file="./nets_thesis/se.rad.off.irm.rds")
+# saveRDS(se.rad.off.pos,file="./nets_thesis/se.rad.off.pos.rds")
+```
+
+# Basic igraph info
+
+## Setup
+
+### Libraries
+
+```{r}
+library("ggraph")
+library("tidygraph")
+#plot_network(ig.rad.pre, ps.rad.pre, type='taxa', color="Rank3")
+#install.packages("ggraph")
+library(ggnet)
+#install.packages("intergraph")
+library("intergraph")
+library("sna")
+library(ggpubr)
+
+##very pretty resource: http://web.stanford.edu/class/bios221/NetworkSlides.html
+```
+
+### Re-read in nets & ps objects
+
+(Update with new files)
+
+```{r}
+##sids
+# se.sid.pre <- readRDS("./nets_revised/se.sid.pre.fam.2.rds")
+# getStability(se.sid.pre) #0.04227197
+# 
+# se.sid.irm <- readRDS("./nets_revised/se.sid.irm.fam.2.rds")
+# getStability(se.sid.irm) #0.04254165 
+# 
+# se.sid.pos <- readRDS("./nets_revised/se.sid.pos.fam.2.rds")
+# getStability(se.sid.pos) #0.04672183
+# 
+# ps.sid.pre <- readRDS("./nets_revised/ps.sid.pre.fam.2")
+# ps.sid.irm <- readRDS("./nets_revised/ps.sid.pre.fam.2")
+# ps.sid.pos <- readRDS("./nets_revised/ps.sid.pre.fam.2")
+# 
+# ##rads
+# se.rad.pre <- readRDS("./nets_revised/se.rad.pre.fam.2.rds")
+# getStability(se.rad.pre) #0.04725916
+# 
+# se.rad.irm <- readRDS("./nets_revised/se.rad.irm.fam.2.rds")
+# getStability(se.rad.irm) #0.04496291 
+# 
+# se.rad.pos <- readRDS("./nets_revised/se.rad.pos.fam.2.rds")
+# getStability(se.rad.pos) #0.04364215
+# 
+# ps.rad.pre <- readRDS("./nets_revised/ps.rad.pre.fam.2")
+# ps.rad.irm <- readRDS("./nets_revised/ps.rad.irm.fam.2")
+# ps.rad.pos <- readRDS("./nets_revised/ps.rad.pos.fam.2")
+```
+
+## Basic igraph info{.tabset}
+
+Taken from [this site](https://kateto.net/netscix2016.html)
+
+"The description of an igraph object starts with up to four letters:
+
+D or U, for a directed or undirected graph
+N for a named graph (where nodes have a name attribute)
+W for a weighted graph (where edges have a weight attribute)
+B for a bipartite (two-mode) graph (where nodes have a type attribute)
+The two numbers that follow (7 5) refer to the number of nodes and edges in the graph. The description also lists node & edge attributes, for example:
+
+(g/c) - graph-level character attribute
+(v/c) - vertex-level character attribute
+(e/n) - edge-level numeric attribute
+
+### Siderea
+
+#### Sids inshore
+
+##### Pre
+
+```{r}
+ig.sid.in.pre
+# IGRAPH 8f13dcd UNW- 145 174 -- 
+# + attr: name (v/n), weight (e/n)
+# + edges from 8f13dcd (vertex names):
+#U=undirected
+#N=named
+#W=weighted
+
+##getting some more info from the spieceasi objects before making the igraph object
+##following things here: https://github.com/zdk123/SpiecEasi/issues/109
+##here's a more complete chapter: https://mibwurrepo.github.io/Microbial-bioinformatics-introductory-course-Material-2018/inference-of-microbial-ecological-networks.html
+sebeta.sid.in.pre <- symBeta(getOptBeta(se.sid.in.pre),mode='maxabs')
+rownames(sebeta.sid.in.pre) <- colnames(sebeta.sid.in.pre) <- taxa_names(ps.sid.in.pre.go)
+elist.sid.in.pre <- summary(sebeta.sid.in.pre)
+emat.sid.in.pre <- data.frame(as.matrix(sebeta.sid.in.pre))
+
+positive=length(emat.sid.in.pre[emat.sid.in.pre>0])/2 #10
+negative=length(emat.sid.in.pre[emat.sid.in.pre<0])/2 #3
+total=length(emat.sid.in.pre[emat.sid.in.pre!=0])/2 #13
+# We divide by two since an edge is represented by two entries in the matrix.
+
+#(2*13)/41 = average degree
+ # This is certainly a nice measure: at the smallest possible value 0, the graph is just a bunch of nodes with no edges; at the largest possible value 𝑁−1, every node is connected to every other. 
+
+g.sid.in.pre <- adj2igraph(getRefit(se.sid.in.pre),diag=TRUE,
+                  edge.attr=elist.sid.in.pre,
+                  vertex.attr=list(name=taxa_names(ps.sid.in.pre.go)))
+
+otu.ids=colnames(se.sid.in.pre$est$data)
+edges=E(ig.sid.in.pre)
+edge.colors=c()
+for(e.index in 1:length(edges)){
+        adj.nodes=ends(ig.sid.in.pre,edges[e.index])
+        xindex=which(otu.ids==adj.nodes[1])
+        yindex=which(otu.ids==adj.nodes[2])
+        beta=emat.sid.in.pre[xindex,yindex]
+        if(beta>0){
+                edge.colors=append(edge.colors,"forestgreen")
+        }else if(beta<0){
+                edge.colors=append(edge.colors,"red")
+        }
+}
+E(ig.sid.in.pre)$color=edge.colors
+
+#weights
+#https://github.com/zdk123/SpiecEasi/issues/81
+edges.wts=c()
+for(e.index in 1:length(edges)){
+        adj.nodes=ends(ig.sid.in.pre,edges[e.index])
+        xindex=which(otu.ids==adj.nodes[1])
+        yindex=which(otu.ids==adj.nodes[2])
+        beta=emat.sid.in.pre[xindex,yindex]
+        edges.wts=append(edges.wts,abs(beta))
+        }
+E(ig.sid.in.pre)$width=edges.wts
+
+##will plot nicer below
+ggnet2(ig.sid.in.pre,size="degree",max_size=4,size.cut=3,edge.color="color",edge.size="width")
+
+##In terms of interpretation, apparently it's not great to assign 'strength' of 'correlations':
+#https://github.com/zdk123/SpiecEasi/issues/54
+##This is given by the absolute value of the coefficients (the beta matrix). However, due to the penalization/shrinkage, it is not really possible to compare association strengths across experiments but this is generally true of any LASSO type regression.
+```
+
+##### Irma
+
+```{r}
+ig.sid.in.irm
+# IGRAPH 8f13dcd UNW- 145 174 -- 
+# + attr: name (v/n), weight (e/n)
+# + edges from 8f13dcd (vertex names):
+#U=undirected
+#N=named
+#W=weighted
+
+##getting some more info from the spieceasi objects before making the igraph object
+##following things here: https://github.com/zdk123/SpiecEasi/issues/109
+##here's a more complete chapter: https://mibwurrepo.github.io/Microbial-bioinformatics-introductory-course-Material-2018/inference-of-microbial-ecological-networks.html
+sebeta.sid.in.irm <- symBeta(getOptBeta(se.sid.in.irm),mode='maxabs')
+rownames(sebeta.sid.in.irm) <- colnames(sebeta.sid.in.irm) <- taxa_names(ps.sid.in.irm.go)
+elist.sid.in.irm <- summary(sebeta.sid.in.irm)
+emat.sid.in.irm <- data.frame(as.matrix(sebeta.sid.in.irm))
+
+positive=length(emat.sid.in.irm[emat.sid.in.irm>0])/2 #8
+negative=length(emat.sid.in.irm[emat.sid.in.irm<0])/2 #3 
+total=length(emat.sid.in.irm[emat.sid.in.irm!=0])/2 #11
+# We divide by two since an edge is reirmsented by two entries in the matrix.
+
+ig.sid.in.irm <- adj2igraph(getRefit(se.sid.in.irm),diag=TRUE,
+                  edge.attr=elist.sid.in.irm,
+                  vertex.attr=list(name=taxa_names(ps.sid.in.irm.go)))
+
+otu.ids=colnames(se.sid.in.irm$est$data)
+edges=E(ig.sid.in.irm)
+edge.colors=c()
+for(e.index in 1:length(edges)){
+        adj.nodes=ends(ig.sid.in.irm,edges[e.index])
+        xindex=which(otu.ids==adj.nodes[1])
+        yindex=which(otu.ids==adj.nodes[2])
+        beta=emat.sid.in.irm[xindex,yindex]
+        if(beta>0){
+                edge.colors=append(edge.colors,"forestgreen")
+        }else if(beta<0){
+                edge.colors=append(edge.colors,"red")
+        }
+}
+E(ig.sid.in.irm)$color=edge.colors
+
+#weights
+#https://github.com/zdk123/SpiecEasi/issues/81
+edges.wts=c()
+for(e.index in 1:length(edges)){
+        adj.nodes=ends(ig.sid.in.irm,edges[e.index])
+        xindex=which(otu.ids==adj.nodes[1])
+        yindex=which(otu.ids==adj.nodes[2])
+        beta=emat.sid.in.irm[xindex,yindex]
+        edges.wts=append(edges.wts,abs(beta))
+        }
+E(ig.sid.in.irm)$width=edges.wts
+
+ggnet2(ig.sid.in.irm,size="degree",max_size=4,size.cut=3,edge.color="color",edge.size="width")
+```
+
+##### Post
+
+```{r}
+ig.sid.in.pos
+# IGRAPH 8f13dcd UNW- 145 174 -- 
+# + attr: name (v/n), weight (e/n)
+# + edges from 8f13dcd (vertex names):
+#U=undirected
+#N=named
+#W=weighted
+
+##getting some more info from the spieceasi objects before making the igraph object
+##following things here: https://github.com/zdk123/SpiecEasi/issues/109
+##here's a more complete chapter: https://mibwurrepo.github.io/Microbial-bioinformatics-introductory-course-Material-2018/inference-of-microbial-ecological-networks.html
+sebeta.sid.in.pos <- symBeta(getOptBeta(se.sid.in.pos),mode='maxabs')
+rownames(sebeta.sid.in.pos) <- colnames(sebeta.sid.in.pos) <- taxa_names(ps.sid.in.pos.go)
+elist.sid.in.pos <- summary(sebeta.sid.in.pos)
+emat.sid.in.pos <- data.frame(as.matrix(sebeta.sid.in.pos))
+
+positive=length(emat.sid.in.pos[emat.sid.in.pos>0])/2 #14
+negative=length(emat.sid.in.pos[emat.sid.in.pos<0])/2 #1 
+total=length(emat.sid.in.pos[emat.sid.in.pos!=0])/2 #15
+# We divide by two since an edge is repossented by two entries in the matrix.
+
+ig.sid.in.pos <- adj2igraph(getRefit(se.sid.in.pos),diag=TRUE,
+                  edge.attr=elist.sid.in.pos,
+                  vertex.attr=list(name=taxa_names(ps.sid.in.pos.go)))
+
+otu.ids=colnames(se.sid.in.pos$est$data)
+edges=E(ig.sid.in.pos)
+edge.colors=c()
+for(e.index in 1:length(edges)){
+        adj.nodes=ends(ig.sid.in.pos,edges[e.index])
+        xindex=which(otu.ids==adj.nodes[1])
+        yindex=which(otu.ids==adj.nodes[2])
+        beta=emat.sid.in.pos[xindex,yindex]
+        if(beta>0){
+                edge.colors=append(edge.colors,"forestgreen")
+        }else if(beta<0){
+                edge.colors=append(edge.colors,"red")
+        }
+}
+E(ig.sid.in.pos)$color=edge.colors
+
+#weights
+#https://github.com/zdk123/SpiecEasi/issues/81
+edges.wts=c()
+for(e.index in 1:length(edges)){
+        adj.nodes=ends(ig.sid.in.pos,edges[e.index])
+        xindex=which(otu.ids==adj.nodes[1])
+        yindex=which(otu.ids==adj.nodes[2])
+        beta=emat.sid.in.pos[xindex,yindex]
+        edges.wts=append(edges.wts,abs(beta))
+        }
+E(ig.sid.in.pos)$width=edges.wts
+
+ggnet2(ig.sid.in.pos,size="degree",max_size=4,size.cut=3,edge.color="color",edge.size="width")
+```
+
+#### Sids offshore
+
+##### Pre
+
+```{r}
+ig.sid.off.pre
+# IGRAPH 8f13dcd UNW- 145 174 -- 
+# + attr: name (v/n), weight (e/n)
+# + edges from 8f13dcd (vertex names):
+#U=undirected
+#N=named
+#W=weighted
+
+##gettoffg some more offfo from the spieceasi objects before makoffg the igraph object
+##followoffg thoffgs here: https://github.com/zdk123/SpiecEasi/issues/109
+##here's a more complete chapter: https://mibwurrepo.github.io/Microbial-biooffformatics-offtroductory-course-Material-2018/offference-of-microbial-ecological-networks.html
+sebeta.sid.off.pre <- symBeta(getOptBeta(se.sid.off.pre),mode='maxabs')
+rownames(sebeta.sid.off.pre) <- colnames(sebeta.sid.off.pre) <- taxa_names(ps.sid.off.pre.go)
+elist.sid.off.pre <- summary(sebeta.sid.off.pre)
+emat.sid.off.pre <- data.frame(as.matrix(sebeta.sid.off.pre))
+
+positive=length(emat.sid.off.pre[emat.sid.off.pre>0])/2 #12
+negative=length(emat.sid.off.pre[emat.sid.off.pre<0])/2 #9
+total=length(emat.sid.off.pre[emat.sid.off.pre!=0])/2 #21
+# We divide by two since an edge is represented by two entries off the matrix.
+
+ig.sid.off.pre <- adj2igraph(getRefit(se.sid.off.pre),diag=TRUE,
+                  edge.attr=elist.sid.off.pre,
+                  vertex.attr=list(name=taxa_names(ps.sid.off.pre.go)))
+
+otu.ids=colnames(se.sid.off.pre$est$data)
+edges=E(ig.sid.off.pre)
+edge.colors=c()
+for(e.index in 1:length(edges)){
+        adj.nodes=ends(ig.sid.off.pre,edges[e.index])
+        xindex=which(otu.ids==adj.nodes[1])
+        yindex=which(otu.ids==adj.nodes[2])
+        beta=emat.sid.off.pre[xindex,yindex]
+        if(beta>0){
+                edge.colors=append(edge.colors,"forestgreen")
+        }else if(beta<0){
+                edge.colors=append(edge.colors,"red")
+        }
+}
+E(ig.sid.off.pre)$color=edge.colors
+
+#weights
+#https://github.com/zdk123/SpiecEasi/issues/81
+edges.wts=c()
+for(e.index in 1:length(edges)){
+        adj.nodes=ends(ig.sid.off.pre,edges[e.index])
+        xindex=which(otu.ids==adj.nodes[1])
+        yindex=which(otu.ids==adj.nodes[2])
+        beta=emat.sid.off.pre[xindex,yindex]
+        edges.wts=append(edges.wts,abs(beta))
+        }
+E(ig.sid.off.pre)$width=edges.wts
+
+##will plot nicer below
+ggnet2(ig.sid.off.pre,size="degree",max_size=4,size.cut=3,edge.color="color",edge.size="width")
+
+##off terms of interpretation, apparently it's not great to assign 'strength' of 'correlations':
+#https://github.com/zdk123/SpiecEasi/issues/54
+##This is given by the absolute value of the coefficients (the beta matrix). However, due to the penalization/shroffkage, it is not really possible to compare association strengths across experiments but this is generally true of any LASSO type regression.
+```
+
+##### pos
+
+```{r}
+ig.sid.off.irm
+# IGRAPH 8f13dcd UNW- 145 174 -- 
+# + attr: name (v/n), weight (e/n)
+# + edges from 8f13dcd (vertex names):
+#U=undirected
+#N=named
+#W=weighted
+
+##gettoffg some more offfo from the spieceasi objects before makoffg the igraph object
+##followoffg thoffgs here: https://github.com/zdk123/SpiecEasi/issues/109
+##here's a more complete chapter: https://mibwurrepo.github.io/Microbial-biooffformatics-offtroductory-course-Material-2018/offference-of-microbial-ecological-networks.html
+sebeta.sid.off.irm <- symBeta(getOptBeta(se.sid.off.irm),mode='maxabs')
+rownames(sebeta.sid.off.irm) <- colnames(sebeta.sid.off.irm) <- taxa_names(ps.sid.off.irm.go)
+elist.sid.off.irm <- summary(sebeta.sid.off.irm)
+emat.sid.off.irm <- data.frame(as.matrix(sebeta.sid.off.irm))
+
+positive=length(emat.sid.off.irm[emat.sid.off.irm>0])/2 #16
+negative=length(emat.sid.off.irm[emat.sid.off.irm<0])/2 #2
+total=length(emat.sid.off.irm[emat.sid.off.irm!=0])/2 #18
+# We divide by two since an edge is reirmsented by two entries off the matrix.
+
+ig.sid.off.irm <- adj2igraph(getRefit(se.sid.off.irm),diag=TRUE,
+                  edge.attr=elist.sid.off.irm,
+                  vertex.attr=list(name=taxa_names(ps.sid.off.irm.go)))
+
+otu.ids=colnames(se.sid.off.irm$est$data)
+edges=E(ig.sid.off.irm)
+edge.colors=c()
+for(e.index in 1:length(edges)){
+        adj.nodes=ends(ig.sid.off.irm,edges[e.index])
+        xindex=which(otu.ids==adj.nodes[1])
+        yindex=which(otu.ids==adj.nodes[2])
+        beta=emat.sid.off.irm[xindex,yindex]
+        if(beta>0){
+                edge.colors=append(edge.colors,"forestgreen")
+        }else if(beta<0){
+                edge.colors=append(edge.colors,"red")
+        }
+}
+E(ig.sid.off.irm)$color=edge.colors
+
+#weights
+#https://github.com/zdk123/SpiecEasi/issues/81
+edges.wts=c()
+for(e.index in 1:length(edges)){
+        adj.nodes=ends(ig.sid.off.irm,edges[e.index])
+        xindex=which(otu.ids==adj.nodes[1])
+        yindex=which(otu.ids==adj.nodes[2])
+        beta=emat.sid.off.irm[xindex,yindex]
+        edges.wts=append(edges.wts,abs(beta))
+        }
+E(ig.sid.off.irm)$width=edges.wts
+
+##will plot nicer below
+ggnet2(ig.sid.off.irm,size="degree",max_size=4,size.cut=3,edge.color="color",edge.size="width")
+```
+
+##### Post
+
+```{r}
+ig.sid.off.pos
+# IGRAPH 8f13dcd UNW- 145 174 -- 
+# + attr: name (v/n), weight (e/n)
+# + edges from 8f13dcd (vertex names):
+#U=undirected
+#N=named
+#W=weighted
+
+##gettoffg some more offfo from the spieceasi objects before makoffg the igraph object
+##followoffg thoffgs here: https://github.com/zdk123/SpiecEasi/issues/109
+##here's a more complete chapter: https://mibwurrepo.github.io/Microbial-biooffformatics-offtroductory-course-Material-2018/offference-of-microbial-ecological-networks.html
+sebeta.sid.off.pos <- symBeta(getOptBeta(se.sid.off.pos),mode='maxabs')
+rownames(sebeta.sid.off.pos) <- colnames(sebeta.sid.off.pos) <- taxa_names(ps.sid.off.pos.go)
+elist.sid.off.pos <- summary(sebeta.sid.off.pos)
+emat.sid.off.pos <- data.frame(as.matrix(sebeta.sid.off.pos))
+
+positive=length(emat.sid.off.pos[emat.sid.off.pos>0])/2 #10
+negative=length(emat.sid.off.pos[emat.sid.off.pos<0])/2 #2
+total=length(emat.sid.off.pos[emat.sid.off.pos!=0])/2 #12
+# We divide by two since an edge is repossented by two entries off the matrix.
+
+ig.sid.off.pos <- adj2igraph(getRefit(se.sid.off.pos),diag=TRUE,
+                  edge.attr=elist.sid.off.pos,
+                  vertex.attr=list(name=taxa_names(ps.sid.off.pos.go)))
+
+otu.ids=colnames(se.sid.off.pos$est$data)
+edges=E(ig.sid.off.pos)
+edge.colors=c()
+for(e.index in 1:length(edges)){
+        adj.nodes=ends(ig.sid.off.pos,edges[e.index])
+        xindex=which(otu.ids==adj.nodes[1])
+        yindex=which(otu.ids==adj.nodes[2])
+        beta=emat.sid.off.pos[xindex,yindex]
+        if(beta>0){
+                edge.colors=append(edge.colors,"forestgreen")
+        }else if(beta<0){
+                edge.colors=append(edge.colors,"red")
+        }
+}
+E(ig.sid.off.pos)$color=edge.colors
+
+#weights
+#https://github.com/zdk123/SpiecEasi/issues/81
+edges.wts=c()
+for(e.index in 1:length(edges)){
+        adj.nodes=ends(ig.sid.off.pos,edges[e.index])
+        xindex=which(otu.ids==adj.nodes[1])
+        yindex=which(otu.ids==adj.nodes[2])
+        beta=emat.sid.off.pos[xindex,yindex]
+        edges.wts=append(edges.wts,abs(beta))
+        }
+E(ig.sid.off.pos)$width=edges.wts
+
+##will plot nicer below
+ggnet2(ig.sid.off.pos,size="degree",max_size=4,size.cut=3,edge.color="color",edge.size="width")
+```
+
+#### rads inshore
+
+##### Pre
+
+```{r}
+ig.rad.in.pre
+# IGRAPH 8f13dcd UNW- 145 174 -- 
+# + attr: name (v/n), weight (e/n)
+# + edges from 8f13dcd (vertex names):
+#U=undirected
+#N=named
+#W=weighted
+
+##getting some more info from the spieceasi objects before making the igraph object
+##following things here: https://github.com/zdk123/SpiecEasi/issues/109
+##here's a more complete chapter: https://mibwurrepo.github.io/Microbial-bioinformatics-introductory-course-Material-2018/inference-of-microbial-ecological-networks.html
+sebeta.rad.in.pre <- symBeta(getOptBeta(se.rad.in.pre),mode='maxabs')
+rownames(sebeta.rad.in.pre) <- colnames(sebeta.rad.in.pre) <- taxa_names(ps.rad.in.pre.go)
+elist.rad.in.pre <- summary(sebeta.rad.in.pre)
+emat.rad.in.pre <- data.frame(as.matrix(sebeta.rad.in.pre))
+
+positive=length(emat.rad.in.pre[emat.rad.in.pre>0])/2 #6
+negative=length(emat.rad.in.pre[emat.rad.in.pre<0])/2 #3
+total=length(emat.rad.in.pre[emat.rad.in.pre!=0])/2 #9
+# We divide by two since an edge is represented by two entries in the matrix.
+
+ig.rad.in.pre <- adj2igraph(getRefit(se.rad.in.pre),diag=TRUE,
+                  edge.attr=elist.rad.in.pre,
+                  vertex.attr=list(name=taxa_names(ps.rad.in.pre.go)))
+
+otu.ids=colnames(se.rad.in.pre$est$data)
+edges=E(ig.rad.in.pre)
+edge.colors=c()
+for(e.index in 1:length(edges)){
+        adj.nodes=ends(ig.rad.in.pre,edges[e.index])
+        xindex=which(otu.ids==adj.nodes[1])
+        yindex=which(otu.ids==adj.nodes[2])
+        beta=emat.rad.in.pre[xindex,yindex]
+        if(beta>0){
+                edge.colors=append(edge.colors,"forestgreen")
+        }else if(beta<0){
+                edge.colors=append(edge.colors,"red")
+        }
+}
+E(ig.rad.in.pre)$color=edge.colors
+
+#weights
+#https://github.com/zdk123/SpiecEasi/issues/81
+edges.wts=c()
+for(e.index in 1:length(edges)){
+        adj.nodes=ends(ig.rad.in.pre,edges[e.index])
+        xindex=which(otu.ids==adj.nodes[1])
+        yindex=which(otu.ids==adj.nodes[2])
+        beta=emat.rad.in.pre[xindex,yindex]
+        edges.wts=append(edges.wts,abs(beta))
+        }
+E(ig.rad.in.pre)$width=edges.wts
+
+##will plot nicer below
+ggnet2(ig.rad.in.pre,size="degree",max_size=4,size.cut=3,edge.color="color",edge.size="width")
+
+##In terms of interpretation, apparently it's not great to assign 'strength' of 'correlations':
+#https://github.com/zdk123/SpiecEasi/issues/54
+##This is given by the absolute value of the coefficients (the beta matrix). However, due to the penalization/shrinkage, it is not really possible to compare association strengths across experiments but this is generally true of any LASSO type regression.
+```
+
+##### Irma
+
+```{r}
+ig.rad.in.irm
+# IGRAPH 8f13dcd UNW- 145 174 -- 
+# + attr: name (v/n), weight (e/n)
+# + edges from 8f13dcd (vertex names):
+#U=undirected
+#N=named
+#W=weighted
+
+##getting some more info from the spieceasi objects before making the igraph object
+##following things here: https://github.com/zdk123/SpiecEasi/issues/109
+##here's a more complete chapter: https://mibwurrepo.github.io/Microbial-bioinformatics-introductory-course-Material-2018/inference-of-microbial-ecological-networks.html
+sebeta.rad.in.irm <- symBeta(getOptBeta(se.rad.in.irm),mode='maxabs')
+rownames(sebeta.rad.in.irm) <- colnames(sebeta.rad.in.irm) <- taxa_names(ps.rad.in.irm.go)
+elist.rad.in.irm <- summary(sebeta.rad.in.irm)
+emat.rad.in.irm <- data.frame(as.matrix(sebeta.rad.in.irm))
+
+positive=length(emat.rad.in.irm[emat.rad.in.irm>0])/2 #10
+negative=length(emat.rad.in.irm[emat.rad.in.irm<0])/2 #6
+total=length(emat.rad.in.irm[emat.rad.in.irm!=0])/2 #16
+# We divide by two since an edge is reirmsented by two entries in the matrix.
+
+ig.rad.in.irm <- adj2igraph(getRefit(se.rad.in.irm),diag=TRUE,
+                  edge.attr=elist.rad.in.irm,
+                  vertex.attr=list(name=taxa_names(ps.rad.in.irm.go)))
+
+otu.ids=colnames(se.rad.in.irm$est$data)
+edges=E(ig.rad.in.irm)
+edge.colors=c()
+for(e.index in 1:length(edges)){
+        adj.nodes=ends(ig.rad.in.irm,edges[e.index])
+        xindex=which(otu.ids==adj.nodes[1])
+        yindex=which(otu.ids==adj.nodes[2])
+        beta=emat.rad.in.irm[xindex,yindex]
+        if(beta>0){
+                edge.colors=append(edge.colors,"forestgreen")
+        }else if(beta<0){
+                edge.colors=append(edge.colors,"red")
+        }
+}
+E(ig.rad.in.irm)$color=edge.colors
+
+#weights
+#https://github.com/zdk123/SpiecEasi/issues/81
+edges.wts=c()
+for(e.index in 1:length(edges)){
+        adj.nodes=ends(ig.rad.in.irm,edges[e.index])
+        xindex=which(otu.ids==adj.nodes[1])
+        yindex=which(otu.ids==adj.nodes[2])
+        beta=emat.rad.in.irm[xindex,yindex]
+        edges.wts=append(edges.wts,abs(beta))
+        }
+E(ig.rad.in.irm)$width=edges.wts
+
+ggnet2(ig.rad.in.irm,size="degree",max_size=4,size.cut=3,edge.color="color",edge.size="width")
+```
+
+##### Post
+
+```{r}
+ig.rad.in.pos
+# IGRAPH 8f13dcd UNW- 145 174 -- 
+# + attr: name (v/n), weight (e/n)
+# + edges from 8f13dcd (vertex names):
+#U=undirected
+#N=named
+#W=weighted
+
+##getting some more info from the spieceasi objects before making the igraph object
+##following things here: https://github.com/zdk123/SpiecEasi/issues/109
+##here's a more complete chapter: https://mibwurrepo.github.io/Microbial-bioinformatics-introductory-course-Material-2018/inference-of-microbial-ecological-networks.html
+sebeta.rad.in.pos <- symBeta(getOptBeta(se.rad.in.pos),mode='maxabs')
+rownames(sebeta.rad.in.pos) <- colnames(sebeta.rad.in.pos) <- taxa_names(ps.rad.in.pos.go)
+elist.rad.in.pos <- summary(sebeta.rad.in.pos)
+emat.rad.in.pos <- data.frame(as.matrix(sebeta.rad.in.pos))
+
+positive=length(emat.rad.in.pos[emat.rad.in.pos>0])/2 #6
+negative=length(emat.rad.in.pos[emat.rad.in.pos<0])/2 #0
+total=length(emat.rad.in.pos[emat.rad.in.pos!=0])/2 #6
+# We divide by two since an edge is repossented by two entries in the matrix.
+
+ig.rad.in.pos <- adj2igraph(getRefit(se.rad.in.pos),diag=TRUE,
+                  edge.attr=elist.rad.in.pos,
+                  vertex.attr=list(name=taxa_names(ps.rad.in.pos.go)))
+
+otu.ids=colnames(se.rad.in.pos$est$data)
+edges=E(ig.rad.in.pos)
+edge.colors=c()
+for(e.index in 1:length(edges)){
+        adj.nodes=ends(ig.rad.in.pos,edges[e.index])
+        xindex=which(otu.ids==adj.nodes[1])
+        yindex=which(otu.ids==adj.nodes[2])
+        beta=emat.rad.in.pos[xindex,yindex]
+        if(beta>0){
+                edge.colors=append(edge.colors,"forestgreen")
+        }else if(beta<0){
+                edge.colors=append(edge.colors,"red")
+        }
+}
+E(ig.rad.in.pos)$color=edge.colors
+
+#weights
+#https://github.com/zdk123/SpiecEasi/issues/81
+edges.wts=c()
+for(e.index in 1:length(edges)){
+        adj.nodes=ends(ig.rad.in.pos,edges[e.index])
+        xindex=which(otu.ids==adj.nodes[1])
+        yindex=which(otu.ids==adj.nodes[2])
+        beta=emat.rad.in.pos[xindex,yindex]
+        edges.wts=append(edges.wts,abs(beta))
+        }
+E(ig.rad.in.pos)$width=edges.wts
+
+ggnet2(ig.rad.in.pos,size="degree",max_size=4,size.cut=3,edge.color="color",edge.size="width")
+```
+
+#### Rads offshore
+
+##### Pre
+
+```{r}
+ig.rad.off.pre
+# IGRAPH 8f13dcd UNW- 145 174 -- 
+# + attr: name (v/n), weight (e/n)
+# + edges from 8f13dcd (vertex names):
+#U=undirected
+#N=named
+#W=weighted
+
+##gettoffg some more offfo from the spieceasi objects before makoffg the igraph object
+##followoffg thoffgs here: https://github.com/zdk123/SpiecEasi/issues/109
+##here's a more complete chapter: https://mibwurrepo.github.io/Microbial-biooffformatics-offtroductory-course-Material-2018/offference-of-microbial-ecological-networks.html
+sebeta.rad.off.pre <- symBeta(getOptBeta(se.rad.off.pre),mode='maxabs')
+rownames(sebeta.rad.off.pre) <- colnames(sebeta.rad.off.pre) <- taxa_names(ps.rad.off.pre.go)
+elist.rad.off.pre <- summary(sebeta.rad.off.pre)
+emat.rad.off.pre <- data.frame(as.matrix(sebeta.rad.off.pre))
+
+positive=length(emat.rad.off.pre[emat.rad.off.pre>0])/2 #11
+negative=length(emat.rad.off.pre[emat.rad.off.pre<0])/2 #7
+total=length(emat.rad.off.pre[emat.rad.off.pre!=0])/2 #18
+# We divide by two since an edge is represented by two entries off the matrix.
+
+ig.rad.off.pre <- adj2igraph(getRefit(se.rad.off.pre),diag=TRUE,
+                  edge.attr=elist.rad.off.pre,
+                  vertex.attr=list(name=taxa_names(ps.rad.off.pre.go)))
+
+otu.ids=colnames(se.rad.off.pre$est$data)
+edges=E(ig.rad.off.pre)
+edge.colors=c()
+for(e.index in 1:length(edges)){
+        adj.nodes=ends(ig.rad.off.pre,edges[e.index])
+        xindex=which(otu.ids==adj.nodes[1])
+        yindex=which(otu.ids==adj.nodes[2])
+        beta=emat.rad.off.pre[xindex,yindex]
+        if(beta>0){
+                edge.colors=append(edge.colors,"forestgreen")
+        }else if(beta<0){
+                edge.colors=append(edge.colors,"red")
+        }
+}
+E(ig.rad.off.pre)$color=edge.colors
+
+#weights
+#https://github.com/zdk123/SpiecEasi/issues/81
+edges.wts=c()
+for(e.index in 1:length(edges)){
+        adj.nodes=ends(ig.rad.off.pre,edges[e.index])
+        xindex=which(otu.ids==adj.nodes[1])
+        yindex=which(otu.ids==adj.nodes[2])
+        beta=emat.rad.off.pre[xindex,yindex]
+        edges.wts=append(edges.wts,abs(beta))
+        }
+E(ig.rad.off.pre)$width=edges.wts
+
+##will plot nicer below
+ggnet2(ig.rad.off.pre,size="degree",max_size=4,size.cut=3,edge.color="color",edge.size="width")
+
+##off terms of interpretation, apparently it's not great to assign 'strength' of 'correlations':
+#https://github.com/zdk123/SpiecEasi/issues/54
+##This is given by the absolute value of the coefficients (the beta matrix). However, due to the penalization/shroffkage, it is not really possible to compare association strengths across experiments but this is generally true of any LASSO type regression.
+```
+
+##### Irma
+
+```{r}
+ig.rad.off.irm
+# IGRAPH 8f13dcd UNW- 145 174 -- 
+# + attr: name (v/n), weight (e/n)
+# + edges from 8f13dcd (vertex names):
+#U=undirected
+#N=named
+#W=weighted
+
+##gettoffg some more offfo from the spieceasi objects before makoffg the igraph object
+##followoffg thoffgs here: https://github.com/zdk123/SpiecEasi/issues/109
+##here's a more complete chapter: https://mibwurrepo.github.io/Microbial-biooffformatics-offtroductory-course-Material-2018/offference-of-microbial-ecological-networks.html
+sebeta.rad.off.irm <- symBeta(getOptBeta(se.rad.off.irm),mode='maxabs')
+rownames(sebeta.rad.off.irm) <- colnames(sebeta.rad.off.irm) <- taxa_names(ps.rad.off.irm.go)
+elist.rad.off.irm <- summary(sebeta.rad.off.irm)
+emat.rad.off.irm <- data.frame(as.matrix(sebeta.rad.off.irm))
+
+positive=length(emat.rad.off.irm[emat.rad.off.irm>0])/2 #5
+negative=length(emat.rad.off.irm[emat.rad.off.irm<0])/2 #3
+total=length(emat.rad.off.irm[emat.rad.off.irm!=0])/2 #8
+# We divide by two since an edge is reirmsented by two entries off the matrix.
+
+ig.rad.off.irm <- adj2igraph(getRefit(se.rad.off.irm),diag=TRUE,
+                  edge.attr=elist.rad.off.irm,
+                  vertex.attr=list(name=taxa_names(ps.rad.off.irm.go)))
+
+otu.ids=colnames(se.rad.off.irm$est$data)
+edges=E(ig.rad.off.irm)
+edge.colors=c()
+for(e.index in 1:length(edges)){
+        adj.nodes=ends(ig.rad.off.irm,edges[e.index])
+        xindex=which(otu.ids==adj.nodes[1])
+        yindex=which(otu.ids==adj.nodes[2])
+        beta=emat.rad.off.irm[xindex,yindex]
+        if(beta>0){
+                edge.colors=append(edge.colors,"forestgreen")
+        }else if(beta<0){
+                edge.colors=append(edge.colors,"red")
+        }
+}
+E(ig.rad.off.irm)$color=edge.colors
+
+#weights
+#https://github.com/zdk123/SpiecEasi/issues/81
+edges.wts=c()
+for(e.index in 1:length(edges)){
+        adj.nodes=ends(ig.rad.off.irm,edges[e.index])
+        xindex=which(otu.ids==adj.nodes[1])
+        yindex=which(otu.ids==adj.nodes[2])
+        beta=emat.rad.off.irm[xindex,yindex]
+        edges.wts=append(edges.wts,abs(beta))
+        }
+E(ig.rad.off.irm)$width=edges.wts
+
+##will plot nicer below
+ggnet2(ig.rad.off.irm,size="degree",max_size=4,size.cut=3,edge.color="color",edge.size="width")
+```
+
+##### Post
+
+```{r}
+ig.rad.off.pos
+# IGRAPH 8f13dcd UNW- 145 174 -- 
+# + attr: name (v/n), weight (e/n)
+# + edges from 8f13dcd (vertex names):
+#U=undirected
+#N=named
+#W=weighted
+
+##gettoffg some more offfo from the spieceasi objects before makoffg the igraph object
+##followoffg thoffgs here: https://github.com/zdk123/SpiecEasi/issues/109
+##here's a more complete chapter: https://mibwurrepo.github.io/Microbial-biooffformatics-offtroductory-course-Material-2018/offference-of-microbial-ecological-networks.html
+sebeta.rad.off.pos <- symBeta(getOptBeta(se.rad.off.pos),mode='maxabs')
+rownames(sebeta.rad.off.pos) <- colnames(sebeta.rad.off.pos) <- taxa_names(ps.rad.off.pos.go)
+elist.rad.off.pos <- summary(sebeta.rad.off.pos)
+emat.rad.off.pos <- data.frame(as.matrix(sebeta.rad.off.pos))
+
+positive=length(emat.rad.off.pos[emat.rad.off.pos>0])/2 #6
+negative=length(emat.rad.off.pos[emat.rad.off.pos<0])/2 #0
+total=length(emat.rad.off.pos[emat.rad.off.pos!=0])/2 #6
+# We divide by two since an edge is repossented by two entries off the matrix.
+
+ig.rad.off.pos <- adj2igraph(getRefit(se.rad.off.pos),diag=TRUE,
+                  edge.attr=elist.rad.off.pos,
+                  vertex.attr=list(name=taxa_names(ps.rad.off.pos.go)))
+
+otu.ids=colnames(se.rad.off.pos$est$data)
+edges=E(ig.rad.off.pos)
+edge.colors=c()
+for(e.index in 1:length(edges)){
+        adj.nodes=ends(ig.rad.off.pos,edges[e.index])
+        xindex=which(otu.ids==adj.nodes[1])
+        yindex=which(otu.ids==adj.nodes[2])
+        beta=emat.rad.off.pos[xindex,yindex]
+        if(beta>0){
+                edge.colors=append(edge.colors,"forestgreen")
+        }else if(beta<0){
+                edge.colors=append(edge.colors,"red")
+        }
+}
+E(ig.rad.off.pos)$color=edge.colors
+
+#weights
+#https://github.com/zdk123/SpiecEasi/issues/81
+edges.wts=c()
+for(e.index in 1:length(edges)){
+        adj.nodes=ends(ig.rad.off.pos,edges[e.index])
+        xindex=which(otu.ids==adj.nodes[1])
+        yindex=which(otu.ids==adj.nodes[2])
+        beta=emat.rad.off.pos[xindex,yindex]
+        edges.wts=append(edges.wts,abs(beta))
+        }
+E(ig.rad.off.pos)$width=edges.wts
+
+##will plot nicer below
+ggnet2(ig.rad.off.pos,size="degree",max_size=4,size.cut=3,edge.color="color",edge.size="width")
+```
+
+### Saving all
+
+```{r}
+# saveRDS(ig.sid.in.pre,file="./nets_thesis/ig.sid.in.pre.rds")
+# saveRDS(ig.sid.in.irm,file="./nets_thesis/ig.sid.in.irm.rds")
+# saveRDS(ig.sid.in.pos,file="./nets_thesis/ig.sid.in.pos.rds")
+# 
+# saveRDS(ig.sid.off.pre,file="./nets_thesis/ig.sid.off.pre.rds")
+# saveRDS(ig.sid.off.irm,file="./nets_thesis/ig.sid.off.irm.rds")
+# saveRDS(ig.sid.off.pos,file="./nets_thesis/ig.sid.off.pos.rds")
+# 
+# saveRDS(ig.rad.in.pre,file="./nets_thesis/ig.rad.in.pre.rds")
+# saveRDS(ig.rad.in.irm,file="./nets_thesis/ig.rad.in.irm.rds")
+# saveRDS(ig.rad.in.pos,file="./nets_thesis/ig.rad.in.pos.rds")
+# 
+# saveRDS(ig.rad.off.pre,file="./nets_thesis/ig.rad.off.pre.rds")
+# saveRDS(ig.rad.off.irm,file="./nets_thesis/ig.rad.off.irm.rds")
+# saveRDS(ig.rad.off.pos,file="./nets_thesis/ig.rad.off.pos.rds")
+```
+
+# Transitivity
+
+```{r}
+# transitivity(ig.sid.in.pre,type = "globalundirected")
+# transitivity(ig.sid.in.irm,type = "globalundirected")
+# transitivity(ig.sid.in.pos,type = "globalundirected")
+# 
+# transitivity(ig.rad.pre,type = "globalundirected")
+# transitivity(ig.rad.irm,type = "globalundirected")
+# transitivity(ig.rad.pos,type = "globalundirected")
+# 
+# transitivity(ig.sid.in.pre,type = "average")
+# transitivity(ig.sid.in.irm,type = "average")
+# transitivity(ig.sid.in.pos,type = "average")
+# 
+# transitivity(ig.rad.pre,type = "average")
+# transitivity(ig.rad.irm,type = "average")
+# transitivity(ig.rad.pos,type = "average")
+
+tran.sid.in.pre <- data.frame(transitivity(ig.sid.in.pre,type = "local"))
+tran.sid.in.irm <- data.frame(transitivity(ig.sid.in.irm,type = "local"))
+tran.sid.in.pos <- data.frame(transitivity(ig.sid.in.pos,type = "local"))
+
+tran.sid.off.pre <- data.frame(transitivity(ig.sid.off.pre,type = "local"))
+tran.sid.off.irm <- data.frame(transitivity(ig.sid.off.irm,type = "local"))
+tran.sid.off.pos <- data.frame(transitivity(ig.sid.off.pos,type = "local"))
+
+tran.rad.in.pre <- data.frame(transitivity(ig.rad.in.pre,type = "local"))
+tran.rad.in.irm <- data.frame(transitivity(ig.rad.in.irm,type = "local"))
+tran.rad.in.pos <- data.frame(transitivity(ig.rad.in.pos,type = "local"))
+
+tran.rad.off.pre <- data.frame(transitivity(ig.rad.off.pre,type = "local"))
+tran.rad.off.irm <- data.frame(transitivity(ig.rad.off.irm,type = "local"))
+tran.rad.off.pos <- data.frame(transitivity(ig.rad.off.pos,type = "local"))
+
+##sids
+tran.sid.in.pre$time <- rep("Pre",nrow(tran.sid.in.pre))
+tran.sid.in.pre$zone <- rep("Inshore",nrow(tran.sid.in.pre))
+colnames(tran.sid.in.pre) <- c("tran","time","zone")
+
+tran.sid.in.irm$time <- rep("Irma",nrow(tran.sid.in.irm))
+tran.sid.in.irm$zone <- rep("Inshore",nrow(tran.sid.in.irm))
+colnames(tran.sid.in.irm) <- c("tran","time","zone")
+
+tran.sid.in.pos$time <- rep("Post",nrow(tran.sid.in.pos))
+tran.sid.in.pos$zone <- rep("Inshore",nrow(tran.sid.in.pos))
+colnames(tran.sid.in.pos) <- c("tran","time","zone")
+
+tran.sid.off.pre$time <- rep("Pre",nrow(tran.sid.off.pre))
+tran.sid.off.pre$zone <- rep("Offshore",nrow(tran.sid.off.pre))
+colnames(tran.sid.off.pre) <- c("tran","time","zone")
+
+tran.sid.off.irm$time <- rep("Irma",nrow(tran.sid.off.irm))
+tran.sid.off.irm$zone <- rep("Offshore",nrow(tran.sid.off.irm))
+colnames(tran.sid.off.irm) <- c("tran","time","zone")
+
+tran.sid.off.pos$time <- rep("Post",nrow(tran.sid.off.pos))
+tran.sid.off.pos$zone <- rep("Offshore",nrow(tran.sid.off.pos))
+colnames(tran.sid.off.pos) <- c("tran","time","zone")
+
+##rads
+tran.rad.in.pre$time <- rep("Pre",nrow(tran.rad.in.pre))
+tran.rad.in.pre$zone <- rep("Inshore",nrow(tran.rad.in.pre))
+colnames(tran.rad.in.pre) <- c("tran","time","zone")
+
+tran.rad.in.irm$time <- rep("Irma",nrow(tran.rad.in.irm))
+tran.rad.in.irm$zone <- rep("Inshore",nrow(tran.rad.in.irm))
+colnames(tran.rad.in.irm) <- c("tran","time","zone")
+
+tran.rad.in.pos$time <- rep("Post",nrow(tran.rad.in.pos))
+tran.rad.in.pos$zone <- rep("Inshore",nrow(tran.rad.in.pos))
+colnames(tran.rad.in.pos) <- c("tran","time","zone")
+
+tran.rad.off.pre$time <- rep("Pre",nrow(tran.rad.off.pre))
+tran.rad.off.pre$zone <- rep("Offshore",nrow(tran.rad.off.pre))
+colnames(tran.rad.off.pre) <- c("tran","time","zone")
+
+tran.rad.off.irm$time <- rep("Irma",nrow(tran.rad.off.irm))
+tran.rad.off.irm$zone <- rep("Offshore",nrow(tran.rad.off.irm))
+colnames(tran.rad.off.irm) <- c("tran","time","zone")
+
+tran.rad.off.pos$time <- rep("Post",nrow(tran.rad.off.pos))
+tran.rad.off.pos$zone <- rep("Offshore",nrow(tran.rad.off.pos))
+colnames(tran.rad.off.pos) <- c("tran","time","zone")
+
+tran.sid <- rbind(tran.sid.in.pre,tran.sid.in.irm,tran.sid.in.pos,tran.sid.off.pre,tran.sid.off.irm,tran.sid.off.pos)
+
+ggplot(tran.sid,aes(x=time,y=tran))+
+  geom_point()+
+  facet_wrap(~zone)
+
+tran.rad <- rbind(tran.rad.in.pre,tran.rad.in.irm,tran.rad.in.pos,tran.rad.off.pre,tran.rad.off.irm,tran.rad.off.pos)
+
+ggplot(tran.rad,aes(x=time,y=tran))+
+  geom_boxplot()+
+  facet_wrap(~zone)
+
+kruskal.test(tran~time,data=tran.sid)
+kruskal.test(tran~time,data=tran.rad)
+##ns
+
+kruskal.test(tran~zone,data=tran.sid) #sig
+kruskal.test(tran~zone,data=tran.rad) #ns
+##ns
+
+#write.csv(tran.sid,file="tran.sid.df.csv")
+#write.csv(tran.rad,file="tran.rad.df.csv")
+```
+
+# Betweenness
+
+```{r}
+btwn.sid.in.pre <- data.frame(igraph::betweenness(ig.sid.in.pre))
+btwn.sid.in.irm <- data.frame(igraph::betweenness(ig.sid.in.irm))
+btwn.sid.in.pos <- data.frame(igraph::betweenness(ig.sid.in.pos))
+
+btwn.sid.off.pre <- data.frame(igraph::betweenness(ig.sid.off.pre))
+btwn.sid.off.irm <- data.frame(igraph::betweenness(ig.sid.off.irm))
+btwn.sid.off.pos <- data.frame(igraph::betweenness(ig.sid.off.pos))
+
+btwn.rad.in.pre <- data.frame(igraph::betweenness(ig.rad.in.pre))
+btwn.rad.in.irm <- data.frame(igraph::betweenness(ig.rad.in.irm))
+btwn.rad.in.pos <- data.frame(igraph::betweenness(ig.rad.in.pos))
+
+btwn.rad.off.pre <- data.frame(igraph::betweenness(ig.rad.off.pre))
+btwn.rad.off.irm <- data.frame(igraph::betweenness(ig.rad.off.irm))
+btwn.rad.off.pos <- data.frame(igraph::betweenness(ig.rad.off.pos))
+
+##sids
+btwn.sid.in.pre$time <- rep("Pre",nrow(btwn.sid.in.pre))
+btwn.sid.in.pre$zone <- rep("Inshore",nrow(btwn.sid.in.pre))
+colnames(btwn.sid.in.pre) <- c("btwn","time","zone")
+
+btwn.sid.in.irm$time <- rep("Irma",nrow(btwn.sid.in.irm))
+btwn.sid.in.irm$zone <- rep("Inshore",nrow(btwn.sid.in.irm))
+colnames(btwn.sid.in.irm) <- c("btwn","time","zone")
+
+btwn.sid.in.pos$time <- rep("Post",nrow(btwn.sid.in.pos))
+btwn.sid.in.pos$zone <- rep("Inshore",nrow(btwn.sid.in.pos))
+colnames(btwn.sid.in.pos) <- c("btwn","time","zone")
+
+btwn.sid.off.pre$time <- rep("Pre",nrow(btwn.sid.off.pre))
+btwn.sid.off.pre$zone <- rep("Offshore",nrow(btwn.sid.off.pre))
+colnames(btwn.sid.off.pre) <- c("btwn","time","zone")
+
+btwn.sid.off.irm$time <- rep("Irma",nrow(btwn.sid.off.irm))
+btwn.sid.off.irm$zone <- rep("Offshore",nrow(btwn.sid.off.irm))
+colnames(btwn.sid.off.irm) <- c("btwn","time","zone")
+
+btwn.sid.off.pos$time <- rep("Post",nrow(btwn.sid.off.pos))
+btwn.sid.off.pos$zone <- rep("Offshore",nrow(btwn.sid.off.pos))
+colnames(btwn.sid.off.pos) <- c("btwn","time","zone")
+
+##rads
+btwn.rad.in.pre$time <- rep("Pre",nrow(btwn.rad.in.pre))
+btwn.rad.in.pre$zone <- rep("Inshore",nrow(btwn.rad.in.pre))
+colnames(btwn.rad.in.pre) <- c("btwn","time","zone")
+
+btwn.rad.in.irm$time <- rep("Irma",nrow(btwn.rad.in.irm))
+btwn.rad.in.irm$zone <- rep("Inshore",nrow(btwn.rad.in.irm))
+colnames(btwn.rad.in.irm) <- c("btwn","time","zone")
+
+btwn.rad.in.pos$time <- rep("Post",nrow(btwn.rad.in.pos))
+btwn.rad.in.pos$zone <- rep("Inshore",nrow(btwn.rad.in.pos))
+colnames(btwn.rad.in.pos) <- c("btwn","time","zone")
+
+btwn.rad.off.pre$time <- rep("Pre",nrow(btwn.rad.off.pre))
+btwn.rad.off.pre$zone <- rep("Offshore",nrow(btwn.rad.off.pre))
+colnames(btwn.rad.off.pre) <- c("btwn","time","zone")
+
+btwn.rad.off.irm$time <- rep("Irma",nrow(btwn.rad.off.irm))
+btwn.rad.off.irm$zone <- rep("Offshore",nrow(btwn.rad.off.irm))
+colnames(btwn.rad.off.irm) <- c("btwn","time","zone")
+
+btwn.rad.off.pos$time <- rep("Post",nrow(btwn.rad.off.pos))
+btwn.rad.off.pos$zone <- rep("Offshore",nrow(btwn.rad.off.pos))
+colnames(btwn.rad.off.pos) <- c("btwn","time","zone")
+
+btwn.sid <- rbind(btwn.sid.in.pre,btwn.sid.in.irm,btwn.sid.in.pos,btwn.sid.off.pre,btwn.sid.off.irm,btwn.sid.off.pos)
+
+library("dplyr")
+
+btwn.sid.sel <- btwn.sid %>%
+  filter(btwn>0)
+
+ggplot(btwn.sid.sel,aes(x=time,y=log(btwn)))+
+  geom_boxplot()+
+  facet_wrap(~zone)
+
+btwn.rad <- rbind(btwn.rad.in.pre,btwn.rad.in.irm,btwn.rad.in.pos,btwn.rad.off.pre,btwn.rad.off.irm,btwn.rad.off.pos)
+
+btwn.rad.sel <- btwn.rad %>%
+  filter(btwn>0)
+
+ggplot(btwn.rad.sel,aes(x=time,y=log(btwn)))+
+  geom_boxplot()+
+  facet_wrap(~zone)
+
+kruskal.test(log(btwn)~time,data=btwn.sid.sel)
+kruskal.test(log(btwn)~time,data=btwn.rad.sel)
+
+kruskal.test(log(btwn)~zone,data=btwn.sid.sel)
+kruskal.test(log(btwn)~zone,data=btwn.rad.sel)
+
+#write.csv(btwn.sid,file="btwn.sid.df.csv")
+#write.csv(btwn.rad,file="btwn.rad.df.csv")
+
+shapiro.test(log(btwn.sid.sel$btwn))
+
+a.btwn.sid <- aov(log(btwn)~time*zone,data=btwn.sid.sel)
+summary(a.btwn.sid)
+
+TukeyHSD(a.btwn.sid)
+```
+
+Degree
+
+```{r}
+degr.sid.in.pre <- data.frame(igraph::degree(ig.sid.in.pre))
+degr.sid.in.irm <- data.frame(igraph::degree(ig.sid.in.irm))
+degr.sid.in.pos <- data.frame(igraph::degree(ig.sid.in.pos))
+
+degr.sid.off.pre <- data.frame(igraph::degree(ig.sid.off.pre))
+degr.sid.off.irm <- data.frame(igraph::degree(ig.sid.off.irm))
+degr.sid.off.pos <- data.frame(igraph::degree(ig.sid.off.pos))
+
+degr.rad.in.pre <- data.frame(igraph::degree(ig.rad.in.pre))
+degr.rad.in.irm <- data.frame(igraph::degree(ig.rad.in.irm))
+degr.rad.in.pos <- data.frame(igraph::degree(ig.rad.in.pos))
+
+degr.rad.off.pre <- data.frame(igraph::degree(ig.rad.off.pre))
+degr.rad.off.irm <- data.frame(igraph::degree(ig.rad.off.irm))
+degr.rad.off.pos <- data.frame(igraph::degree(ig.rad.off.pos))
+
+##sids
+degr.sid.in.pre$time <- rep("Pre",nrow(degr.sid.in.pre))
+degr.sid.in.pre$zone <- rep("Inshore",nrow(degr.sid.in.pre))
+colnames(degr.sid.in.pre) <- c("degr","time","zone")
+
+degr.sid.in.irm$time <- rep("Irma",nrow(degr.sid.in.irm))
+degr.sid.in.irm$zone <- rep("Inshore",nrow(degr.sid.in.irm))
+colnames(degr.sid.in.irm) <- c("degr","time","zone")
+
+degr.sid.in.pos$time <- rep("Post",nrow(degr.sid.in.pos))
+degr.sid.in.pos$zone <- rep("Inshore",nrow(degr.sid.in.pos))
+colnames(degr.sid.in.pos) <- c("degr","time","zone")
+
+degr.sid.off.pre$time <- rep("Pre",nrow(degr.sid.off.pre))
+degr.sid.off.pre$zone <- rep("Offshore",nrow(degr.sid.off.pre))
+colnames(degr.sid.off.pre) <- c("degr","time","zone")
+
+degr.sid.off.irm$time <- rep("Irma",nrow(degr.sid.off.irm))
+degr.sid.off.irm$zone <- rep("Offshore",nrow(degr.sid.off.irm))
+colnames(degr.sid.off.irm) <- c("degr","time","zone")
+
+degr.sid.off.pos$time <- rep("Post",nrow(degr.sid.off.pos))
+degr.sid.off.pos$zone <- rep("Offshore",nrow(degr.sid.off.pos))
+colnames(degr.sid.off.pos) <- c("degr","time","zone")
+
+##rads
+degr.rad.in.pre$time <- rep("Pre",nrow(degr.rad.in.pre))
+degr.rad.in.pre$zone <- rep("Inshore",nrow(degr.rad.in.pre))
+colnames(degr.rad.in.pre) <- c("degr","time","zone")
+
+degr.rad.in.irm$time <- rep("Irma",nrow(degr.rad.in.irm))
+degr.rad.in.irm$zone <- rep("Inshore",nrow(degr.rad.in.irm))
+colnames(degr.rad.in.irm) <- c("degr","time","zone")
+
+degr.rad.in.pos$time <- rep("Post",nrow(degr.rad.in.pos))
+degr.rad.in.pos$zone <- rep("Inshore",nrow(degr.rad.in.pos))
+colnames(degr.rad.in.pos) <- c("degr","time","zone")
+
+degr.rad.off.pre$time <- rep("Pre",nrow(degr.rad.off.pre))
+degr.rad.off.pre$zone <- rep("Offshore",nrow(degr.rad.off.pre))
+colnames(degr.rad.off.pre) <- c("degr","time","zone")
+
+degr.rad.off.irm$time <- rep("Irma",nrow(degr.rad.off.irm))
+degr.rad.off.irm$zone <- rep("Offshore",nrow(degr.rad.off.irm))
+colnames(degr.rad.off.irm) <- c("degr","time","zone")
+
+degr.rad.off.pos$time <- rep("Post",nrow(degr.rad.off.pos))
+degr.rad.off.pos$zone <- rep("Offshore",nrow(degr.rad.off.pos))
+colnames(degr.rad.off.pos) <- c("degr","time","zone")
+
+degr.sid <- rbind(degr.sid.in.pre,degr.sid.in.irm,degr.sid.in.pos,degr.sid.off.pre,degr.sid.off.irm,degr.sid.off.pos)
+
+library("dplyr")
+
+degr.sid.sel <- degr.sid %>%
+  filter(degr>0)
+
+ggplot(degr.sid.sel,aes(x=time,y=log(degr)))+
+  geom_boxplot()+
+  facet_wrap(~zone)
+
+degr.rad <- rbind(degr.rad.in.pre,degr.rad.in.irm,degr.rad.in.pos,degr.rad.off.pre,degr.rad.off.irm,degr.rad.off.pos)
+
+degr.rad.sel <- degr.rad %>%
+  filter(degr>0)
+
+ggplot(degr.rad.sel,aes(x=time,y=log(degr)))+
+  geom_boxplot()+
+  facet_wrap(~zone)
+
+kruskal.test(log(degr)~time,data=degr.sid.sel)
+kruskal.test(log(degr)~time,data=degr.rad.sel)
+
+kruskal.test(log(degr)~zone,data=degr.sid.sel)
+kruskal.test(log(degr)~zone,data=degr.rad.sel)
+```
+
+# Degree distribution
+
+```{r}
+#https://www.researchgate.net/publication/249316106_Quantification_and_Comparison_of_Degree_Distributions_in_Complex_Networks
+#to compare?^
+
+deg.dist <- degree_distribution(ig.sid.in.pre, mode = "all", cumulative = T) # Plot degree distribution
+num <- (1:length(deg.dist))
+zone <- rep("in",length(deg.dist))
+time <- rep("pre",length(deg.dist))
+deg.sid.in.pre.df <- data.frame(deg.dist,num,zone,time)
+
+deg.dist <- degree_distribution(ig.sid.in.irm, mode = "all", cumulative = T) # Plot degree distribution
+num <- (1:length(deg.dist))
+zone <- rep("in",length(deg.dist))
+time <- rep("irm",length(deg.dist))
+deg.sid.in.irm.df <- data.frame(deg.dist,num,zone,time)
+
+deg.dist <- degree_distribution(ig.sid.in.pos, mode = "all", cumulative = T) # Plot degree distribution
+num <- (1:length(deg.dist))
+zone <- rep("in",length(deg.dist))
+time <- rep("pos",length(deg.dist))
+deg.sid.in.pos.df <- data.frame(deg.dist,num,zone,time)
+
+deg.sid.in <- rbind(deg.sid.in.pre.df,deg.sid.in.irm.df,deg.sid.in.pos.df)
+
+#raw
+ggplot(deg.sid.in,aes(x=num,y=deg.dist,color=time))+
+  geom_point()+
+  facet_wrap(~zone)+
+  geom_line()
+
+deg.dist <- degree_distribution(ig.sid.off.pre, mode = "all", cumulative = T) # Plot degree distribution
+num <- (1:length(deg.dist))
+zone <- rep("off",length(deg.dist))
+time <- rep("pre",length(deg.dist))
+deg.sid.off.pre.df <- data.frame(deg.dist,num,zone,time)
+
+deg.dist <- degree_distribution(ig.sid.off.irm, mode = "all", cumulative = T) # Plot degree distribution
+num <- (1:length(deg.dist))
+zone <- rep("off",length(deg.dist))
+time <- rep("irm",length(deg.dist))
+deg.sid.off.irm.df <- data.frame(deg.dist,num,zone,time)
+
+deg.dist <- degree_distribution(ig.sid.off.pos, mode = "all", cumulative = T) # Plot degree distribution
+num <- (1:length(deg.dist))
+zone <- rep("off",length(deg.dist))
+time <- rep("pos",length(deg.dist))
+deg.sid.off.pos.df <- data.frame(deg.dist,num,zone,time)
+
+deg.sid <- rbind(deg.sid.in.pre.df,deg.sid.in.irm.df,deg.sid.in.pos.df,deg.sid.off.pre.df,deg.sid.off.irm.df,deg.sid.off.pos.df)
+
+#raw
+ggplot(deg.sid,aes(x=num,y=deg.dist,color=time))+
+  geom_point()+
+  facet_wrap(~zone)+
+  geom_line()
+
+```
+
+Eigen cent
+
+```{r}
+eign.sid.in.pre <- data.frame(igraph::eigen_centrality(ig.sid.in.pre))
+eign.sid.in.irm <- data.frame(igraph::eigen_centrality(ig.sid.in.irm))
+eign.sid.in.pos <- data.frame(igraph::eigen_centrality(ig.sid.in.pos))
+
+eign.sid.off.pre <- data.frame(igraph::eigen_centrality(ig.sid.off.pre))
+eign.sid.off.irm <- data.frame(igraph::eigen_centrality(ig.sid.off.irm))
+eign.sid.off.pos <- data.frame(igraph::eigen_centrality(ig.sid.off.pos))
+
+eign.rad.in.pre <- data.frame(igraph::eigen_centrality(ig.rad.in.pre))
+eign.rad.in.irm <- data.frame(igraph::eigen_centrality(ig.rad.in.irm))
+eign.rad.in.pos <- data.frame(igraph::eigen_centrality(ig.rad.in.pos))
+
+eign.rad.off.pre <- data.frame(igraph::eigen_centrality(ig.rad.off.pre))
+eign.rad.off.irm <- data.frame(igraph::eigen_centrality(ig.rad.off.irm))
+eign.rad.off.pos <- data.frame(igraph::eigen_centrality(ig.rad.off.pos))
+
+##sids
+eign.sid.in.pre$time <- rep("Pre",nrow(eign.sid.in.pre))
+eign.sid.in.pre$zone <- rep("Inshore",nrow(eign.sid.in.pre))
+colnames(eign.sid.in.pre) <- c("eign","time","zone")
+
+eign.sid.in.irm$time <- rep("Irma",nrow(eign.sid.in.irm))
+eign.sid.in.irm$zone <- rep("Inshore",nrow(eign.sid.in.irm))
+colnames(eign.sid.in.irm) <- c("eign","time","zone")
+
+eign.sid.in.pos$time <- rep("Post",nrow(eign.sid.in.pos))
+eign.sid.in.pos$zone <- rep("Inshore",nrow(eign.sid.in.pos))
+colnames(eign.sid.in.pos) <- c("eign","time","zone")
+
+eign.sid.off.pre$time <- rep("Pre",nrow(eign.sid.off.pre))
+eign.sid.off.pre$zone <- rep("Offshore",nrow(eign.sid.off.pre))
+colnames(eign.sid.off.pre) <- c("eign","time","zone")
+
+eign.sid.off.irm$time <- rep("Irma",nrow(eign.sid.off.irm))
+eign.sid.off.irm$zone <- rep("Offshore",nrow(eign.sid.off.irm))
+colnames(eign.sid.off.irm) <- c("eign","time","zone")
+
+eign.sid.off.pos$time <- rep("Post",nrow(eign.sid.off.pos))
+eign.sid.off.pos$zone <- rep("Offshore",nrow(eign.sid.off.pos))
+colnames(eign.sid.off.pos) <- c("eign","time","zone")
+
+##rads
+eign.rad.in.pre$time <- rep("Pre",nrow(eign.rad.in.pre))
+eign.rad.in.pre$zone <- rep("Inshore",nrow(eign.rad.in.pre))
+colnames(eign.rad.in.pre) <- c("eign","time","zone")
+
+eign.rad.in.irm$time <- rep("Irma",nrow(eign.rad.in.irm))
+eign.rad.in.irm$zone <- rep("Inshore",nrow(eign.rad.in.irm))
+colnames(eign.rad.in.irm) <- c("eign","time","zone")
+
+eign.rad.in.pos$time <- rep("Post",nrow(eign.rad.in.pos))
+eign.rad.in.pos$zone <- rep("Inshore",nrow(eign.rad.in.pos))
+colnames(eign.rad.in.pos) <- c("eign","time","zone")
+
+eign.rad.off.pre$time <- rep("Pre",nrow(eign.rad.off.pre))
+eign.rad.off.pre$zone <- rep("Offshore",nrow(eign.rad.off.pre))
+colnames(eign.rad.off.pre) <- c("eign","time","zone")
+
+eign.rad.off.irm$time <- rep("Irma",nrow(eign.rad.off.irm))
+eign.rad.off.irm$zone <- rep("Offshore",nrow(eign.rad.off.irm))
+colnames(eign.rad.off.irm) <- c("eign","time","zone")
+
+eign.rad.off.pos$time <- rep("Post",nrow(eign.rad.off.pos))
+eign.rad.off.pos$zone <- rep("Offshore",nrow(eign.rad.off.pos))
+colnames(eign.rad.off.pos) <- c("eign","time","zone")
+
+eign.sid <- rbind(eign.sid.in.pre,eign.sid.in.irm,eign.sid.in.pos,eign.sid.off.pre,eign.sid.off.irm,eign.sid.off.pos)
+
+library("dplyr")
+
+eign.sid.sel <- eign.sid %>%
+  filter(eign>0)
+
+ggplot(eign.sid,aes(x=time,y=log(eign)))+
+  geom_boxplot()+
+  facet_wrap(~zone)
+
+eign.rad <- rbind(eign.rad.in.pre,eign.rad.in.irm,eign.rad.in.pos,eign.rad.off.pre,eign.rad.off.irm,eign.rad.off.pos)
+
+eign.rad.sel <- eign.rad %>%
+  filter(eign>0)
+
+ggplot(eign.rad.sel,aes(x=time,y=log(eign)))+
+  geom_boxplot()+
+  facet_wrap(~zone)
+
+kruskal.test(log(eign)~time,data=eign.sid.sel)
+kruskal.test(log(eign)~time,data=eign.rad.sel)
+
+kruskal.test(log(eign)~zone,data=eign.sid.sel)
+kruskal.test(log(eign)~zone,data=eign.rad.sel)
+```
+
+# Eigen centrality
+
+## Libs
+
+```{r}
+library("tidyr")
+library("plyr")
+library(colorBlindness)
+```
+
+## Calculating{.tabset}
+
+```{r}
+
+##update
+# ig.sid.pre <- readRDS("./nets_revised/ig.sid.pre.fam.2.rds")
+# ig.sid.irm <- readRDS("./nets_revised/ig.sid.irm.fam.2.rds")
+# ig.sid.pos <- readRDS("./nets_revised/ig.sid.pos.fam.2.rds")
+# 
+# ig.rad.pre <- readRDS("./nets_revised/ig.rad.pre.fam.2.rds")
+# ig.rad.irm <- readRDS("./nets_revised/ig.rad.irm.fam.2.rds")
+# ig.rad.pos <- readRDS("./nets_revised/ig.rad.pos.fam.2.rds")
+```
+
+### Siderea
+
+#### Inshore
+
+```{r}
+###pre
+cen.sid.in.pre <- eigen_centrality(ig.sid.in.pre)$vector
+cen.sid.in.pre.sort <- sort(cen.sid.in.pre,decreasing=TRUE)
+cen.sid.in.pre.sort5 <- cen.sid.in.pre.sort[1:5]
+
+cen.sid.in.pre.df <- data.frame(cen.sid.in.pre.sort5)
+cen.sid.in.pre.df$sqs <- row.names(cen.sid.in.pre.df)
+
+cen.sid.in.pre.df$time <- rep("Pre",nrow(cen.sid.in.pre.df))
+cen.sid.in.pre.df$zone <- rep("Inshore",nrow(cen.sid.in.pre.df))
+
+names(cen.sid.in.pre.df)[names(cen.sid.in.pre.df) == 'cen.sid.in.pre.sort5'] <- 'cent'
+
+##put the info into the 'time' part of the networks for coloring
+# cen.sid.in.pre.sqs <- c(cen.sid.in.pre.df$sqs)
+# V(ig.sid.pre)$cent <- ifelse(igraph::get.vertex.attribute(ig.sid.pre)$name %in% cen.sid.in.pre.sqs, "Pre","other")
+
+##irm
+cen.sid.in.irm <- eigen_centrality(ig.sid.in.irm)$vector
+cen.sid.in.irm.sort <- sort(cen.sid.in.irm,decreasing=TRUE)
+cen.sid.in.irm.sort5 <- cen.sid.in.irm.sort[1:5]
+
+cen.sid.in.irm.df <- data.frame(cen.sid.in.irm.sort5)
+cen.sid.in.irm.df$sqs <- row.names(cen.sid.in.irm.df)
+
+cen.sid.in.irm.df$time <- rep("Irma",nrow(cen.sid.in.irm.df))
+cen.sid.in.irm.df$zone <- rep("Inshore",nrow(cen.sid.in.irm.df))
+
+names(cen.sid.in.irm.df)[names(cen.sid.in.irm.df) == 'cen.sid.in.irm.sort5'] <- 'cent'
+
+##pos
+cen.sid.in.pos <- eigen_centrality(ig.sid.in.pos)$vector
+cen.sid.in.pos.sort <- sort(cen.sid.in.pos,decreasing=TRUE)
+cen.sid.in.pos.sort5 <- cen.sid.in.pos.sort[1:5]
+
+cen.sid.in.pos.df <- data.frame(cen.sid.in.pos.sort5)
+cen.sid.in.pos.df$sqs <- row.names(cen.sid.in.pos.df)
+
+cen.sid.in.pos.df$time <- rep("Post",nrow(cen.sid.in.pos.df))
+cen.sid.in.pos.df$zone <- rep("Inshore",nrow(cen.sid.in.pos.df))
+
+names(cen.sid.in.pos.df)[names(cen.sid.in.pos.df) == 'cen.sid.in.pos.sort5'] <- 'cent'
+```
+
+#### Offshore
+
+```{r}
+cen.sid.off.pre <- eigen_centrality(ig.sid.off.pre)$vector
+cen.sid.off.pre.sort <- sort(cen.sid.off.pre,decreasing=TRUE)
+cen.sid.off.pre.sort5 <- cen.sid.off.pre.sort[1:5]
+
+cen.sid.off.pre.df <- data.frame(cen.sid.off.pre.sort5)
+cen.sid.off.pre.df$sqs <- row.names(cen.sid.off.pre.df)
+
+cen.sid.off.pre.df$time <- rep("Pre",nrow(cen.sid.off.pre.df))
+cen.sid.off.pre.df$zone <- rep("Offshore",nrow(cen.sid.off.pre.df))
+
+names(cen.sid.off.pre.df)[names(cen.sid.off.pre.df) == 'cen.sid.off.pre.sort5'] <- 'cent'
+
+##put the offfo offto the 'time' part of the networks for coloroffg
+# cen.sid.off.pre.sqs <- c(cen.sid.off.pre.df$sqs)
+# V(ig.sid.pre)$cent <- ifelse(igraph::get.vertex.attribute(ig.sid.pre)$name %off% cen.sid.off.pre.sqs, "Pre","other")
+
+##irm
+cen.sid.off.irm <- eigen_centrality(ig.sid.off.irm)$vector
+cen.sid.off.irm.sort <- sort(cen.sid.off.irm,decreasing=TRUE)
+cen.sid.off.irm.sort5 <- cen.sid.off.irm.sort[1:5]
+
+cen.sid.off.irm.df <- data.frame(cen.sid.off.irm.sort5)
+cen.sid.off.irm.df$sqs <- row.names(cen.sid.off.irm.df)
+
+cen.sid.off.irm.df$time <- rep("Irma",nrow(cen.sid.off.irm.df))
+cen.sid.off.irm.df$zone <- rep("Offshore",nrow(cen.sid.off.irm.df))
+
+names(cen.sid.off.irm.df)[names(cen.sid.off.irm.df) == 'cen.sid.off.irm.sort5'] <- 'cent'
+
+##pos
+cen.sid.off.pos <- eigen_centrality(ig.sid.off.pos)$vector
+cen.sid.off.pos.sort <- sort(cen.sid.off.pos,decreasing=TRUE)
+cen.sid.off.pos.sort5 <- cen.sid.off.pos.sort[1:5]
+
+cen.sid.off.pos.df <- data.frame(cen.sid.off.pos.sort5)
+cen.sid.off.pos.df$sqs <- row.names(cen.sid.off.pos.df)
+
+cen.sid.off.pos.df$time <- rep("Post",nrow(cen.sid.off.pos.df))
+cen.sid.off.pos.df$zone <- rep("Offshore",nrow(cen.sid.off.pos.df))
+
+names(cen.sid.off.pos.df)[names(cen.sid.off.pos.df) == 'cen.sid.off.pos.sort5'] <- 'cent'
+```
+
+### All sids
+
+```{r}
+##putting them all together, going to name the families specific things
+cen.sid <- rbind(cen.sid.in.pre.df,cen.sid.in.irm.df,cen.sid.in.pos.df,cen.sid.off.pre.df,cen.sid.off.irm.df,cen.sid.off.pos.df)
+
+row.names(cen.sid) <- 1:nrow(cen.sid)
+
+tax.sid <- as.data.frame(ps.sid.off.pos.go@tax_table)
+tax.sid$sqs <- row.names(tax.sid)
+
+cen.sid.tax <- merge(tax.sid,cen.sid,by="sqs")
+
+cen.sid.tax[duplicated(cen.sid.tax$Family),]
+##by genus:
+table(cen.sid.tax$Genus)
+##dups gen
+#Afipia 3
+#Bradyrhizobium 3
+#Pir4 2
+#Tistlia 2
+#Burkh 3
+#muricauda 4
+#SM 4
+table(cen.sid.tax$Family)
+##dups fam
+#3 burks
+#5 Flavo
+#2 kilo
+#5 phycisph
+#3 pirell
+#6 xantho
+
+# cen.sid.tax[7:8,]$time <- c("Irma & Post") #sq2
+# cen.sid.tax[13:14,]$time <- c("Irma & Post") #sq287
+# cen.sid.tax[18:19,]$time <- c("Irma & Post") #sq41
+# cen.sid.tax[23:24,]$time <- c("Pre & Irma") #sq56
+# cen.sid.tax[28:29,]$time <- c("Irma & Post") #sq8
+
+table(cen.sid.tax$Family)
+table(cen.sid.tax$Family)>1
+
+cen.sid.tax$fam <- paste0(substr(cen.sid.tax$Family,1,3))
+table(cen.sid.tax$fam)
+#cen.sid.tax$fam <- c("Com","Kil","Cya","Cla3","Met","Spi","SAR","Phy","Bur","Bur","Chi","Hyd","AEG","Cla2","Alc","She","Cau","Rho","Sum","NS9","Cla1","Sap","Par","MBA","Woe","Vib","SB-","Rhi","Xan","Mor")
+#cen.sid.tax$fam1==cen.sid.tax$fam
+
+#saveRDS(cen.sid.tax,file="./nets_thesis/eigen.centrality.sid.rds")
+# 
+# pre.sid.sqs <- c(cen.sid.pre.sorted.top10.df$sqs)
+# irm.sid.sqs <- c(cen.sid.irm.sorted.top10.df$sqs)
+# pos.sid.sqs <- c(cen.sid.pos.sorted.top10.df$sqs)
+
+library("plyr")
+
+cen.sid.sub <- data.frame(cen.sid.tax$sqs,cen.sid.tax$fam)
+cen.sid.sub.uni <- unique(cen.sid.sub)
+v.sid.names <- data.frame(igraph::get.vertex.attribute(ig.sid.off.pre)$name)
+names(v.sid.names) <- "sqs"
+names(cen.sid.sub.uni) <- c("sqs","fam")
+
+v.sid.names.info <- join(v.sid.names,cen.sid.sub.uni,by="sqs")
+v.sid.names.info$sqs==v.sid.names$sqs
+
+#v.sid.names.info$time <- replace_na(v.sid.names.info$fam,"other")
+igraph::get.vertex.attribute(ig.sid.off.pos)$name == igraph::get.vertex.attribute(ig.sid.off.pos)$name
+
+V(ig.sid.in.pre)$fam <- c(v.sid.names.info$fam)
+V(ig.sid.in.irm)$fam <- c(v.sid.names.info$fam)
+V(ig.sid.in.pos)$fam <- c(v.sid.names.info$fam)
+
+V(ig.sid.off.pre)$fam <- c(v.sid.names.info$fam)
+V(ig.sid.off.irm)$fam <- c(v.sid.names.info$fam)
+V(ig.sid.off.pos)$fam <- c(v.sid.names.info$fam)
+```
+
+### Radians
+
+#### Inshore
+
+```{r}
+###pre
+cen.rad.in.pre <- eigen_centrality(ig.rad.in.pre)$vector
+cen.rad.in.pre.sort <- sort(cen.rad.in.pre,decreasing=TRUE)
+cen.rad.in.pre.sort5 <- cen.rad.in.pre.sort[1:5]
+
+cen.rad.in.pre.df <- data.frame(cen.rad.in.pre.sort5)
+cen.rad.in.pre.df$sqs <- row.names(cen.rad.in.pre.df)
+
+cen.rad.in.pre.df$time <- rep("Pre",nrow(cen.rad.in.pre.df))
+cen.rad.in.pre.df$zone <- rep("Inshore",nrow(cen.rad.in.pre.df))
+
+names(cen.rad.in.pre.df)[names(cen.rad.in.pre.df) == 'cen.rad.in.pre.sort5'] <- 'cent'
+
+##put the info into the 'time' part of the networks for coloring
+# cen.rad.in.pre.sqs <- c(cen.rad.in.pre.df$sqs)
+# V(ig.rad.pre)$cent <- ifelse(igraph::get.vertex.attribute(ig.rad.pre)$name %in% cen.rad.in.pre.sqs, "Pre","other")
+
+##irm
+cen.rad.in.irm <- eigen_centrality(ig.rad.in.irm)$vector
+cen.rad.in.irm.sort <- sort(cen.rad.in.irm,decreasing=TRUE)
+cen.rad.in.irm.sort5 <- cen.rad.in.irm.sort[1:5]
+
+cen.rad.in.irm.df <- data.frame(cen.rad.in.irm.sort5)
+cen.rad.in.irm.df$sqs <- row.names(cen.rad.in.irm.df)
+
+cen.rad.in.irm.df$time <- rep("Irma",nrow(cen.rad.in.irm.df))
+cen.rad.in.irm.df$zone <- rep("Inshore",nrow(cen.rad.in.irm.df))
+
+names(cen.rad.in.irm.df)[names(cen.rad.in.irm.df) == 'cen.rad.in.irm.sort5'] <- 'cent'
+
+##pos
+cen.rad.in.pos <- eigen_centrality(ig.rad.in.pos)$vector
+cen.rad.in.pos.sort <- sort(cen.rad.in.pos,decreasing=TRUE)
+cen.rad.in.pos.sort5 <- cen.rad.in.pos.sort[1:5]
+
+cen.rad.in.pos.df <- data.frame(cen.rad.in.pos.sort5)
+cen.rad.in.pos.df$sqs <- row.names(cen.rad.in.pos.df)
+
+cen.rad.in.pos.df$time <- rep("Post",nrow(cen.rad.in.pos.df))
+cen.rad.in.pos.df$zone <- rep("Inshore",nrow(cen.rad.in.pos.df))
+
+names(cen.rad.in.pos.df)[names(cen.rad.in.pos.df) == 'cen.rad.in.pos.sort5'] <- 'cent'
+```
+
+#### Offshore
+
+```{r}
+cen.rad.off.pre <- eigen_centrality(ig.rad.off.pre)$vector
+cen.rad.off.pre.sort <- sort(cen.rad.off.pre,decreasing=TRUE)
+cen.rad.off.pre.sort5 <- cen.rad.off.pre.sort[1:5]
+
+cen.rad.off.pre.df <- data.frame(cen.rad.off.pre.sort5)
+cen.rad.off.pre.df$sqs <- row.names(cen.rad.off.pre.df)
+
+cen.rad.off.pre.df$time <- rep("Pre",nrow(cen.rad.off.pre.df))
+cen.rad.off.pre.df$zone <- rep("Offshore",nrow(cen.rad.off.pre.df))
+
+names(cen.rad.off.pre.df)[names(cen.rad.off.pre.df) == 'cen.rad.off.pre.sort5'] <- 'cent'
+
+##put the offfo offto the 'time' part of the networks for coloroffg
+# cen.rad.off.pre.sqs <- c(cen.rad.off.pre.df$sqs)
+# V(ig.rad.pre)$cent <- ifelse(igraph::get.vertex.attribute(ig.rad.pre)$name %off% cen.rad.off.pre.sqs, "Pre","other")
+
+##irm
+cen.rad.off.irm <- eigen_centrality(ig.rad.off.irm)$vector
+cen.rad.off.irm.sort <- sort(cen.rad.off.irm,decreasing=TRUE)
+cen.rad.off.irm.sort5 <- cen.rad.off.irm.sort[1:5]
+
+cen.rad.off.irm.df <- data.frame(cen.rad.off.irm.sort5)
+cen.rad.off.irm.df$sqs <- row.names(cen.rad.off.irm.df)
+
+cen.rad.off.irm.df$time <- rep("Irma",nrow(cen.rad.off.irm.df))
+cen.rad.off.irm.df$zone <- rep("Offshore",nrow(cen.rad.off.irm.df))
+
+names(cen.rad.off.irm.df)[names(cen.rad.off.irm.df) == 'cen.rad.off.irm.sort5'] <- 'cent'
+
+##pos
+cen.rad.off.pos <- eigen_centrality(ig.rad.off.pos)$vector
+cen.rad.off.pos.sort <- sort(cen.rad.off.pos,decreasing=TRUE)
+cen.rad.off.pos.sort5 <- cen.rad.off.pos.sort[1:5]
+
+cen.rad.off.pos.df <- data.frame(cen.rad.off.pos.sort5)
+cen.rad.off.pos.df$sqs <- row.names(cen.rad.off.pos.df)
+
+cen.rad.off.pos.df$time <- rep("Post",nrow(cen.rad.off.pos.df))
+cen.rad.off.pos.df$zone <- rep("Offshore",nrow(cen.rad.off.pos.df))
+
+names(cen.rad.off.pos.df)[names(cen.rad.off.pos.df) == 'cen.rad.off.pos.sort5'] <- 'cent'
+```
+
+### All rads
+
+```{r}
+##putting them all together, going to name the families specific things
+cen.rad <- rbind(cen.rad.in.pre.df,cen.rad.in.irm.df,cen.rad.in.pos.df,cen.rad.off.pre.df,cen.rad.off.irm.df,cen.rad.off.pos.df)
+
+row.names(cen.rad) <- 1:nrow(cen.rad)
+
+tax.rad <- as.data.frame(ps.rad.off.pos.go@tax_table)
+tax.rad$sqs <- row.names(tax.rad)
+
+cen.rad.tax <- merge(tax.rad,cen.rad,by="sqs")
+
+cen.rad.tax[duplicated(cen.rad.tax$Family),]
+##by genus:
+table(cen.rad.tax$Genus)
+##dups gen
+#Afipia 3
+#Bradyrhizobium 3
+#Pir4 2
+#Tistlia 2
+#Burkh 3
+#muricauda 4
+#SM 4
+table(cen.rad.tax$Family)
+##dups fam
+#3 burks
+#5 Flavo
+#2 kilo
+#5 phycisph
+#3 pirell
+#6 xantho
+
+# cen.rad.tax[7:8,]$time <- c("Irma & Post") #sq2
+# cen.rad.tax[13:14,]$time <- c("Irma & Post") #sq287
+# cen.rad.tax[18:19,]$time <- c("Irma & Post") #sq41
+# cen.rad.tax[23:24,]$time <- c("Pre & Irma") #sq56
+# cen.rad.tax[28:29,]$time <- c("Irma & Post") #sq8
+
+table(cen.rad.tax$Family)
+table(cen.rad.tax$Family)>1
+
+cen.rad.tax$fam <- paste0(substr(cen.rad.tax$Family,1,3))
+table(cen.rad.tax$fam)
+#cen.rad.tax$fam <- c("Com","Kil","Cya","Cla3","Met","Spi","SAR","Phy","Bur","Bur","Chi","Hyd","AEG","Cla2","Alc","She","Cau","Rho","Sum","NS9","Cla1","Sap","Par","MBA","Woe","Vib","SB-","Rhi","Xan","Mor")
+#cen.rad.tax$fam1==cen.rad.tax$fam
+
+#saveRDS(cen.rad.tax,file="./nets_thesis/eigen.centrality.rad.rds")
+# 
+# pre.rad.sqs <- c(cen.rad.pre.sorted.top10.df$sqs)
+# irm.rad.sqs <- c(cen.rad.irm.sorted.top10.df$sqs)
+# pos.rad.sqs <- c(cen.rad.pos.sorted.top10.df$sqs)
+
+library("plyr")
+
+cen.rad.sub <- data.frame(cen.rad.tax$sqs,cen.rad.tax$fam)
+cen.rad.sub.uni <- unique(cen.rad.sub)
+v.rad.names <- data.frame(igraph::get.vertex.attribute(ig.rad.off.pre)$name)
+names(v.rad.names) <- "sqs"
+names(cen.rad.sub.uni) <- c("sqs","fam")
+
+v.rad.names.info <- join(v.rad.names,cen.rad.sub.uni,by="sqs")
+v.rad.names.info$sqs==v.rad.names$sqs
+
+#v.rad.names.info$time <- replace_na(v.rad.names.info$fam,"other")
+igraph::get.vertex.attribute(ig.rad.off.pos)$name == igraph::get.vertex.attribute(ig.rad.off.pos)$name
+
+V(ig.rad.in.pre)$fam <- c(v.rad.names.info$fam)
+V(ig.rad.in.irm)$fam <- c(v.rad.names.info$fam)
+V(ig.rad.in.pos)$fam <- c(v.rad.names.info$fam)
+
+V(ig.rad.off.pre)$fam <- c(v.rad.names.info$fam)
+V(ig.rad.off.irm)$fam <- c(v.rad.names.info$fam)
+V(ig.rad.off.pos)$fam <- c(v.rad.names.info$fam)
+```
+
+### Save processed igraph objects
+
+```{r}
+##saving tax tables
+#write.csv(cen.sid.tax,"./nets_thesis/cen.sid.tax.csv")
+#write.csv(cen.rad.tax,"./nets_thesis/cen.rad.tax.csv")
+
+##update:
+
+# saveRDS(ig.sid.pre,file="./nets_revised/ig.sid.pre.fam.2.more.rds")
+# saveRDS(ig.sid.irm,file="./nets_revised/ig.sid.irm.fam.2.more.rds")
+# saveRDS(ig.sid.pos,file="./nets_revised/ig.sid.pos.fam.2.more.rds")
+# 
+# saveRDS(ig.rad.pre,file="./nets_revised/ig.rad.pre.fam.2.more.rds")
+# saveRDS(ig.rad.irm,file="./nets_revised/ig.rad.irm.fam.2.more.rds")
+# saveRDS(ig.rad.pos,file="./nets_revised/ig.rad.pos.fam.2.more.rds")
+```
+
+## Plotting!{.tabset}
+
+```{r}
+library("ggnet")
+library("ggpubr")
+```
+
+### Sids
+
+#### Inshore
+
+```{r}
+E(ig.sid.in.pre)$color2 <- sub("forestgreen","#A5A5A5",E(ig.sid.in.pre)$color)
+E(ig.sid.in.pre)$color3 <- sub("red","#A6231D",E(ig.sid.in.pre)$color2)
+#68001D
+#CBCBCB gray 
+# gray
+
+gg.sid.in.pre <- ggnet2(ig.sid.in.pre,alpha=0.5,color="#6BBE99",size="degree",size.cut=T,label = "fam",label.color="black",max_size=5,label.size=2,edge.color="color3",edge.size=0.75,edge.alpha=0.6)+
+  ggtitle("Pre")
+gg.sid.in.pre
+
+#col <- hcl.colors(12, "RdGy")
+#show_col(col)
+
+#ggnet2(ig.sid.irm,size="degree",max_size=5,size.cut=3,edge.color="color",edge.size="width")
+#cvdPlot(gg.sid.pre)
+
+E(ig.sid.in.irm)$color2 <- sub("forestgreen","#A5A5A5",E(ig.sid.in.irm)$color)
+E(ig.sid.in.irm)$color3 <- sub("red","#A6231D",E(ig.sid.in.irm)$color2)
+#68001D
+#CBCBCB gray 
+# gray
+
+gg.sid.in.irm <- ggnet2(ig.sid.in.irm,alpha=0.5,color="#6BBE99",size="degree",size.cut=T,label = "fam",label.color="black",max_size=5,label.size=2,edge.color="color3",edge.size=0.75,edge.alpha=0.6)+
+  ggtitle("Disturb.")
+gg.sid.in.irm
+
+E(ig.sid.in.pos)$color2 <- sub("forestgreen","#A5A5A5",E(ig.sid.in.pos)$color)
+E(ig.sid.in.pos)$color3 <- sub("red","#A6231D",E(ig.sid.in.pos)$color2)
+#68001D
+#CBCBCB gray 
+# gray
+
+gg.sid.in.pos <- ggnet2(ig.sid.in.pos,alpha=0.5,color="#6BBE99",size="degree",size.cut=T,label = "fam",label.color="black",max_size=5,label.size=2,edge.color="color3",edge.size=0.75,edge.alpha=0.6)+
+  ggtitle("Post")
+gg.sid.in.pos
+
+ggarrange(gg.sid.in.pre,gg.sid.in.irm,gg.sid.in.pos,nrow=1)
+```
+
+#### offshore
+
+```{r}
+E(ig.sid.off.pre)$color2 <- sub("forestgreen","#A5A5A5",E(ig.sid.off.pre)$color)
+E(ig.sid.off.pre)$color3 <- sub("red","#A6231D",E(ig.sid.off.pre)$color2)
+#68001D
+#CBCBCB gray 
+# gray
+
+gg.sid.off.pre <- ggnet2(ig.sid.off.pre,alpha=0.5,color="#14505C",size="degree",size.cut=T,label = "fam",label.color="black",max_size=5,label.size=2,edge.color="color3",edge.size=0.75,edge.alpha=0.6)+
+    ggtitle("Pre")
+gg.sid.off.pre
+
+#col <- hcl.colors(12, "RdGy")
+#show_col(col)
+
+#ggnet2(ig.sid.irm,size="degree",max_size=5,size.cut=3,edge.color="color",edge.size="width")
+#cvdPlot(gg.sid.pre)
+
+E(ig.sid.off.irm)$color2 <- sub("forestgreen","#A5A5A5",E(ig.sid.off.irm)$color)
+E(ig.sid.off.irm)$color3 <- sub("red","#A6231D",E(ig.sid.off.irm)$color2)
+#68001D
+#CBCBCB gray 
+# gray
+
+gg.sid.off.irm <- ggnet2(ig.sid.off.irm,alpha=0.5,color="#14505C",size="degree",size.cut=T,label = "fam",label.color="black",max_size=5,label.size=2,edge.color="color3",edge.size=0.75,edge.alpha=0.6)+
+  ggtitle("Disturb.")
+gg.sid.off.irm
+
+E(ig.sid.off.pos)$color2 <- sub("forestgreen","#A5A5A5",E(ig.sid.off.pos)$color)
+E(ig.sid.off.pos)$color3 <- sub("red","#A6231D",E(ig.sid.off.pos)$color2)
+#68001D
+#CBCBCB gray 
+# gray
+
+gg.sid.off.pos <- ggnet2(ig.sid.off.pos,alpha=0.5,color="#14505C",size="degree",size.cut=T,label = "fam",label.color="black",max_size=5,label.size=2,edge.color="color3",edge.size=0.75,edge.alpha=0.6)+
+  ggtitle("Post")
+gg.sid.off.pos
+
+ggarrange(gg.sid.off.pre,gg.sid.off.irm,gg.sid.off.pos,nrow=1)
+```
+
+### Rads
+
+#### Inshore
+
+```{r}
+E(ig.rad.in.pre)$color2 <- sub("forestgreen","#A5A5A5",E(ig.rad.in.pre)$color)
+E(ig.rad.in.pre)$color3 <- sub("red","#A6231D",E(ig.rad.in.pre)$color2)
+#68001D
+#CBCBCB gray 
+# gray
+
+gg.rad.in.pre <- ggnet2(ig.rad.in.pre,alpha=0.5,color="#6BBE99",size="degree",size.cut=T,label = "fam",label.color="black",max_size=5,label.size=2,edge.color="color3",edge.size=0.75,edge.alpha=0.6)+
+  ggtitle("Pre")
+gg.rad.in.pre
+
+#col <- hcl.colors(12, "RdGy")
+#show_col(col)
+
+#ggnet2(ig.rad.irm,size="degree",max_size=5,size.cut=3,edge.color="color",edge.size="width")
+#cvdPlot(gg.rad.pre)
+
+E(ig.rad.in.irm)$color2 <- sub("forestgreen","#A5A5A5",E(ig.rad.in.irm)$color)
+E(ig.rad.in.irm)$color3 <- sub("red","#A6231D",E(ig.rad.in.irm)$color2)
+#68001D
+#CBCBCB gray 
+# gray
+
+gg.rad.in.irm <- ggnet2(ig.rad.in.irm,alpha=0.5,color="#6BBE99",size="degree",size.cut=T,label = "fam",label.color="black",max_size=5,label.size=2,edge.color="color3",edge.size=0.75,edge.alpha=0.6)+
+  ggtitle("Disturb.")
+gg.rad.in.irm
+
+E(ig.rad.in.pos)$color2 <- sub("forestgreen","#A5A5A5",E(ig.rad.in.pos)$color)
+E(ig.rad.in.pos)$color3 <- sub("red","#A6231D",E(ig.rad.in.pos)$color2)
+#68001D
+#CBCBCB gray 
+# gray
+
+gg.rad.in.pos <- ggnet2(ig.rad.in.pos,alpha=0.5,color="#6BBE99",size="degree",size.cut=T,label = "fam",label.color="black",max_size=5,label.size=2,edge.color="color3",edge.size=0.75,edge.alpha=0.6)+
+  ggtitle("Post")
+gg.rad.in.pos
+
+ggarrange(gg.rad.in.pre,gg.rad.in.irm,gg.rad.in.pos,nrow=1)
+```
+
+#### offshore
+
+```{r}
+E(ig.rad.off.pre)$color2 <- sub("forestgreen","#A5A5A5",E(ig.rad.off.pre)$color)
+E(ig.rad.off.pre)$color3 <- sub("red","#A6231D",E(ig.rad.off.pre)$color2)
+#68001D
+#CBCBCB gray 
+# gray
+
+gg.rad.off.pre <- ggnet2(ig.rad.off.pre,alpha=0.5,color="#14505C",size="degree",size.cut=T,label = "fam",label.color="black",max_size=5,label.size=2,edge.color="color3",edge.size=0.75,edge.alpha=0.6)+
+    ggtitle("Pre")
+gg.rad.off.pre
+
+#col <- hcl.colors(12, "RdGy")
+#show_col(col)
+
+#ggnet2(ig.rad.irm,size="degree",max_size=5,size.cut=3,edge.color="color",edge.size="width")
+#cvdPlot(gg.rad.pre)
+
+E(ig.rad.off.irm)$color2 <- sub("forestgreen","#A5A5A5",E(ig.rad.off.irm)$color)
+E(ig.rad.off.irm)$color3 <- sub("red","#A6231D",E(ig.rad.off.irm)$color2)
+#68001D
+#CBCBCB gray 
+# gray
+
+gg.rad.off.irm <- ggnet2(ig.rad.off.irm,alpha=0.5,color="#14505C",size="degree",size.cut=T,label = "fam",label.color="black",max_size=5,label.size=2,edge.color="color3",edge.size=0.75,edge.alpha=0.6)+
+  ggtitle("Disturb.")
+gg.rad.off.irm
+
+E(ig.rad.off.pos)$color2 <- sub("forestgreen","#A5A5A5",E(ig.rad.off.pos)$color)
+E(ig.rad.off.pos)$color3 <- sub("red","#A6231D",E(ig.rad.off.pos)$color2)
+#68001D
+#CBCBCB gray 
+# gray
+
+gg.rad.off.pos <- ggnet2(ig.rad.off.pos,alpha=0.5,color="#14505C",size="degree",size.cut=T,label = "fam",label.color="black",max_size=5,label.size=2,edge.color="color3",edge.size=0.75,edge.alpha=0.6)+
+  ggtitle("Post")
+gg.rad.off.pos
+
+ggarrange(gg.rad.off.pre,gg.rad.off.irm,gg.rad.off.pos,nrow=1)
+```
+
+# Eigen bar graphs
+
+## Siderea
+
+```{r}
+##we want the centrality info of all unque sqs
+###inshore
+cen.sid.in.pre.df <- data.frame(cen.sid.in.pre)
+cen.sid.in.pre.df$sqs <- rownames(cen.sid.in.pre.df)
+
+cen.sid.in.pre.sub <- cen.sid.in.pre.df[cen.sid.in.pre.df$sqs %in% c(cen.sid.tax$sqs),]
+cen.sid.in.pre.sub$time <- rep("Pre",nrow(cen.sid.in.pre.sub))
+cen.sid.in.pre.sub$zone <- rep("Inshore",nrow(cen.sid.in.pre.sub))
+names(cen.sid.in.pre.sub) <- c("cent","sqs","time","zone")
+
+cen.sid.in.irm.df <- data.frame(cen.sid.in.irm)
+cen.sid.in.irm.df$sqs <- rownames(cen.sid.in.irm.df)
+
+cen.sid.in.irm.sub <- cen.sid.in.irm.df[cen.sid.in.irm.df$sqs %in% c(cen.sid.tax$sqs),]
+cen.sid.in.irm.sub$time <- rep("irm",nrow(cen.sid.in.irm.sub))
+cen.sid.in.irm.sub$zone <- rep("Inshore",nrow(cen.sid.in.irm.sub))
+names(cen.sid.in.irm.sub) <- c("cent","sqs","time","zone")
+
+cen.sid.in.pos.df <- data.frame(cen.sid.in.pos)
+cen.sid.in.pos.df$sqs <- rownames(cen.sid.in.pos.df)
+
+cen.sid.in.pos.sub <- cen.sid.in.pos.df[cen.sid.in.pos.df$sqs %in% c(cen.sid.tax$sqs),]
+cen.sid.in.pos.sub$time <- rep("pos",nrow(cen.sid.in.pos.sub))
+cen.sid.in.pos.sub$zone <- rep("Inshore",nrow(cen.sid.in.pos.sub))
+names(cen.sid.in.pos.sub) <- c("cent","sqs","time","zone")
+
+###offshore
+cen.sid.off.pre.df <- data.frame(cen.sid.off.pre)
+cen.sid.off.pre.df$sqs <- rownames(cen.sid.off.pre.df)
+
+cen.sid.off.pre.sub <- cen.sid.off.pre.df[cen.sid.off.pre.df$sqs %in% c(cen.sid.tax$sqs),]
+cen.sid.off.pre.sub$time <- rep("Pre",nrow(cen.sid.off.pre.sub))
+cen.sid.off.pre.sub$zone <- rep("offshore",nrow(cen.sid.off.pre.sub))
+names(cen.sid.off.pre.sub) <- c("cent","sqs","time","zone")
+
+cen.sid.off.irm.df <- data.frame(cen.sid.off.irm)
+cen.sid.off.irm.df$sqs <- rownames(cen.sid.off.irm.df)
+
+cen.sid.off.irm.sub <- cen.sid.off.irm.df[cen.sid.off.irm.df$sqs %in% c(cen.sid.tax$sqs),]
+cen.sid.off.irm.sub$time <- rep("irm",nrow(cen.sid.off.irm.sub))
+cen.sid.off.irm.sub$zone <- rep("offshore",nrow(cen.sid.off.irm.sub))
+names(cen.sid.off.irm.sub) <- c("cent","sqs","time","zone")
+
+cen.sid.off.pos.df <- data.frame(cen.sid.off.pos)
+cen.sid.off.pos.df$sqs <- rownames(cen.sid.off.pos.df)
+
+cen.sid.off.pos.sub <- cen.sid.off.pos.df[cen.sid.off.pos.df$sqs %in% c(cen.sid.tax$sqs),]
+cen.sid.off.pos.sub$time <- rep("pos",nrow(cen.sid.off.pos.sub))
+cen.sid.off.pos.sub$zone <- rep("offshore",nrow(cen.sid.off.pos.sub))
+names(cen.sid.off.pos.sub) <- c("cent","sqs","time","zone")
+
+#cen.sid.sub <- rbind(cen.sid.pre.sub,cen.sid.irm.sub,cen.sid.pos.sub)
+#cen.sid.sub[duplicated(cen.sid.sub$sqs),]
+
+cen.sid.tax.less <- cen.sid.tax %>%
+  select(sqs,Genus,Family,fam) %>%
+  unique()
+
+#### family color palette ####
+#maybe later
+# sids.fams <- unique(cen.sid.tax$Family)
+# rads.fams <- unique(cen.rad.tax$Family)
+# #all.fams <- unique(c(sids.fams,rads.fams))
+# #all.fams
+# 
+# #pal.turk <- hcl.colors(20,palette="Turku")
+# ##from here:http://mkweb.bcgsc.ca/colorblind/palettes/24.color.blindness.palette.txt
+# pal.rand <- c("#003D30","#00735C","#009175","#00AF8E","#00CBA7","#00EBC1","#86FFDE","#00306F","#00489E","#0079FA","#009FFA","#00C2F9","#00E5F8","#7CFFFA","#004002","#007702","#009503","#00B408","#00D302","#AFFF2A")
+# 
+# all.fams.colors <-
+#   setNames(c(pal.rand),all.fams)
+
+cen.sid.tax.less$Genus <- sub("Burkholderia-Caballeronia-Paraburkholderia","Burkh.-Cabal.-Parab.",cen.sid.tax.less$Genus)
+cen.sid.tax.less$fam_gen <- paste0("(",cen.sid.tax.less$fam,")"," ",cen.sid.tax.less$Genus)
+
+#### inshore ####
+cen.sid.in.pre.sub.fam <- merge(cen.sid.in.pre.sub, cen.sid.tax.less, by="sqs",all.x=F)
+#cen.sid.in.pre.sub.fam.filt <- filter(cen.sid.in.pre.sub.fam,cent>0)
+
+gg.bar.sid.in.pre <- ggplot(data=cen.sid.in.pre.sub.fam,aes(x=cent,y=reorder(fam_gen,cent)))+
+  geom_bar(stat="identity")+
+  theme_bw()+
+  ylab("Genus")+
+  xlab("Eigen. cent.")+
+  theme(axis.text.x=element_text(angle=45,hjust=1))
+gg.bar.sid.in.pre
+
+cen.sid.in.irm.sub.fam <- merge(cen.sid.in.irm.sub, cen.sid.tax.less, by="sqs",all.x=F)
+#cen.sid.in.irm.sub.fam.filt <- filter(cen.sid.in.irm.sub.fam,cent>0)
+
+gg.bar.sid.in.irm <- ggplot(data=cen.sid.in.irm.sub.fam,aes(x=cent,y=reorder(fam_gen,cent)))+
+  geom_bar(stat="identity")+
+  theme_bw()+
+  ylab("Genus")+
+  xlab("Eigen. cent.")+
+  theme(axis.text.x=element_text(angle=45,hjust=1))
+  #scale_fill_manual(values=all.fams.colors)
+gg.bar.sid.in.irm
+
+cen.sid.in.pos.sub.fam <- merge(cen.sid.in.pos.sub, cen.sid.tax.less, by="sqs",all.x=F)
+#cen.sid.in.pos.sub.fam.filt <- filter(cen.sid.in.pos.sub.fam,cent>0)
+
+gg.bar.sid.in.pos <- ggplot(data=cen.sid.in.pos.sub.fam,aes(x=cent,y=reorder(fam_gen,cent)))+
+  geom_bar(stat="identity")+
+  theme_bw()+
+  ylab("Genus")+
+  xlab("Eigen. cent.")+
+  theme(axis.text.x=element_text(angle=45,hjust=1))
+gg.bar.sid.in.pos
+
+#### offshore ####
+cen.sid.off.pre.sub.fam <- merge(cen.sid.off.pre.sub, cen.sid.tax.less, by="sqs",all.x=F)
+#cen.sid.off.pre.sub.fam.filt <- filter(cen.sid.off.pre.sub.fam,cent>0)
+
+gg.bar.sid.off.pre <- ggplot(data=cen.sid.off.pre.sub.fam,aes(x=cent,y=reorder(fam_gen,cent)))+
+  geom_bar(stat="identity")+
+  theme_bw()+
+  ylab("Genus")+
+  xlab("Eigen. cent.")+
+  theme(axis.text.x=element_text(angle=45,hjust=1))
+gg.bar.sid.off.pre
+
+cen.sid.off.irm.sub.fam <- merge(cen.sid.off.irm.sub, cen.sid.tax.less, by="sqs",all.x=F)
+#cen.sid.off.irm.sub.fam.filt <- filter(cen.sid.off.irm.sub.fam,cent>0)
+
+gg.bar.sid.off.irm <- ggplot(data=cen.sid.off.irm.sub.fam,aes(x=cent,y=reorder(fam_gen,cent)))+
+  geom_bar(stat="identity")+
+  theme_bw()+
+  ylab("Genus")+
+  xlab("Eigen. cent.")+
+  theme(axis.text.x=element_text(angle=45,hjust=1))
+  #scale_fill_manual(values=all.fams.colors)
+gg.bar.sid.off.irm
+
+cen.sid.off.pos.sub.fam <- merge(cen.sid.off.pos.sub, cen.sid.tax.less, by="sqs",all.x=F)
+#cen.sid.off.pos.sub.fam.filt <- filter(cen.sid.off.pos.sub.fam,cent>0)
+
+gg.bar.sid.off.pos <- ggplot(data=cen.sid.off.pos.sub.fam,aes(x=cent,y=reorder(fam_gen,cent)))+
+  geom_bar(stat="identity")+
+  theme_bw()+
+  ylab("Genus")+
+  xlab("Eigen. cent.")+
+  theme(axis.text.x=element_text(angle=45,hjust=1))
+gg.bar.sid.off.pos
+
+#ggarrange(gg.sid.pre,gg.sid.irm,gg.sid.pos,gg.bar.pre,gg.bar.irm,gg.bar.pos,nrow=2,ncol=3,widths=c(1,1,1,0.5,0.5,0.5))
+
+ggarrange(gg.sid.in.pre,gg.bar.sid.in.pre,gg.sid.in.irm,gg.bar.sid.in.irm,gg.sid.in.pos,gg.bar.sid.in.pos,nrow=3,ncol=2,align="hv")
+
+ggarrange(gg.sid.off.pre,gg.bar.sid.off.pre,gg.sid.off.irm,gg.bar.sid.off.irm,gg.sid.off.pos,gg.bar.sid.off.pos,nrow=3,ncol=2,align="hv")
+
+#widths=c(1.5,1)
+#labels=c("(a) Pre","(b)","(c) Disturb.","(d)","(e) Post","(f)")
+
+
+net.rev.sid <- ggarrange(gg.sid.in.pre,gg.sid.off.pre,gg.sid.in.irm,gg.sid.off.irm,gg.sid.in.pos,gg.sid.off.pos,nrow=3,ncol=2,align="hv")
+
+net.rev.rad <- ggarrange(gg.rad.in.pre,gg.rad.off.pre,gg.rad.in.irm,gg.rad.off.irm,gg.rad.in.pos,gg.rad.off.pos,nrow=3,ncol=2,align="hv")
+
+bar.rev.sid <- ggarrange(gg.bar.sid.in.pre,gg.bar.sid.off.pre,gg.bar.sid.in.irm,gg.bar.sid.off.irm,gg.bar.sid.in.pos,gg.bar.sid.off.pos,nrow=3,ncol=2,align="hv")
+
+#ggarrange(gg.sid.in.pre,gg.bar.sid.in.pre)
+
+#net.rev.sid
+annotate_figure(net.rev.sid,top=text_grob("S. siderea",face="italic",size=16)) #5 x6
+annotate_figure(bar.rev.sid,top=text_grob("S. siderea",face="italic",size=16)) #8x8
+
+#ggsave("")
+
+```
+
+```{r}
+##sids
+#inshore
+#15 pre
+#15 irma
+#22 post
+
+#offshore
+#20 pre
+#22 irma
+#15 post
+
+
+```
+
+## Radians
+
+```{r}
+##we want the centrality info of all unque sqs
+###inshore
+cen.rad.in.pre.df <- data.frame(cen.rad.in.pre)
+cen.rad.in.pre.df$sqs <- rownames(cen.rad.in.pre.df)
+
+cen.rad.in.pre.sub <- cen.rad.in.pre.df[cen.rad.in.pre.df$sqs %in% c(cen.rad.tax$sqs),]
+cen.rad.in.pre.sub$time <- rep("Pre",nrow(cen.rad.in.pre.sub))
+cen.rad.in.pre.sub$zone <- rep("Inshore",nrow(cen.rad.in.pre.sub))
+names(cen.rad.in.pre.sub) <- c("cent","sqs","time","zone")
+
+cen.rad.in.irm.df <- data.frame(cen.rad.in.irm)
+cen.rad.in.irm.df$sqs <- rownames(cen.rad.in.irm.df)
+
+cen.rad.in.irm.sub <- cen.rad.in.irm.df[cen.rad.in.irm.df$sqs %in% c(cen.rad.tax$sqs),]
+cen.rad.in.irm.sub$time <- rep("irm",nrow(cen.rad.in.irm.sub))
+cen.rad.in.irm.sub$zone <- rep("Inshore",nrow(cen.rad.in.irm.sub))
+names(cen.rad.in.irm.sub) <- c("cent","sqs","time","zone")
+
+cen.rad.in.pos.df <- data.frame(cen.rad.in.pos)
+cen.rad.in.pos.df$sqs <- rownames(cen.rad.in.pos.df)
+
+cen.rad.in.pos.sub <- cen.rad.in.pos.df[cen.rad.in.pos.df$sqs %in% c(cen.rad.tax$sqs),]
+cen.rad.in.pos.sub$time <- rep("pos",nrow(cen.rad.in.pos.sub))
+cen.rad.in.pos.sub$zone <- rep("Inshore",nrow(cen.rad.in.pos.sub))
+names(cen.rad.in.pos.sub) <- c("cent","sqs","time","zone")
+
+###offshore
+cen.rad.off.pre.df <- data.frame(cen.rad.off.pre)
+cen.rad.off.pre.df$sqs <- rownames(cen.rad.off.pre.df)
+
+cen.rad.off.pre.sub <- cen.rad.off.pre.df[cen.rad.off.pre.df$sqs %in% c(cen.rad.tax$sqs),]
+cen.rad.off.pre.sub$time <- rep("Pre",nrow(cen.rad.off.pre.sub))
+cen.rad.off.pre.sub$zone <- rep("offshore",nrow(cen.rad.off.pre.sub))
+names(cen.rad.off.pre.sub) <- c("cent","sqs","time","zone")
+
+cen.rad.off.irm.df <- data.frame(cen.rad.off.irm)
+cen.rad.off.irm.df$sqs <- rownames(cen.rad.off.irm.df)
+
+cen.rad.off.irm.sub <- cen.rad.off.irm.df[cen.rad.off.irm.df$sqs %in% c(cen.rad.tax$sqs),]
+cen.rad.off.irm.sub$time <- rep("irm",nrow(cen.rad.off.irm.sub))
+cen.rad.off.irm.sub$zone <- rep("offshore",nrow(cen.rad.off.irm.sub))
+names(cen.rad.off.irm.sub) <- c("cent","sqs","time","zone")
+
+cen.rad.off.pos.df <- data.frame(cen.rad.off.pos)
+cen.rad.off.pos.df$sqs <- rownames(cen.rad.off.pos.df)
+
+cen.rad.off.pos.sub <- cen.rad.off.pos.df[cen.rad.off.pos.df$sqs %in% c(cen.rad.tax$sqs),]
+cen.rad.off.pos.sub$time <- rep("pos",nrow(cen.rad.off.pos.sub))
+cen.rad.off.pos.sub$zone <- rep("offshore",nrow(cen.rad.off.pos.sub))
+names(cen.rad.off.pos.sub) <- c("cent","sqs","time","zone")
+
+#cen.rad.sub <- rbind(cen.rad.pre.sub,cen.rad.irm.sub,cen.rad.pos.sub)
+#cen.rad.sub[duplicated(cen.rad.sub$sqs),]
+
+cen.rad.tax.less <- cen.rad.tax %>%
+  select(sqs,Genus,Family,fam) %>%
+  unique()
+
+#### family color palette ####
+#maybe later
+# rads.fams <- unique(cen.rad.tax$Family)
+# rads.fams <- unique(cen.rad.tax$Family)
+# #all.fams <- unique(c(rads.fams,rads.fams))
+# #all.fams
+# 
+# #pal.turk <- hcl.colors(20,palette="Turku")
+# ##from here:http://mkweb.bcgsc.ca/colorblind/palettes/24.color.blindness.palette.txt
+# pal.rand <- c("#003D30","#00735C","#009175","#00AF8E","#00CBA7","#00EBC1","#86FFDE","#00306F","#00489E","#0079FA","#009FFA","#00C2F9","#00E5F8","#7CFFFA","#004002","#007702","#009503","#00B408","#00D302","#AFFF2A")
+# 
+# all.fams.colors <-
+#   setNames(c(pal.rand),all.fams)
+
+cen.rad.tax.less$Genus <- sub("Burkholderia-Caballeronia-Paraburkholderia","Burkh.-Cabal.-Parab.",cen.rad.tax.less$Genus)
+cen.rad.tax.less$fam_gen <- paste0("(",cen.rad.tax.less$fam,")"," ",cen.rad.tax.less$Genus)
+
+#### inshore ####
+cen.rad.in.pre.sub.fam <- merge(cen.rad.in.pre.sub, cen.rad.tax.less, by="sqs",all.x=F)
+#cen.rad.in.pre.sub.fam.filt <- filter(cen.rad.in.pre.sub.fam,cent>0)
+
+gg.bar.rad.in.pre <- ggplot(data=cen.rad.in.pre.sub.fam,aes(x=cent,y=reorder(fam_gen,cent)))+
+  geom_bar(stat="identity")+
+  theme_bw()+
+  ylab("Genus")+
+  xlab("Eigen. cent.")+
+  ggtitle("Pre")+
+  theme(axis.text.x=element_text(angle=45,hjust=1))
+gg.bar.rad.in.pre
+
+cen.rad.in.irm.sub.fam <- merge(cen.rad.in.irm.sub, cen.rad.tax.less, by="sqs",all.x=F)
+#cen.rad.in.irm.sub.fam.filt <- filter(cen.rad.in.irm.sub.fam,cent>0)
+
+gg.bar.rad.in.irm <- ggplot(data=cen.rad.in.irm.sub.fam,aes(x=cent,y=reorder(fam_gen,cent)))+
+  geom_bar(stat="identity")+
+  theme_bw()+
+  ylab("Genus")+
+  xlab("Eigen. cent.")+
+  ggtitle("Disturb.")+
+  theme(axis.text.x=element_text(angle=45,hjust=1))
+  #scale_fill_manual(values=all.fams.colors)
+gg.bar.rad.in.irm
+
+cen.rad.in.pos.sub.fam <- merge(cen.rad.in.pos.sub, cen.rad.tax.less, by="sqs",all.x=F)
+#cen.rad.in.pos.sub.fam.filt <- filter(cen.rad.in.pos.sub.fam,cent>0)
+
+gg.bar.rad.in.pos <- ggplot(data=cen.rad.in.pos.sub.fam,aes(x=cent,y=reorder(fam_gen,cent)))+
+  geom_bar(stat="identity")+
+  theme_bw()+
+  ylab("Genus")+
+  xlab("Eigen. cent.")+
+  ggtitle("Post")+
+  theme(axis.text.x=element_text(angle=45,hjust=1))
+gg.bar.rad.in.pos
+
+#### offshore ####
+cen.rad.off.pre.sub.fam <- merge(cen.rad.off.pre.sub, cen.rad.tax.less, by="sqs",all.x=F)
+#cen.rad.off.pre.sub.fam.filt <- filter(cen.rad.off.pre.sub.fam,cent>0)
+
+gg.bar.rad.off.pre <- ggplot(data=cen.rad.off.pre.sub.fam,aes(x=cent,y=reorder(fam_gen,cent)))+
+  geom_bar(stat="identity")+
+  theme_bw()+
+  ylab("Genus")+
+  xlab("Eigen. cent.")+
+  ggtitle("Pre")+
+  theme(axis.text.x=element_text(angle=45,hjust=1))
+gg.bar.rad.off.pre
+
+cen.rad.off.irm.sub.fam <- merge(cen.rad.off.irm.sub, cen.rad.tax.less, by="sqs",all.x=F)
+#cen.rad.off.irm.sub.fam.filt <- filter(cen.rad.off.irm.sub.fam,cent>0)
+
+gg.bar.rad.off.irm <- ggplot(data=cen.rad.off.irm.sub.fam,aes(x=cent,y=reorder(fam_gen,cent)))+
+  geom_bar(stat="identity")+
+  theme_bw()+
+  ylab("Genus")+
+  xlab("Eigen. cent.")+
+  ggtitle("Disturb.")+
+  theme(axis.text.x=element_text(angle=45,hjust=1))
+  #scale_fill_manual(values=all.fams.colors)
+gg.bar.rad.off.irm
+
+cen.rad.off.pos.sub.fam <- merge(cen.rad.off.pos.sub, cen.rad.tax.less, by="sqs",all.x=F)
+#cen.rad.off.pos.sub.fam.filt <- filter(cen.rad.off.pos.sub.fam,cent>0)
+
+gg.bar.rad.off.pos <- ggplot(data=cen.rad.off.pos.sub.fam,aes(x=cent,y=reorder(fam_gen,cent)))+
+  geom_bar(stat="identity")+
+  theme_bw()+
+  ylab("Genus")+
+  xlab("Eigen. cent.")+
+  ggtitle("Post")+
+  theme(axis.text.x=element_text(angle=45,hjust=1))
+gg.bar.rad.off.pos
+
+#ggarrange(gg.rad.pre,gg.rad.irm,gg.rad.pos,gg.bar.pre,gg.bar.irm,gg.bar.pos,nrow=2,ncol=3,widths=c(1,1,1,0.5,0.5,0.5))
+
+ggarrange(gg.rad.in.pre,gg.bar.rad.in.pre,gg.rad.in.irm,gg.bar.rad.in.irm,gg.rad.in.pos,gg.bar.rad.in.pos,nrow=3,ncol=2,align="hv")
+
+ggarrange(gg.rad.off.pre,gg.bar.rad.off.pre,gg.rad.off.irm,gg.bar.rad.off.irm,gg.rad.off.pos,gg.bar.rad.off.pos,nrow=3,ncol=2,align="hv")
+
+#widths=c(1.5,1)
+#labels=c("(a) Pre","(b)","(c) Disturb.","(d)","(e) Post","(f)")
+
+
+#net.rev.rad <- ggarrange(gg.rad.in.pre,gg.rad.off.pre,gg.rad.in.irm,gg.rad.off.irm,gg.rad.in.pos,gg.rad.off.pos,nrow=3,ncol=2,align="hv")
+
+net.rev.rad <- ggarrange(gg.rad.in.pre,gg.rad.off.pre,gg.rad.in.irm,gg.rad.off.irm,gg.rad.in.pos,gg.rad.off.pos,nrow=3,ncol=2,align="hv")
+
+bar.rev.rad <- ggarrange(gg.bar.rad.in.pre,gg.bar.rad.off.pre,gg.bar.rad.in.irm,gg.bar.rad.off.irm,gg.bar.rad.in.pos,gg.bar.rad.off.pos,nrow=3,ncol=2,align="hv")
+
+#ggarrange(gg.rad.in.pre,gg.bar.rad.in.pre)
+
+#net.rev.rad
+annotate_figure(net.rev.rad,top=text_grob("S. radians",face="italic",size=16)) #5x6 inches
+annotate_figure(bar.rev.rad,top=text_grob("S. radians",face="italic",size=16)) #8x8
+
+#5x6 inches
+#ggsave("")
+```
+
+# ggnetwork?
+
+```{r}
+#install.packages("ggnetwork")
+library("ggnetwork")
+
+ggplot(ig.rad.pre2)
+```
+
+# Checking table stats
+
+```{r}
+#shannon diversity divided by species richness
+#df.div$even <- df.div$Shannon/(log(df.div$Observed))
+#write.csv(df.div,file="fl16s.df.diversity.csv")
+#write.csv(df.div,file="fl16s.df.diversity_rare.csv")
+
+##reorder the time points
+df.div$time <- factor(df.div$time, levels = c("Pre","Irma","Post"))
+df.div$zone <- as.factor(df.div$zone)
+
+#separate species
+df.div.rad <- subset(df.div,spp=="srad")
+df.div.sid <- subset(df.div,spp=="ssid")
+
+ps.cleanest.rel.ord <- ordinate(ps.cleanest.rel, method="PCoA",distance="bray")
+plot_ordination(ps.cleanest.rel,ps.cleanest.rel.ord,color="year")
+
+ps.rad.pre <- subset_samples(ps.clean.rad.no0,time=="Pre")
+ps.rad.irm <- subset_samples(ps.clean.rad.no0,time=="Irma")
+ps.rad.pos <- subset_samples(ps.clean.rad.no0,time=="Post")
+
+
+
+ord.clean.sid <- ordinate(ps.clean.sid, "PCoA", "euclidean")
+
+gg.clean.sid <- plot_ordination(ps.clean.sid, ord.clean.sid,color="time",shape="zone",axes=c(1,2))+
+  stat_ellipse()+
+  scale_color_manual(values=c("#FA7F53","#A8327D","#3B0F70"))+
+  theme_cowplot()+
+  scale_alpha_manual(breaks=c("Inshore","Offshore"),values=c(0.45,0.75),name="Reef zone")+
+  #scale_color_manual(name="Site",values=c("darkslategray3","darkslategray4","#000004"))+
+  #scale_shape_manual(name="Site",values=c(8,4,9))+
+  #xlab("Axis 1 (44.1%)")+
+  #ylab("Axis 2 (23%)")+
+  #ggtitle("S. siderea")+
+  facet_wrap(~site_zone)
+gg.clean.sid
+
+
+```
+
+# Read in & process data
+
+Checking out diversity of taxa tables
+
+Will need to update this for the reduced dataset
+
+```{r}
+#ps.clean.rad.rel = transform_sample_counts(ps.clean.rad.no0, function(x) x / sum(x))
+
+samdf.rad <- data.frame(ps.clean.rad.no0@sam_data)
+df.rad <- data.frame(estimate_richness(ps.clean.rad.no0, split=TRUE, measures=c("Shannon","InvSimpson","Observed")))
+
+df.rad$sample_num <- rownames(df.rad)
+df.rad$sample_num <- sub("X","",df.rad$sample_num)
+rownames(df.rad) <- df.rad$sample_num
+df.div.rad <- merge(df.rad,samdf.rad,by="sample_num") #add sample data
+
+df.div.rad$time <- factor(df.div.rad$time, levels = c("Pre","Irma","Post"))
+
+ggplot(df.div.rad,aes(x=time,y=Shannon))+
+  geom_boxplot()
+
+a1 <- aov(Shannon~time,data=df.div.rad)
+summary(a1)
+
+samdf.sid <- data.frame(ps.clean.sid.no0@sam_data)
+df.sid <- data.frame(estimate_richness(ps.clean.sid.no0, split=TRUE, measures=c("Shannon","InvSimpson","Observed")))
+
+df.sid$sample_num <- rownames(df.sid)
+df.sid$sample_num <- sub("X","",df.sid$sample_num)
+rownames(df.sid) <- df.sid$sample_num
+df.div.sid <- merge(df.sid,samdf.sid,by="sample_num") #add sample data
+
+df.div.sid$time <- factor(df.div.sid$time, levels = c("Pre","Irma","Post"))
+
+ggplot(df.div.sid,aes(x=time,y=Shannon))+
+  geom_boxplot()
+
+a1 <- aov(Shannon~time,data=df.div.sid)
+summary(a1)
+```
+
+# Not needed
+
+## More plots
+
+```{r}
+# #v.rad.names.irm <- data.frame(igraph::get.vertex.attribute(ig.rad.irm2)$name)
+# #names(v.rad.names.irm) <- "sqs"
+# #v.rad.names.irm$sqs==v.rad.names$sqs
+# V(ig.rad.irm2)$time <- c(v.rad.names.info$time)
+# V(ig.rad.irm2)$fam <- c(v.rad.names.info$fam)
+# 
+# V(ig.rad.pos2)$time <- c(v.rad.names.info$time)
+# V(ig.rad.pos2)$fam <- c(v.rad.names.info$fam)
+
+#scale_color_manual(values=c("#3B0F70","#FA7F53","#A8327D"))+
+#size.pal.pre = c("Pre"=10,"Irma"=1,"Post"=1,"Irma & Post"=1,"Pre & Irma"=1,"NA"=1)
+#size="time",size.palette=size.pal.pre
+##didn't really work
+#lab.pal=c(cen.rad.sub.uni$fam)
+
+#Pre & Irma = 
+#colorRampPalette(c("#3B0F70", "#FA7F53"))(16)
+#palette(c("#3B0F70","#FA7F53"))
+
+#pal=c("Pre"="#3B0F70","Irma"="#FA7F53","Post"="#A8327D","Irma & Post"="goldenrod","Pre & Irma"="pink","other"="slategray")
+
+
+# V(ig.rad.pre2)$cent <- ifelse(igraph::get.vertex.attribute(ig.rad.pre2)$name %in% pre.rad.sqs, "Pre","other")
+# V(ig.rad.irm2)$cent <- ifelse(igraph::get.vertex.attribute(ig.rad.irm2)$name %in% irm.rad.sqs, "Irma","other")
+# V(ig.rad.pos2)$cent <- ifelse(igraph::get.vertex.attribute(ig.rad.pos2)$name %in% pos.rad.sqs, "Post","other")
+# 
+# ggnet2(ig.rad.pre2,alpha=0.5,color="cent",size="degree",size.cut=5)+
+#   ggtitle('Post')
+# 
+# ggnet2(ig.rad.pre2,alpha=0.5,color="cent",size="degree",size.cut=5)+
+#   ggtitle('Post')
+
+#alpha.pal.pre = c("Pre"=0.5,"Irma"=0.5,"Post"=0.5,"Irma & Post"=0.5,"Pre & Irma"=0.5,"other"=0.2)
+```
+
+## Lots of plot iterations
+
+```{r}
+ig.rad.pos2 <- adj2igraph(getRefit(se.rad.pos), vertex.attr=list(name=taxa_names(ps.rad.pos)))
+plot_network(ig.rad.pos2, ps.rad.pos, type='taxa', color="Phylum")
+
+ig.rad.pre2 <- adj2igraph(getRefit(se.rad.pre), vertex.attr=list(name=taxa_names(ps.rad.pre)))
+plot_network(ig.rad.pre2, ps.rad.pre, type='taxa', color="Phylum")
+
+ig.rad.irm2 <- adj2igraph(getRefit(se.rad.irm), vertex.attr=list(name=taxa_names(ps.rad.irm)))
+plot_network(ig.rad.irm2, ps.rad.irm, type='taxa', color="Phylum")
+
+set.seed(111)
+coords <- layout_with_fr(ig.rad.pre)
+#coords <- layout_in_circle(ig.rad.pos)
+
+tigr.rad.pre <- as_tbl_graph(ig.rad.pre)
+tigr.rad.irm <- as_tbl_graph(ig.rad.irm)
+tigr.rad.pos <- as_tbl_graph(ig.rad.pos)
+
+ggraph(tigr.rad.pre,layout=coords)+ 
+  geom_edge_link(alpha=0.5) +
+  geom_node_point(aes(color="Phylum"))+
+  theme_graph()
+
+ggraph(tigr.rad.irm,layout=coords)+ 
+  geom_edge_link() +
+  geom_node_point(aes(color="Phylum"))+
+  theme_graph()
+
+ggraph(tigr.rad.pos,layout=coords)+ 
+  geom_edge_link() +
+  geom_node_point(aes(color="Phylum"))+
+  theme_graph()
+
+##how I did it last time
+##excellent walkthrough here: https://briatte.github.io/ggnet/
+
+##pre
+tax.rad.pre <- data.frame(ps.rad.pre@tax_table)
+row.names(tax.rad.pre) == c(igraph::get.vertex.attribute(ig.rad.pre2)$name)
+V(ig.rad.pre2)$phylum <- c(tax.rad.pre$Phylum)
+
+##irm
+tax.rad.irm <- data.frame(ps.rad.irm@tax_table)
+row.names(tax.rad.irm) == c(igraph::get.vertex.attribute(ig.rad.irm2)$name)
+V(ig.rad.irm2)$phylum <- c(tax.rad.irm$Phylum)
+
+##pos
+tax.rad.pos <- data.frame(ps.rad.pos@tax_table)
+row.names(tax.rad.pos) == c(igraph::get.vertex.attribute(ig.rad.pos2)$name)
+V(ig.rad.pos2)$phylum <- c(tax.rad.pos$Phylum)
+
+ggnet2(ig.rad.pre2,alpha=0.5,color="phylum",size="degree",size.cut=5)+
+  ggtitle('Pre')
+
+ggnet2(ig.rad.irm2,alpha=0.5,color="phylum",size="degree",size.cut=5)+
+  ggtitle('Disturb.')
+
+ggnet2(ig.rad.pos2,alpha=0.5,color="phylum",size="degree",size.cut=5)+
+  ggtitle('Post')
+
+ig.rad.pre2 %v% "phono" = ifelse(letters[1:10] %in% c("a", "e", "i"), "vowel", "consonant")
+igraph::get.vertex.attribute(ig.rad.pre2)
+igraph::set_vertex_attr(ig.rad.pre2,name="phylum",index)
+```
+
+Igraph plots, fixed layout of nodes
+
+```{r}
+## Create igraph objects
+ig.rad.pre <- adj2igraph(getRefit(se.rad.pre))
+ig.rad.irm <- adj2igraph(getRefit(se.rad.irm))
+ig.rad.pos <- adj2igraph(getRefit(se.rad.pos))
+
+## set size of vertex proportional to clr-mean
+#vsize.rad.pre    <- rowMeans(clr(otu.rad.pre.trim, 1))+6
+coords <- igraph::layout.fruchterman.reingold(ig.rad.pre)
+
+par(mfrow=c(1,3))
+#plot(ig.rad.pre, layout=coord.rad.pre, vertex.size=vsize.rad.pre, vertex.label=NA, main="MB")
+
+plot.igraph(ig.rad.pre, layout = coords, main = "pre")
+plot.igraph(ig.rad.irm, layout = coords, main = "irma")
+plot.igraph(ig.rad.pos, layout = coords, main = "post")
+```
+
+```{r}
+# nums <- 1:nrow(otu.rad.cut) 
+# samples <- rownames(otu.rad.cut)
+# 
+# int <- cbind(sample = 0, otu.rad.cut)
+# otu.rad.cut.mcmc <- cbind(X = 0, int)
+# 
+# otu.rad.cut.mcmc$X <- nums
+# otu.rad.cut.mcmc$sample <- samples #105 samples
+# 
+# seq.rad.mcmc.allinfo <- purgeOutliers(otu.rad.cut.mcmc,count.columns=3:67,sampleZcut=-2.5,otu.cut=0,zero.cut=0.05) 
+# #leaves 63
+# 
+# seq.rad.trim <- seq.rad.mcmc.allinfo[,3:65]
+# 
+# 
+# ps.rad.pre <- subset_samples(ps.rad,time=="Pre")
+```
+
+Network things from [SpiecEasi github](https://github.com/zdk123/SpiecEasi/)
+
+```{r}
+data(amgut1.filt)
+depths <- rowSums(amgut1.filt)
+amgut1.filt.n  <- t(apply(amgut1.filt, 1, norm_to_total))
+amgut1.filt.cs <- round(amgut1.filt.n * min(depths))
+
+d <- ncol(amgut1.filt.cs) #number of taxa
+n <- nrow(amgut1.filt.cs) #number of samples
+e <- d #I don't understand why these are the same
+
+set.seed(10010)
+graph <- make_graph('cluster', d, e)
+#seems like binary yes or no
+Prec  <- graph2prec(graph)
+Cor   <- cov2cor(prec2cov(Prec))
+
+X <- synth_comm_from_counts(amgut1.filt.cs, mar=2, distr='zinegbin', Sigma=Cor, n=n)
+##I guess above was just generating fake data?
+##I don't really understand because why not use the real one above?
+
+se <- spiec.easi(amgut1.filt.cs, method='mb', lambda.min.ratio=1e-2, nlambda=15)
+##method options = 'mb' or 'glasso'
+##meinshausen-buhlmann's neighborhood selection
+##this here: https://github.com/zdk123/SpiecEasi/issues/70 says either doesn't really matter? different performance somewhat
+
+huge::huge.roc(se$est$path, graph, verbose=FALSE)
+stars.pr(getOptMerge(se), graph, verbose=FALSE)
+# stars selected final network under: getRefit(se)
+
+##notes: The above example does not cover all possible options and parameters. For example, 
+#other generative network models are available, the lambda.min.ratio (the scaling factor that 
+#determines the minimum sparsity/lambda parameter) shown here might not be right for your 
+#dataset, and its possible that you’ll want more repetitions (number of subsamples) for StARS.
+
+
+```
+

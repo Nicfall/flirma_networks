@@ -29,7 +29,6 @@ library("dplyr")
 
 #work
 setwd("~/Library/CloudStorage/GoogleDrive-nicfall@bu.edu/My Drive/Flirma/flirma_networks/fl_16s/02.diversity")
-
 ```
 
 ## Read in data
@@ -37,7 +36,7 @@ setwd("~/Library/CloudStorage/GoogleDrive-nicfall@bu.edu/My Drive/Flirma/flirma_
 Be careful, I tried different data inputs [i.e. not rare, or rare]
 
 ```{r}
-ps.clean <- readRDS("../01.generate_asv_table/fl16s.23.ps.cleaner.rare5500.rds")
+ps.clean <- readRDS("../01.generate_asv_table/fl16s.23.ps.clean.trim.less.rds")
 
 samdf <- data.frame(ps.clean@sam_data)
 table(samdf$site_zone)
@@ -60,35 +59,37 @@ df.div <- merge(df,samdf,by="sample_num") #add sample data
 ##aka pielou's evenness
 ##can also do this function: microbiome::evenness()
 df.div$even <- df.div$Shannon/(log(df.div$Observed))
-#write.csv(df.div,file="fl16s.23.df.diversity.rare.csv")
+#write.csv(df.div,file="fl16s.23.df.diversity.trim.csv")
 
-##reorder the time points
-df.div$time <- factor(df.div$time, levels = c("Pre","Irma","Post"))
-df.div$zone <- as.factor(df.div$zone)
-
-#separate species
-df.div.rad <- subset(df.div,spp=="srad")
-df.div.sid <- subset(df.div,spp=="ssid")
+# ##reorder the time points
+# df.div$time <- factor(df.div$time, levels = c("Pre","Irma","Post"))
+# df.div$zone <- as.factor(df.div$zone)
+# 
+# #separate species
+# df.div.rad <- subset(df.div,spp=="srad")
+# df.div.sid <- subset(df.div,spp=="ssid")
 ```
+
+# Analyzing alpha metrics
 
 ## Re-read in data, skipping the two sections above
 
 ```{r re-read in *start here*}
 #df.div <- read.csv("fl16s.df.diversity.csv")
-df.div <- read.csv("fl16s.23.df.diversity.rare.csv")
+#df.div <- read.csv("fl16s.23.df.diversity.rare.csv")
 
 table(df.div$site_zone)
 df.div %>%
   filter(spp=="ssid") %>%
   summarise(sd.obs=sd(Observed), av.obs=mean(Observed))
 #     sd.obs   av.obs
-# 1 250.1111 264.4311
+# 1 197.5431 194.7725
 
 df.div %>%
   filter(spp=="srad") %>%
   summarise(sd.obs=sd(Observed), av.obs=mean(Observed))
 #     sd.obs   av.obs
-# 1 438.5386 672.0229
+# 1 376.3091 517.0992
 
 df.div$zone <- as.factor(df.div$zone)
 df.div$time <- factor(df.div$time,levels=c("Pre","Irma","Post"))
@@ -97,8 +98,6 @@ df.div$time <- factor(df.div$time,levels=c("Pre","Irma","Post"))
 df.div.rad <- subset(df.div,spp=="srad")
 df.div.sid <- subset(df.div,spp=="ssid")
 ```
-
-# Analyzing alpha metrics
 
 ## Shannon{.tabset}
 
@@ -184,6 +183,14 @@ ggplot(df.div.sid,aes(x=time,y=Shannon,fill=time,color=time))+
   scale_x_discrete(labels=c("Pre","Disturb.","Post"))
 
 ##stats say no main effect of time or zone, but pre-offshore is different than irma & post offshore
+
+df.div.sid.se <- summarySE(data=df.div.sid,measurevar="Shannon",groupvars=c("time","site","zone"))
+
+ggplot(df.div.sid.se,aes(x=time,y=Shannon,color=time,shape=site))+
+  geom_point(position=position_dodge(width=0.4))+
+  geom_errorbar(aes(ymin=Shannon-se,ymax=Shannon+se),width=0.2,position=position_dodge(width=0.4))+
+  #geom_boxplot()+
+  facet_wrap(~zone)
 
 #ggsave(gg.sh.sids.yr,file="gg.sids.shannon.pdf",width=3.5,height=4)
 ```

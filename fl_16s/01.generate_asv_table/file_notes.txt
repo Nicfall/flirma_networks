@@ -1,0 +1,26 @@
+FL scripts/data
+===============
+
+Within fl_16s/
+
+01. generate ASV table
+----------------------
+Master script files:
+- fl_16s.Rmd
+- fl_16s.html
+CSV files:
+- fl16s.readstats.csv = read statistics
+- fl_sample_info - 16s_all_newvars [new vars = renaming some stuff]
+R data frames:
+- fl16s.seqtab.rds = raw counts total
+- fl16s.seqtab.nochim.rds = raw counts, chimeras removed
+- fl16s.23.seqtab.nochim.newids.rds = raw, no chimeras, with 'sq' names
+- fl16s.23.taxid.rds = raw taxonomic information made from seqtab.nochim file
+- fl16s.23.taxid.newids.rds = raw taxonomic information, with 'sq' names
+Phyloseq objects
+- fl16s.23.ps.clean.noneg.rds = neg controls removed, mitochondria etc removed
+- fl16s.23.ps.clean.trim.rds = singletons removed, reads <112 removed
+- fl16s.23.ps.clean.trim.less.rds = trimmed^, and samples <5000 reads removed
+- fl16s.23.ps.clean.trim.rare5k.rds = trimmed, rarefied to 5000
+Other
+- fl16s.23.fasta = fasta file of all the sequences
