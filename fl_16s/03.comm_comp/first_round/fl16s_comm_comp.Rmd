@@ -1,0 +1,1628 @@
+---
+title: "Florida 16s community composition"
+author: "Nicola G. Kriefall"
+date: "12/7/2021"
+output:
+ rmarkdown::html_document:
+    theme: cerulean
+    toc: yes
+    toc_float: yes
+    highlight: haddock
+    number_sections: true
+---
+
+# Setup
+
+```{r packages used composition}
+library(stringr)
+library(ggpubr)
+library(vegan)
+library(cowplot)
+library(ggplot2)
+library(tidyverse)
+library(phyloseq)
+library(funfuns)
+```
+
+Read in data
+
+```{r read in data}
+setwd("/Volumes/GoogleDrive/My Drive/Flirma/flirma_networks/fl_16s/03.comm_comp")
+
+#ps.clean <- readRDS("../01.generate_asv_table/ps.cleanest.less.rds")
+
+#made these below:
+# ps.fam <- readRDS("ps.asvsnamed.fam.RDS")
+# ps.cla <- readRDS("ps.asvsnamed.cla.RDS")
+#ps.clean <- readRDS("ps.asvsnamed.clean.RDS")
+
+#made this elsewhere:
+ps.clean <- readRDS("../04.networks/nets_revised/ps.rare.asvsnamed.rds")
+```
+
+Rename ASVs to be more informative
+
+(ran once then skip)
+
+```{r rename ASVs, eval=F}
+tax <- as.data.frame(ps.clean@tax_table@.Data)
+
+tax.clean <- data.frame(row.names = row.names(tax),
+                        Kingdom = str_replace(tax[,1], "D_0__",""),
+                        Phylum = str_replace(tax[,2], "D_1__",""),
+                        Class = str_replace(tax[,3], "D_2__",""),
+                        Order = str_replace(tax[,4], "D_3__",""),
+                        Family = str_replace(tax[,5], "D_4__",""),
+                        Genus = str_replace(tax[,6], "D_5__",""),
+                        Species = str_replace(tax[,7], "D_6__",""),
+                        stringsAsFactors = FALSE)
+tax.clean[is.na(tax.clean)] <- ""
+
+for (i in 1:7){ tax.clean[,i] <- as.character(tax.clean[,i])}
+####### Fill holes in the tax table
+tax.clean[is.na(tax.clean)] <- ""
+for (i in 1:nrow(tax.clean)){
+  if (tax.clean[i,2] == ""){
+    kingdom <- paste("Kingdom_", tax.clean[i,1], sep = "")
+    tax.clean[i, 2:7] <- kingdom
+  } else if (tax.clean[i,3] == ""){
+    phylum <- paste("Phylum_", tax.clean[i,2], sep = "")
+    tax.clean[i, 3:7] <- phylum
+  } else if (tax.clean[i,4] == ""){
+    class <- paste("Class_", tax.clean[i,3], sep = "")
+    tax.clean[i, 4:7] <- class
+  } else if (tax.clean[i,5] == ""){
+    order <- paste("Order_", tax.clean[i,4], sep = "")
+    tax.clean[i, 5:7] <- order
+  } else if (tax.clean[i,6] == ""){
+    family <- paste("Family_", tax.clean[i,5], sep = "")
+    tax.clean[i, 6:7] <- family
+  } else if (tax.clean[i,7] == ""){
+    tax.clean$Species[i] <- paste("Genus",tax.clean$Genus[i], sep = "_")
+  }
+}
+
+tax_table(ps.clean) <- as.matrix(tax.clean)
+
+# #sum by genus
+# ps.clean.gen <- tax_glom(ps.clean,"Genus")
+# 
+# #sum by family
+# ps.clean.fam <- tax_glom(ps.clean,"Family")
+# 
+# #sum by class
+# ps.clean.cla <- tax_glom(ps.clean,"Class")
+```
+
+Saving
+
+```{r save renamed files, eval=FALSE}
+# saveRDS(ps.clean.gen,"ps.asvsnamed.gen.RDS")
+# saveRDS(ps.clean.fam,"ps.asvsnamed.fam.RDS")
+# saveRDS(ps.clean.cla,"ps.asvsnamed.cla.RDS")
+#saveRDS(ps.clean,"ps.asvsnamed.clean.RDS")
+```
+
+# Pcoa {.tabset}
+
+Subset samples
+
+```{r}
+##option to clr transform here or not
+#ps.clr <-  microbiome::transform(ps.clean,"clr")
+#ps.temp <- subset_samples(ps.clr,site!="UK3")
+
+##other option
+ps.temp <- subset_samples(ps.clean,site!="UK3")
+
+ps.clean.sid <- subset_samples(ps.temp,spp=="ssid")
+ps.clean.rad <- subset_samples(ps.temp,spp=="srad")
+
+##sites/zones stats
+##sids
+ps.clean.sid.pre <- subset_samples(ps.clean.sid,time=="Pre")
+ps.clean.sid.irm <- subset_samples(ps.clean.sid,time=="Irma")
+ps.clean.sid.pos <- subset_samples(ps.clean.sid,time=="Post")
+
+ps.clean.sid.pre.lk1 <- subset_samples(ps.clean.sid.pre,site=="LK1")
+ps.clean.sid.pre.uk1 <- subset_samples(ps.clean.sid.pre,site=="UK1")
+ps.clean.sid.pre.uk2 <- subset_samples(ps.clean.sid.pre,site=="UK2")
+
+ps.clean.sid.irm.lk1 <- subset_samples(ps.clean.sid.irm,site=="LK1")
+ps.clean.sid.irm.uk1 <- subset_samples(ps.clean.sid.irm,site=="UK1")
+ps.clean.sid.irm.uk2 <- subset_samples(ps.clean.sid.irm,site=="UK2")
+
+ps.clean.sid.pos.lk1 <- subset_samples(ps.clean.sid.pos,site=="LK1")
+ps.clean.sid.pos.uk1 <- subset_samples(ps.clean.sid.pos,site=="UK1")
+ps.clean.sid.pos.uk2 <- subset_samples(ps.clean.sid.pos,site=="UK2")
+
+##time stats
+ps.clean.sid.lk1 <- subset_samples(ps.clean.sid,site=="LK1")
+ps.clean.sid.uk1 <- subset_samples(ps.clean.sid,site=="UK1")
+ps.clean.sid.uk2 <- subset_samples(ps.clean.sid,site=="UK2")
+
+ps.clean.sid.lk1i <- subset_samples(ps.clean.sid.lk1,zone=="Inshore")
+ps.clean.sid.lk1o <- subset_samples(ps.clean.sid.lk1,zone=="Offshore")
+
+ps.clean.sid.uk1i <- subset_samples(ps.clean.sid.uk1,zone=="Inshore")
+ps.clean.sid.uk1o <- subset_samples(ps.clean.sid.uk1,zone=="Offshore")
+
+ps.clean.sid.uk2i <- subset_samples(ps.clean.sid.uk2,zone=="Inshore")
+ps.clean.sid.uk2o <- subset_samples(ps.clean.sid.uk2,zone=="Offshore")
+
+##sites/zones stats
+##radians
+ps.clean.rad.pre <- subset_samples(ps.clean.rad,time=="Pre")
+ps.clean.rad.irm <- subset_samples(ps.clean.rad,time=="Irma")
+ps.clean.rad.pos <- subset_samples(ps.clean.rad,time=="Post")
+
+#sites & time
+ps.clean.rad.pre.lk1 <- subset_samples(ps.clean.rad.pre,site=="LK1")
+ps.clean.rad.pre.uk1 <- subset_samples(ps.clean.rad.pre,site=="UK1")
+ps.clean.rad.pre.uk2 <- subset_samples(ps.clean.rad.pre,site=="UK2")
+
+ps.clean.rad.irm.lk1 <- subset_samples(ps.clean.rad.irm,site=="LK1")
+ps.clean.rad.irm.uk1 <- subset_samples(ps.clean.rad.irm,site=="UK1")
+ps.clean.rad.irm.uk2 <- subset_samples(ps.clean.rad.irm,site=="UK2")
+
+ps.clean.rad.pos.lk1 <- subset_samples(ps.clean.rad.pos,site=="LK1")
+#ps.clean.rad.pos.uk1 <- subset_samples(ps.clean.rad.pos,site=="UK1")
+ps.clean.rad.pos.uk2 <- subset_samples(ps.clean.rad.pos,site=="UK2")
+
+##time stats
+ps.clean.rad.lk1 <- subset_samples(ps.clean.rad,site=="LK1")
+ps.clean.rad.uk1 <- subset_samples(ps.clean.rad,site=="UK1")
+ps.clean.rad.uk2 <- subset_samples(ps.clean.rad,site=="UK2")
+
+ps.clean.rad.lk1i <- subset_samples(ps.clean.rad.lk1,zone=="Inshore")
+ps.clean.rad.lk1o <- subset_samples(ps.clean.rad.lk1,zone=="Offshore")
+
+ps.clean.rad.uk1i <- subset_samples(ps.clean.rad.uk1,zone=="Inshore")
+ps.clean.rad.uk1o <- subset_samples(ps.clean.rad.uk1,zone=="Offshore")
+
+ps.clean.rad.uk2i <- subset_samples(ps.clean.rad.uk2,zone=="Inshore")
+ps.clean.rad.uk2o <- subset_samples(ps.clean.rad.uk2,zone=="Offshore")
+```
+
+## CLR
+
+### Sids
+
+#### All data
+
+```{r}
+ord.clean.sid <- ordinate(ps.clean.sid, "PCoA", "euclidean")
+
+gg.clean.sid <- plot_ordination(ps.clean.sid, ord.clean.sid,color="time",shape="zone",axes=c(1,2))+
+  stat_ellipse()+
+  scale_color_manual(values=c("#FA7F53","#A8327D","#3B0F70"))+
+  theme_cowplot()+
+  scale_alpha_manual(breaks=c("Inshore","Offshore"),values=c(0.45,0.75),name="Reef zone")+
+  #scale_color_manual(name="Site",values=c("darkslategray3","darkslategray4","#000004"))+
+  #scale_shape_manual(name="Site",values=c(8,4,9))+
+  #xlab("Axis 1 (44.1%)")+
+  #ylab("Axis 2 (23%)")+
+  #ggtitle("S. siderea")+
+  facet_wrap(~site_zone)
+gg.clean.sid
+```
+
+## Rarefied
+
+### Sids
+
+```{r}
+ord.clean.sid <- ordinate(ps.clean.sid, "PCoA", "bray")
+
+gg.clean.sid <- plot_ordination(ps.clean.sid, ord.clean.sid,color="time",shape="zone",axes=c(1,2))+
+  stat_ellipse()+
+  scale_color_manual(values=c("#FA7F53","#A8327D","#3B0F70"))+
+  theme_cowplot()+
+  scale_alpha_manual(breaks=c("Inshore","Offshore"),values=c(0.45,0.75),name="Reef zone")
+  #scale_color_manual(name="Site",values=c("darkslategray3","darkslategray4","#000004"))+
+  #scale_shape_manual(name="Site",values=c(8,4,9))+
+  #xlab("Axis 1 (44.1%)")+
+  #ylab("Axis 2 (23%)")+
+  #ggtitle("S. siderea")+
+  #facet_wrap(~site_zone)
+gg.clean.sid
+
+```
+
+# Stats
+
+## Beta dispersion - sids{.tabset}
+
+### LK1
+
+```{r}
+##time - inshore
+seq.sid.lk1i <- data.frame(ps.clean.sid.lk1i@otu_table)
+samdf.sid.lk1i <- data.frame(ps.clean.sid.lk1i@sam_data)
+
+dist.sid.lk1i <- vegdist(seq.sid.lk1i, method="euclidean")
+
+bet.sid.lk1i <- betadisper(dist.sid.lk1i,samdf.sid.lk1i$time)
+#anova(bet.rad.uk2i)
+permutest(bet.sid.lk1i,pairwise=TRUE,permutations=999) #ns
+
+plot(bet.sid.lk1i)
+
+##time - offshore
+seq.sid.lk1o <- data.frame(ps.clean.sid.lk1o@otu_table)
+samdf.sid.lk1o <- data.frame(ps.clean.sid.lk1o@sam_data)
+
+dist.sid.lk1o <- vegdist(seq.sid.lk1o, method="euclidean")
+
+bet.sid.lk1o <- betadisper(dist.sid.lk1o,samdf.sid.lk1o$time)
+#anova(bet.rad.uk2i)
+permutest(bet.sid.lk1o,pairwise=TRUE,permutations=999)
+#pre different than other two
+# Pairwise comparisons:
+# (Observed p-value below diagonal, permuted p-value above diagonal)
+#           Irma      Post   Pre
+# Irma           0.3010000 0.001
+# Post 0.3143735           0.038
+# Pre  0.0014984 0.0282772      
+plot(bet.sid.lk1o) 
+#pre way less constrained
+```
+
+### UK1
+
+```{r}
+##time - inshore
+seq.sid.uk1i <- data.frame(ps.clean.sid.uk1i@otu_table)
+samdf.sid.uk1i <- data.frame(ps.clean.sid.uk1i@sam_data)
+
+dist.sid.uk1i <- vegdist(seq.sid.uk1i, method="euclidean")
+
+bet.sid.uk1i <- betadisper(dist.sid.uk1i,samdf.sid.uk1i$time)
+#anova(bet.rad.uk2i)
+permutest(bet.sid.uk1i,pairwise=TRUE,permutations=999) 
+##pre different than other two
+#           Irma      Post   Pre
+# Irma           0.9340000 0.002
+# Post 0.9240667           0.004
+# Pre  0.0063064 0.0019885      
+plot(bet.sid.uk1i)
+
+##time - offshore
+seq.sid.uk1o <- data.frame(ps.clean.sid.uk1o@otu_table)
+samdf.sid.uk1o <- data.frame(ps.clean.sid.uk1o@sam_data)
+
+dist.sid.uk1o <- vegdist(seq.sid.uk1o, method="euclidean")
+
+bet.sid.uk1o <- betadisper(dist.sid.uk1o,samdf.sid.uk1o$time)
+#anova(bet.rad.uk2i)
+permutest(bet.sid.uk1o,pairwise=TRUE,permutations=999) #ns
+
+plot(bet.sid.uk1o) #ns
+```
+
+### UK2
+
+```{r}
+##time - inshore
+seq.sid.uk2i <- data.frame(ps.clean.sid.uk2i@otu_table)
+samdf.sid.uk2i <- data.frame(ps.clean.sid.uk2i@sam_data)
+
+dist.sid.uk2i <- vegdist(seq.sid.uk2i, method="euclidean")
+
+bet.sid.uk2i <- betadisper(dist.sid.uk2i,samdf.sid.uk2i$time)
+#anova(bet.rad.uk2i)
+permutest(bet.sid.uk2i,pairwise=TRUE,permutations=999) 
+##Post different than other two
+#          Irma     Post   Pre
+# Irma          0.031000 0.849
+# Post 0.034533          0.030
+# Pre  0.860445 0.026736      
+plot(bet.sid.uk2i) 
+##post not constrained at all
+
+##time - offshore
+seq.sid.uk2o <- data.frame(ps.clean.sid.uk2o@otu_table)
+samdf.sid.uk2o <- data.frame(ps.clean.sid.uk2o@sam_data)
+
+dist.sid.uk2o <- vegdist(seq.sid.uk2o, method="euclidean")
+
+bet.sid.uk2o <- betadisper(dist.sid.uk2o,samdf.sid.uk2o$time)
+#anova(bet.rad.uk2i)
+permutest(bet.sid.uk2o,pairwise=TRUE,permutations=999) #ns
+
+plot(bet.sid.uk2o) #ns
+```
+
+## Adonis sids{.tabset}
+
+### LK1
+
+```{r}
+##inshore
+dist.sid.lk1i <- vegdist(seq.sid.lk1i,method="euclidean")
+
+adonis2(dist.sid.lk1i ~ time, data=samdf.sid.lk1i, permutations=999)
+pairwise.adonis(dist.sid.lk1i, samdf.sid.lk1i$time)
+#          pairs Df SumsOfSqs  F.Model         R2 p.value p.adjusted sig
+# 1 Post vs Irma  1 10909.420 1.752174 0.11123379   0.001      0.003   *
+# 2  Post vs Pre  1  6672.550 1.510925 0.09151064   0.003      0.009   *
+# 3  Irma vs Pre  1  9518.006 1.603753 0.08620590   0.001      0.003   *
+##all different
+
+##offshore
+dist.sid.lk1o <- vegdist(seq.sid.lk1o,method="euclidean")
+
+adonis2(dist.sid.lk1o ~ time, data=samdf.sid.lk1o, permutations=999)
+pairwise.adonis(dist.sid.lk1o, samdf.sid.lk1o$time)
+#          pairs Df SumsOfSqs  F.Model         R2 p.value p.adjusted sig
+# 1  Pre vs Post  1 19017.898 1.648825 0.10536417   0.014      0.042   .
+# 2  Pre vs Irma  1 20638.313 2.181010 0.11370675   0.001      0.003   *
+# 3 Post vs Irma  1  8373.194 1.360958 0.08318325   0.022      0.066    
+##Post & Irma not different, the rest are
+```
+
+### UK1
+
+```{r}
+##inshore
+dist.sid.uk1i <- vegdist(seq.sid.uk1i,method="euclidean")
+
+adonis2(dist.sid.uk1i ~ time, data=samdf.sid.uk1i, permutations=999)
+pairwise.adonis(dist.sid.uk1i, samdf.sid.uk1i$time)
+#          pairs Df SumsOfSqs  F.Model         R2 p.value p.adjusted sig
+# 1  Post vs Pre  1  14207.61 3.016869 0.18835571   0.001      0.003   *
+# 2 Post vs Irma  1  11593.23 1.525136 0.09229188   0.016      0.048   .
+# 3  Pre vs Irma  1  17721.46 3.166843 0.13669720   0.001      0.003   *
+##all different
+
+##offshore
+dist.sid.uk1o <- vegdist(seq.sid.uk1o,method="euclidean")
+
+adonis2(dist.sid.uk1o ~ time, data=samdf.sid.uk1o, permutations=999)
+pairwise.adonis(dist.sid.uk1o, samdf.sid.uk1o$time)
+# 1  Post vs Pre  1  8852.862 1.651959 0.09920506   0.002      0.006   *
+# 2 Post vs Irma  1  6013.370 1.109824 0.05807608   0.140      0.420    
+# 3  Pre vs Irma  1  7985.110 1.481190 0.07231954   0.007      0.021   .
+##post & Irma not different, the rest are 
+```
+
+### UK2
+
+```{r}
+##inshore
+dist.sid.uk2i <- vegdist(seq.sid.uk2i,method="euclidean")
+
+adonis2(dist.sid.uk2i ~ time, data=samdf.sid.uk2i, permutations=999)
+pairwise.adonis(dist.sid.uk2i, samdf.sid.uk2i$time)
+#          pairs Df SumsOfSqs  F.Model        R2 p.value p.adjusted sig
+# 1  Post vs Pre  1 13487.897 2.157473 0.1257454   0.001      0.003   *
+# 2 Post vs Irma  1 12156.059 1.942688 0.1082718   0.001      0.003   *
+# 3  Pre vs Irma  1  9471.256 2.292130 0.1076515   0.001      0.003   *
+##all different
+
+##offshore
+dist.sid.uk2o <- vegdist(seq.sid.uk2o,method="euclidean")
+
+adonis2(dist.sid.uk2o ~ time, data=samdf.sid.uk2o, permutations=999)
+pairwise.adonis(dist.sid.uk2o, samdf.sid.uk2o$time)
+#          pairs Df SumsOfSqs  F.Model         R2 p.value p.adjusted sig
+# 1  Pre vs Post  1  9857.701 1.866595 0.09893649   0.002      0.006   *
+# 2  Pre vs Irma  1 10497.491 1.526681 0.07437545   0.001      0.003   *
+# 3 Post vs Irma  1  7778.311 1.172068 0.06113416   0.070      0.210    
+##post & Irma not different
+```
+
+## Beta dispersion - rads{.tabset}
+
+### LK1
+
+```{r}
+##time - inshore
+seq.rad.lk1i <- data.frame(ps.clean.rad.lk1i@otu_table)
+samdf.rad.lk1i <- data.frame(ps.clean.rad.lk1i@sam_data)
+
+dist.rad.lk1i <- vegdist(seq.rad.lk1i, method="euclidean")
+
+bet.rad.lk1i <- betadisper(dist.rad.lk1i,samdf.rad.lk1i$time)
+#anova(bet.rad.uk2i)
+permutest(bet.rad.lk1i,pairwise=TRUE,permutations=999) 
+#            Irma       Post   Pre
+# Irma            0.00100000 0.940
+# Post 0.00060477            0.004
+# Pre  0.93979794 0.00285655      
+##post super constrained
+
+plot(bet.rad.lk1i)
+
+##time - offshore
+seq.rad.lk1o <- data.frame(ps.clean.rad.lk1o@otu_table)
+samdf.rad.lk1o <- data.frame(ps.clean.rad.lk1o@sam_data)
+
+dist.rad.lk1o <- vegdist(seq.rad.lk1o, method="euclidean")
+
+bet.rad.lk1o <- betadisper(dist.rad.lk1o,samdf.rad.lk1o$time)
+#anova(bet.rad.uk2i)
+permutest(bet.rad.lk1o,pairwise=TRUE,permutations=999)
+##all different pre > Irma > post [most constrained]
+#            Irma       Post   Pre
+# Irma            5.0000e-03 0.017
+# Post 3.9279e-03            0.001
+# Pre  1.2875e-02 1.0797e-08        
+
+plot(bet.rad.lk1o) 
+```
+
+### UK1
+
+```{r}
+##time - inshore
+seq.rad.uk1i <- data.frame(ps.clean.rad.uk1i@otu_table)
+samdf.rad.uk1i <- data.frame(ps.clean.rad.uk1i@sam_data)
+
+dist.rad.uk1i <- vegdist(seq.rad.uk1i, method="euclidean")
+
+bet.rad.uk1i <- betadisper(dist.rad.uk1i,samdf.rad.uk1i$time)
+#anova(bet.rad.uk2i)
+permutest(bet.rad.uk1i,pairwise=TRUE,permutations=999)#Ns
+
+plot(bet.rad.uk1i)
+
+##time - offshore
+# seq.rad.uk1o <- data.frame(ps.clean.rad.uk1o@otu_table)
+# samdf.rad.uk1o <- data.frame(ps.clean.rad.uk1o@sam_data)
+# 
+# dist.rad.uk1o <- vegdist(seq.rad.uk1o, method="euclidean")
+# 
+# bet.rad.uk1o <- betadisper(dist.rad.uk1o,samdf.rad.uk1o$time)
+# #anova(bet.rad.uk2i)
+# permutest(bet.rad.uk1o,pairwise=TRUE,permutations=999) #ns
+# 
+# plot(bet.rad.uk1o) #ns
+```
+
+### UK2
+
+```{r}
+##time - inshore
+seq.rad.uk2i <- data.frame(ps.clean.rad.uk2i@otu_table)
+samdf.rad.uk2i <- data.frame(ps.clean.rad.uk2i@sam_data)
+
+dist.rad.uk2i <- vegdist(seq.rad.uk2i, method="euclidean")
+
+bet.rad.uk2i <- betadisper(dist.rad.uk2i,samdf.rad.uk2i$time)
+#anova(bet.rad.uk2i)
+permutest(bet.rad.uk2i,pairwise=TRUE,permutations=999) 
+#           Irma      Post   Pre
+# Irma           0.6520000 0.007
+# Post 0.6537679           0.014
+# Pre  0.0022603 0.0078200      
+##Irma & post not different, pre less constrained
+plot(bet.rad.uk2i) 
+
+##time - offshore
+seq.rad.uk2o <- data.frame(ps.clean.rad.uk2o@otu_table)
+samdf.rad.uk2o <- data.frame(ps.clean.rad.uk2o@sam_data)
+
+dist.rad.uk2o <- vegdist(seq.rad.uk2o, method="euclidean")
+
+bet.rad.uk2o <- betadisper(dist.rad.uk2o,samdf.rad.uk2o$time)
+
+permutest(bet.rad.uk2o,pairwise=TRUE,permutations=999) 
+#            Irma       Post   Pre
+# Irma            1.0000e-02 0.108
+# Post 6.1384e-03            0.003
+# Pre  1.1530e-01 8.2803e-05      
+##post different than the other two
+##post constrained
+plot(bet.rad.uk2o) 
+```
+
+## Adonis rads{.tabset}
+
+```{r}
+source("pairwise.adonis.R")
+```
+
+### LK1
+
+```{r}
+##inshore
+dist.rad.lk1i <- vegdist(seq.rad.lk1i,method="euclidean")
+
+adonis2(dist.rad.lk1i ~ time, data=samdf.rad.lk1i, permutations=999)
+pairwise.adonis(dist.rad.lk1i, samdf.rad.lk1i$time)
+#          pairs Df SumsOfSqs   F.Model         R2 p.value p.adjusted sig
+# 1 Post vs Irma  1  20954.66 1.9428527 0.10828003   0.001      0.003   *
+# 2  Post vs Pre  1  24753.26 2.3174381 0.13382107   0.001      0.003   *
+# 3  Irma vs Pre  1  13847.92 0.9455399 0.05268941   0.661      1.000    
+##Irma & pre not different
+
+##offshore
+dist.rad.lk1o <- vegdist(seq.rad.lk1o,method="euclidean")
+
+adonis2(dist.rad.lk1o ~ time, data=samdf.rad.lk1o, permutations=999)
+pairwise.adonis(dist.rad.lk1o, samdf.rad.lk1o$time)
+#          pairs Df SumsOfSqs  F.Model         R2 p.value p.adjusted sig
+# 1  Post vs Pre  1  36560.08 2.679998 0.15158361   0.001      0.003   *
+# 2 Post vs Irma  1  15226.41 1.571210 0.09481563   0.014      0.042   .
+# 3  Pre vs Irma  1  30461.82 1.866579 0.09395572   0.001      0.003   *
+##all different
+```
+
+### UK1
+
+```{r}
+##inshore
+dist.rad.uk1i <- vegdist(seq.rad.uk1i,method="euclidean")
+
+adonis2(dist.rad.uk1i ~ time, data=samdf.rad.uk1i, permutations=999)
+pairwise.adonis(dist.rad.uk1i, samdf.rad.uk1i$time)
+#         pairs Df SumsOfSqs  F.Model         R2 p.value p.adjusted sig
+# 1 Irma vs Pre  1  20695.11 1.340781 0.08205122   0.011      0.011   .
+##all different
+
+##offshore not available
+```
+
+### UK2
+
+```{r}
+##inshore
+dist.rad.uk2i <- vegdist(seq.rad.uk2i,method="euclidean")
+
+adonis2(dist.rad.uk2i ~ time, data=samdf.rad.uk2i, permutations=999)
+pairwise.adonis(dist.rad.uk2i, samdf.rad.uk2i$time)
+#          pairs Df SumsOfSqs  F.Model         R2 p.value p.adjusted sig
+# 1  Post vs Pre  1 18093.924 1.743761 0.10414394   0.001      0.003   *
+# 2 Post vs Irma  1  7505.247 1.143537 0.07083562   0.084      0.252    
+# 3  Pre vs Irma  1 15930.667 1.574501 0.10109478   0.001      0.003   *
+##post & Irma not different
+
+##offshore
+dist.rad.uk2o <- vegdist(seq.rad.uk2o,method="euclidean")
+
+adonis2(dist.rad.uk2o ~ time, data=samdf.rad.uk2o, permutations=999)
+pairwise.adonis(dist.rad.uk2o, samdf.rad.uk2o$time)
+#          pairs Df SumsOfSqs  F.Model         R2 p.value p.adjusted sig
+# 1  Post vs Pre  1  22835.79 1.871994 0.11095274   0.001      0.003   *
+# 2 Post vs Irma  1  15526.38 1.561645 0.10035218   0.005      0.015   .
+# 3  Pre vs Irma  1  23035.02 1.501765 0.08116876   0.004      0.012   .
+##all different
+```
+
+# Bar plots
+
+## Setup microshades
+
+```{r}
+library("microshades")
+#remotes::install_github("mikemc/speedyseq")
+library("speedyseq")
+library(ggpubr)
+library(cowplot)
+
+setwd("/Volumes/GoogleDrive/My Drive/Flirma/flirma_networks/fl_16s/03.comm_comp")
+```
+
+## Setup - data
+
+```{r}
+ps.clean <- readRDS("ps.asvsnamed.clean.RDS")
+
+ps <- subset_samples(ps.clean,site!="UK3")
+
+ps.sid <- subset_samples(ps,spp=="ssid")
+ps.rad <- subset_samples(ps,spp=="srad")
+
+ps.sid.no0 <- prune_taxa(taxa_sums(ps.sid)!=0,ps.sid)
+ps.rad.no0 <- prune_taxa(taxa_sums(ps.rad)!=0,ps.rad)
+```
+
+## Most abundant taxa
+
+Informs 4 'selected groups' below
+
+```{r}
+# Merges ASVs that have the same taxonomy rank
+tax.phy.sid  <- tax_glom(ps.sid, taxrank = "Phylum")
+#"Proteobacteria","Bacteroidota","Cyanobacteria","Actinobacteriota"
+tax.phy.rad  <- tax_glom(ps.rad, taxrank = "Phylum")
+#same top 4 as sids
+```
+
+## Plots setup - sids
+
+```{r}
+#was doing Family before, seeing what Class looks like now
+mdf.sid <- prep_mdf(ps.sid.no0,subgroup_level="Order")
+
+mdf.sid$time <- factor(mdf.sid$time,levels=c("Pre","Irma","Post"))
+
+col.sid <- create_color_dfs(mdf.sid, top_orientation = FALSE,group_level="Phylum",subgroup_level="Order",selected_groups=c("Proteobacteria","Bacteroidota","Cyanobacteria","Actinobacteriota"),cvd=TRUE)
+
+# Extract
+col.sid.m <- col.sid$mdf
+col.sid.c <- col.sid$cdf
+```
+
+## Sids plots{.tabset}
+
+### LK1
+
+```{r}
+col.sid.m.lk1 <- subset(col.sid.m,site=="LK1")
+
+##Class
+ms.plot.lk1 <- plot_microshades(col.sid.m.lk1, col.sid.c)+
+  facet_wrap(zone~time,scales="free_x")+
+  theme_cowplot()+
+  theme(axis.text.x=element_blank())+
+  ggtitle("Lower Keys 1")+
+  guides(color=guide_legend("Phylum, Order"),fill=guide_legend("Phylum, Order"))
+ms.plot.lk1
+
+##Family
+# ms.plot.lk1 <- plot_microshades(col.sid.m.lk1, col.sid.c)+
+#   facet_wrap(zone~time,scales="free_x")+
+#   theme_cowplot()+
+#   theme(axis.text.x=element_blank())+
+#   ggtitle("Lower Keys 1")+
+#   guides(color=guide_legend("Phylum, Family"),fill=guide_legend("Phylum, Family"))
+# ms.plot.lk1
+```
+
+### UK1
+
+```{r}
+col.sid.m.uk1 <- subset(col.sid.m,site=="UK1")
+
+##Class
+ms.plot.uk1 <- plot_microshades(col.sid.m.uk1, col.sid.c)+
+  facet_wrap(zone~time,scales="free_x")+
+  theme_cowplot()+
+  theme(axis.text.x=element_blank())+
+  ggtitle("Upper Keys 1")+
+  guides(color=guide_legend("Phylum, Order"),fill=guide_legend("Phylum, Order"))
+
+# ##Family
+# ms.plot.uk1 <- plot_microshades(col.sid.m.uk1, col.sid.c)+
+#   facet_wrap(zone~time,scales="free_x")+
+#   theme_cowplot()+
+#   theme(axis.text.x=element_blank())+
+#   ggtitle("Upper Keys 1")+
+#   guides(color=guide_legend("Phylum, Family"),fill=guide_legend("Phylum, Family"))
+```
+
+### UK2
+
+```{r}
+col.sid.m.uk2 <- subset(col.sid.m,site=="UK2")
+
+##Class
+ms.plot.uk2 <- plot_microshades(col.sid.m.uk2, col.sid.c)+
+  facet_wrap(zone~time,scales="free_x")+
+  theme_cowplot()+
+  theme(axis.text.x=element_blank())+
+  ggtitle("Upper Keys 2")+
+  guides(color=guide_legend("Phylum, Order"),fill=guide_legend("Phylum, Order"))
+
+##Family
+# ms.plot.uk2 <- plot_microshades(col.sid.m.uk2, col.sid.c)+
+#   facet_wrap(zone~time,scales="free_x")+
+#   theme_cowplot()+
+#   theme(axis.text.x=element_blank())+
+#   ggtitle("Upper Keys 2")+
+#   guides(color=guide_legend("Phylum, Family"),fill=guide_legend("Phylum, Family"))
+```
+
+## All together - sids
+
+```{r}
+ms.plot.sid <- ggarrange(ms.plot.lk1,ms.plot.uk1,ms.plot.uk2,nrow=3,ncol=1,labels="AUTO")
+annotate_figure(ms.plot.sid,top=text_grob("S. siderea",face="italic",size=16))
+
+#ggsave("ms.plot.sid.ord.pdf",height=15,width=12)
+```
+
+## Plots setup - rads
+
+```{r}
+mdf.rad <- prep_mdf(ps.rad.no0,subgroup_level="Order")
+
+mdf.rad$time <- factor(mdf.rad$time,levels=c("Pre","Irma","Post"))
+
+col.rad <- create_color_dfs(mdf.rad, top_orientation = FALSE,group_level="Phylum",subgroup_level="Order",selected_groups=c("Proteobacteria","Bacteroidota","Cyanobacteria","Actinobacteriota"),cvd=TRUE)
+
+# Extract
+col.rad.m <- col.rad$mdf
+col.rad.c <- col.rad$cdf
+```
+
+## Rads plots{.tabset}
+
+### LK1
+
+```{r}
+col.rad.m.lk1 <- subset(col.rad.m,site=="LK1")
+
+ms.plot.lk1 <- plot_microshades(col.rad.m.lk1, col.rad.c)+
+  facet_wrap(zone~time,scales="free_x")+
+  theme_cowplot()+
+  theme(axis.text.x=element_blank())+
+  ggtitle("Lower Keys 1")+
+  guides(color=guide_legend("Phylum, Order"),fill=guide_legend("Phylum, Order"))
+```
+
+### UK1
+
+```{r}
+col.rad.m.uk1 <- subset(col.rad.m,site=="UK1")
+
+ms.plot.uk1 <- plot_microshades(col.rad.m.uk1, col.rad.c)+
+  facet_wrap(zone~time,scales="free_x")+
+  theme_cowplot()+
+  theme(axis.text.x=element_blank())+
+  ggtitle("Upper Keys 1")+
+  guides(color=guide_legend("Phylum, Order"),fill=guide_legend("Phylum, Order"))
+```
+
+### UK2
+
+```{r}
+col.rad.m.uk2 <- subset(col.rad.m,site=="UK2")
+
+ms.plot.uk2 <- plot_microshades(col.rad.m.uk2, col.rad.c)+
+  facet_wrap(zone~time,scales="free_x")+
+  theme_cowplot()+
+  theme(axis.text.x=element_blank())+
+  ggtitle("Upper Keys 2")+
+  guides(color=guide_legend("Phylum, Order"),fill=guide_legend("Phylum, Order"))
+```
+
+## All together - rads
+
+```{r}
+ms.plot.rad <- ggarrange(ms.plot.lk1,ms.plot.uk1,ms.plot.uk2,nrow=3,ncol=1,labels="AUTO")
+annotate_figure(ms.plot.rad,top=text_grob("S. radians",face="italic",size=16))
+
+#ggsave("ms.plot.rad.ord.pdf",height=15,width=12)
+```
+
+# Average rel. abundance
+
+## Setup
+
+```{r}
+library("Rmisc")
+
+ps.sid.rel <- transform_sample_counts(ps.sid.no0, function(x) x / sum(x))
+ps.rad.rel <- transform_sample_counts(ps.rad.no0, function(x) x / sum(x))
+```
+
+```{r}
+library("microbiome")
+library("microViz")
+
+ps.sid.alt <- subset_taxa(ps.sid.rel,Family=="Alteromonadaceae")
+#ps.sid.alt <- tax_glom(ps.sid.alt,"Genus")
+
+ps.sid.alt@otu_table[ps.sid.alt@otu_table>0] <-1
+
+plot_bar(ps.sid.alt,x="time",fill="Genus")
+
+boxplot_abundance(ps.sid.rel, x='time', y='sq324')
+data(peerj32)
+```
+
+## Functions
+
+```{r}
+library("phyloseq")
+library("data.table")
+library("ggplot2")
+
+fast_melt = function(physeq){
+  # supports "naked" otu_table as `physeq` input.
+  otutab = as(otu_table(physeq), "matrix")
+  if(!taxa_are_rows(physeq)){otutab <- t(otutab)}
+  otudt = data.table(otutab, keep.rownames = TRUE)
+  setnames(otudt, "rn", "taxaID")
+  # Enforce character taxaID key
+  otudt[, taxaIDchar := as.character(taxaID)]
+  otudt[, taxaID := NULL]
+  setnames(otudt, "taxaIDchar", "taxaID")
+  # Melt count table
+  mdt = melt.data.table(otudt, 
+                        id.vars = "taxaID",
+                        variable.name = "SampleID",
+                        value.name = "count")
+  # Remove zeroes, NAs
+  mdt <- mdt[count > 0][!is.na(count)]
+  # Calculate relative abundance
+  mdt[, RelativeAbundance := count / sum(count), by = SampleID]
+  if(!is.null(tax_table(physeq, errorIfNULL = FALSE))){
+    # If there is a tax_table, join with it. Otherwise, skip this join.
+    taxdt = data.table(as(tax_table(physeq, errorIfNULL = TRUE), "matrix"), keep.rownames = TRUE)
+    setnames(taxdt, "rn", "taxaID")
+    # Enforce character taxaID key
+    taxdt[, taxaIDchar := as.character(taxaID)]
+    taxdt[, taxaID := NULL]
+    setnames(taxdt, "taxaIDchar", "taxaID")
+    # Join with tax table
+    setkey(taxdt, "taxaID")
+    setkey(mdt, "taxaID")
+    mdt <- taxdt[mdt]
+  }
+  return(mdt)
+}
+
+summarize_taxa = function(physeq, Rank, GroupBy = NULL){
+  Rank <- Rank[1]
+  if(!Rank %in% rank_names(physeq)){
+    message("The argument to `Rank` was:\n", Rank,
+            "\nBut it was not found among taxonomic ranks:\n",
+            paste0(rank_names(physeq), collapse = ", "), "\n",
+            "Please check the list shown above and try again.")
+  }
+  if(!is.null(GroupBy)){
+    GroupBy <- GroupBy[1]
+    if(!GroupBy %in% sample_variables(physeq)){
+      message("The argument to `GroupBy` was:\n", GroupBy,
+              "\nBut it was not found among sample variables:\n",
+              paste0(sample_variables(physeq), collapse = ", "), "\n",
+              "Please check the list shown above and try again.")
+    }
+  }
+  # Start with fast melt
+  mdt = fast_melt(physeq)
+  if(!is.null(GroupBy)){
+    # Add the variable indicated in `GroupBy`, if provided.
+    sdt = data.table(SampleID = sample_names(physeq),
+                     var1 = get_variable(physeq, GroupBy))
+    setnames(sdt, "var1", GroupBy)
+    # Join
+    setkey(sdt, SampleID)
+    setkey(mdt, SampleID)
+    mdt <- sdt[mdt]
+  }
+  # Summarize
+  summarydt = mdt[, list(meanRA = mean(RelativeAbundance),
+                         sdRA = sd(RelativeAbundance),
+                         minRA = min(RelativeAbundance),
+                         maxRA = max(RelativeAbundance)),
+                  by = c(Rank, GroupBy)]
+  return(summarydt)
+}
+
+plot_taxa_summary = function(physeq, Rank, GroupBy = NULL){
+  # Get taxa summary table 
+  dt1 = summarize_taxa(physeq, Rank = Rank, GroupBy = GroupBy)
+  # Set factor appropriately for plotting
+  RankCol = which(colnames(dt1) == Rank)
+  setorder(dt1, -meanRA)
+  dt1[, RankFac := factor(dt1[[Rank]], 
+                          levels = rev(dt1[[Rank]]))]
+  dt1[, ebarMax := max(c(0, min(meanRA + sdRA))), by = eval(Rank)]
+  dt1[, ebarMin := max(c(0, min(meanRA - sdRA))), by = eval(Rank)]
+  # Set zeroes to one-tenth the smallest value
+  ebarMinFloor = dt1[(ebarMin > 0), min(ebarMin)]
+  ebarMinFloor <- ebarMinFloor / 10
+  dt1[(ebarMin == 0), ebarMin := ebarMinFloor]
+
+  pRank = ggplot(dt1, aes(x = meanRA, y = RankFac)) +
+    scale_x_log10() +
+    xlab("Mean Relative Abundance") +
+    ylab(Rank) +
+    theme_bw()
+  if(!is.null(GroupBy)){
+    # pRank <- pRank + facet_wrap(facets = as.formula(paste("~", GroupBy)))
+    pRank <- pRank + geom_point(mapping = aes_string(colour = GroupBy),
+                                size = 5)
+  } else {
+    # Don't include error bars for faceted version
+    pRank <- pRank + geom_errorbarh(aes(xmax = ebarMax,
+                                        xmin = ebarMin))
+  }
+  return(pRank)
+}
+
+# # Test
+# data("GlobalPatterns")
+# plot_taxa_summary(GlobalPatterns, "Phylum")
+# #plot_taxa_summary(GlobalPatterns, "Phylum", "SampleType")
+# gp.sum <- data.frame(summarize_taxa(GlobalPatterns, "Phylum"))
+# newdata <- gp.sum[order(gp.sum$meanRA,decreasing=T),]
+# 
+# arrange(gp.sum$meanRA)
+# #summarize_taxa(GlobalPatterns, "Phylum", "SampleType")
+```
+
+## Sids
+
+```{r}
+ps.sid.rel.phy <- tax_glom(ps.sid.rel,taxrank="Phylum")
+
+ps.sid.sum.phy <- data.frame(summarize_taxa(ps.sid.rel.phy, "Phylum"))
+ps.sid.sum.phy.arr <- ps.sid.sum.phy[order(ps.sid.sum.phy$meanRA,decreasing=T),]
+
+ps.sid.sum.phy.arr
+#Proteobacteria, Bacteroidota, Halanaerobiaeota, Cyanobacteria
+
+ps.sid.rel.cla <- tax_glom(ps.sid.rel,taxrank="Class")
+
+ps.sid.sum.cla <- data.frame(summarize_taxa(ps.sid.rel.cla, "Class"))
+ps.sid.sum.cla.arr <- ps.sid.sum.cla[order(ps.sid.sum.cla$meanRA,decreasing=T),]
+
+head(ps.sid.sum.cla.arr)
+#                   Class     meanRA       sdRA        minRA      maxRA
+# 1   Gammaproteobacteria 0.59578845 0.23613951 0.0337863168 0.96053566
+# 103 Alphaproteobacteria 0.14470923 0.12276991 0.0034753304 0.63406748
+# 61          Bacteroidia 0.10623542 0.09169141 0.0004682644 0.54335091
+# 52        Halanaerobiia 0.03698319 0.07143057 0.0001070855 0.14412096
+# 8        Cyanobacteriia 0.03002937 0.04068228 0.0004503780 0.35349503
+# 34     Desulfotomaculia 0.02065305         NA 0.0206530481 0.02065305
+
+ps.sid.rel.ord <- tax_glom(ps.sid.rel,taxrank="Order")
+
+ps.sid.sum.ord <- data.frame(summarize_taxa(ps.sid.rel.ord, "Order"))
+ps.sid.sum.ord.arr <- ps.sid.sum.ord[order(ps.sid.sum.ord$meanRA,decreasing=T),]
+
+head(ps.sid.sum.ord.arr)
+
+ps.sid.hal <- subset_taxa(ps.sid.no0,Phylum=="Halanaerobiaeota")
+ps.sid.hal.no0 <- prune_samples(sample_sums(ps.sid.hal)!=0,ps.sid.hal)
+ps.sid.hal.no0
+
+ps.sid.cya <- subset_taxa(ps.sid.no0,Phylum=="Cyanobacteria")
+ps.sid.cya.no0 <- prune_samples(sample_sums(ps.sid.cya)!=0,ps.sid.cya)
+ps.sid.cya.no0
+
+##genus
+ps.sid.rel.gen <- tax_glom(ps.sid.rel,taxrank="Genus")
+
+ps.sid.sum.gen <- data.frame(summarize_taxa(ps.sid.rel.gen, "Genus"))
+ps.sid.sum.gen.arr <- ps.sid.sum.gen[order(ps.sid.sum.gen$meanRA,decreasing=T),]
+
+head(ps.sid.sum.gen.arr)
+
+##genus
+ps.rad.rel.gen <- tax_glom(ps.rad.rel,taxrank="Genus")
+
+ps.rad.sum.gen <- data.frame(summarize_taxa(ps.rad.rel.gen, "Genus"))
+ps.rad.sum.gen.arr <- ps.rad.sum.gen[order(ps.rad.sum.gen$meanRA,decreasing=T),]
+
+head(ps.rad.sum.gen.arr)
+
+##Family
+ps.sid.rel.fam <- tax_glom(ps.sid.rel,taxrank="Family")
+
+ps.sid.sum.fam <- data.frame(summarize_taxa(ps.sid.rel.fam, "Family"))
+ps.sid.sum.fam.arr <- ps.sid.sum.fam[order(ps.sid.sum.fam$meanRA,decreasing=T),]
+
+head(ps.sid.sum.fam.arr)
+
+##Family
+ps.rad.rel.fam <- tax_glom(ps.rad.rel,taxrank="Family")
+
+ps.rad.sum.fam <- data.frame(summarize_taxa(ps.rad.rel.fam, "Family"))
+ps.rad.sum.fam.arr <- ps.rad.sum.fam[order(ps.rad.sum.fam$meanRA,decreasing=T),]
+
+head(ps.rad.sum.fam.arr)
+```
+
+## Rads
+
+```{r}
+ps.rad.rel.phy <- tax_glom(ps.rad.rel,taxrank="Phylum")
+
+ps.rad.sum.phy <- data.frame(summarize_taxa(ps.rad.rel.phy, "Phylum"))
+ps.rad.sum.phy.arr <- ps.rad.sum.phy[order(ps.rad.sum.phy$meanRA,decreasing=T),]
+
+head(ps.rad.sum.phy.arr)
+head(ps.sid.sum.phy.arr)
+#Proteobacteria, Bacteroidota, Planctomycetota, Cyanobacteria
+
+ps.rad.rel.cla <- tax_glom(ps.rad.rel,taxrank="Class")
+
+ps.rad.sum.cla <- data.frame(summarize_taxa(ps.rad.rel.cla, "Class"))
+ps.rad.sum.cla.arr <- ps.rad.sum.cla[order(ps.rad.sum.cla$meanRA,decreasing=T),]
+
+head(ps.rad.sum.cla.arr)
+
+ps.rad.rel.ord <- tax_glom(ps.rad.rel,taxrank="Order")
+
+ps.rad.sum.ord <- data.frame(summarize_taxa(ps.rad.rel.ord, "Order"))
+ps.rad.sum.ord.arr <- ps.rad.sum.ord[order(ps.rad.sum.ord$meanRA,decreasing=T),]
+
+head(ps.rad.sum.ord.arr)
+```
+
+## Bar plots summed by sites & times
+
+### Subset data
+
+```{r}
+mdf.sid <- prep_mdf(ps.sid.no0,subgroup_level="Class")
+
+col.sid <- create_color_dfs(mdf.sid, top_orientation = FALSE,group_level="Phylum",subgroup_level="Class",selected_groups=c("Proteobacteria", "Bacteroidota", "Halanaerobiaeota", "Cyanobacteria"),cvd=TRUE)
+col.sid.c <- col.sid$cdf
+
+col.sid.c.new <- color_reassign(col.sid.c,
+                          group_assignment = c("Proteobacteria", "Bacteroidota", "Halanaerobiaeota", "Cyanobacteria"),
+                          color_assignment = c("micro_cvd_orange","micro_cvd_purple","micro_cvd_turquoise","micro_cvd_green"))
+
+# Extract
+col.sid.m <- col.sid$mdf
+
+ms.plot.sid <- plot_microshades(col.sid.m, col.sid.c.new)+
+  facet_grid(site~time,scales="free_x")+
+  theme_cowplot()+
+  theme(axis.text.x=element_blank())+
+  xlab("")+
+  ylab("")+
+  ggtitle("Pre")+
+  guides(color=guide_legend("Phylum-Class"),fill=guide_legend("Phylum-Class"))+
+  theme(axis.text.x=element_text(angle=45))
+ms.plot.sid
+
+ps.sid.pre <- subset_samples(ps.sid.no0, time=="Pre")
+ps.sid.irm <- subset_samples(ps.sid.no0, time=="Irma")
+ps.sid.pos <- subset_samples(ps.sid.no0, time=="Post")
+
+ps.sid.pre.lk1 <- subset_samples(ps.sid.pre,site=="LK1")
+ps.sid.irm.lk1 <- subset_samples(ps.sid.irm,site=="LK1")
+ps.sid.pos.lk1 <- subset_samples(ps.sid.pos,site=="LK1")
+
+ps.sid.pre.uk1 <- subset_samples(ps.sid.pre,site=="UK1")
+ps.sid.irm.uk1 <- subset_samples(ps.sid.irm,site=="UK1")
+ps.sid.pos.uk1 <- subset_samples(ps.sid.pos,site=="UK1")
+
+ps.sid.pre.uk2 <- subset_samples(ps.sid.pre,site=="UK2")
+ps.sid.irm.uk2 <- subset_samples(ps.sid.irm,site=="UK2")
+ps.sid.pos.uk2 <- subset_samples(ps.sid.pos,site=="UK2")
+```
+
+### LK1
+
+#### Pre
+
+```{r}
+ps.sid.pre.lk1.rel <- transform_sample_counts(ps.sid.pre.lk1, function(x) x / sum(x))
+ps.sid.pre.lk1.rel.zone <- merge_samples(ps.sid.pre.lk1.rel, "zone")
+ps.sid.pre.lk1.zone <- transform_sample_counts(ps.sid.pre.lk1.rel.zone, function(x) x / sum(x))
+
+mdf.sid.pre.lk1.zone <- prep_mdf(ps.sid.pre.lk1.zone,subgroup_level="Class")
+
+col.sid.pre.lk1.zone <- create_color_dfs(mdf.sid.pre.lk1.zone, top_orientation = FALSE,group_level="Phylum",subgroup_level="Class",selected_groups=c("Proteobacteria", "Bacteroidota", "Halanaerobiaeota", "Cyanobacteria"),cvd=TRUE)
+
+#mdf.rad$time <- factor(mdf.rad$time,levels=c("Pre","Irma","Post"))
+
+# Extract
+mdf.sid.pre.lk1.zone.m <- col.sid.pre.lk1.zone$mdf
+mdf.sid.pre.lk1.zone.m$site <- rep("LK1",nrow(mdf.sid.pre.lk1.zone.m))
+#col.pre.lk1.rel.zone.c <- col.pre.lk1.rel.zone$cdf
+
+ms.plot.lk1.pre <- plot_microshades(mdf.sid.pre.lk1.zone.m, col.sid.c.new)+
+  #facet_grid(site~.,scales="free_x")+
+  theme_cowplot()+
+  theme(axis.text.x=element_blank())+
+  xlab("")+
+  ylab("")+
+  ggtitle("Pre")+
+  guides(color=guide_legend("Phylum-Class"),fill=guide_legend("Phylum-Class"))+
+  theme(axis.text.x=element_text(angle=45))
+```
+
+#### Irma
+
+```{r}
+ps.sid.irm.lk1.rel <- transform_sample_counts(ps.sid.irm.lk1, function(x) x / sum(x))
+ps.sid.irm.lk1.rel.zone <- merge_samples(ps.sid.irm.lk1.rel, "zone")
+ps.sid.irm.lk1.zone <- transform_sample_counts(ps.sid.irm.lk1.rel.zone, function(x) x / sum(x))
+
+mdf.sid.irm.lk1.zone <- prep_mdf(ps.sid.irm.lk1.zone,subgroup_level="Class")
+
+col.sid.irm.lk1.zone <- create_color_dfs(mdf.sid.irm.lk1.zone, top_orientation = FALSE,group_level="Phylum",subgroup_level="Class",selected_groups=c("Proteobacteria", "Bacteroidota", "Cyanobacteria"),cvd=TRUE)
+
+# Extract
+mdf.sid.irm.lk1.zone.m <- col.sid.irm.lk1.zone$mdf
+mdf.sid.irm.lk1.zone.m$site <- rep("LK1",nrow(mdf.sid.irm.lk1.zone.m))
+
+ms.plot.lk1.irm <- plot_microshades(mdf.sid.irm.lk1.zone.m, col.sid.c.new)+
+  #facet_grid(site~.,scales="free_x")+
+  theme_cowplot()+
+  theme(axis.text.x=element_blank())+
+  xlab("")+
+  ylab("")+
+  ggtitle("Disturb.")+
+  guides(color=guide_legend("Phylum-Class"),fill=guide_legend("Phylum-Class"))+
+  theme(axis.text.x=element_text(angle=45))
+```
+
+#### Post
+
+```{r}
+ps.sid.pos.lk1.rel <- transform_sample_counts(ps.sid.pos.lk1, function(x) x / sum(x))
+ps.sid.pos.lk1.rel.zone <- merge_samples(ps.sid.pos.lk1.rel, "zone")
+ps.sid.pos.lk1.zone <- transform_sample_counts(ps.sid.pos.lk1.rel.zone, function(x) x / sum(x))
+
+mdf.sid.pos.lk1.zone <- prep_mdf(ps.sid.pos.lk1.zone,subgroup_level="Class")
+
+col.sid.pos.lk1.zone <- create_color_dfs(mdf.sid.pos.lk1.zone, top_orientation = FALSE,group_level="Phylum",subgroup_level="Class",selected_groups=c("Proteobacteria", "Bacteroidota", "Cyanobacteria"),cvd=TRUE)
+
+# Extract
+mdf.sid.pos.lk1.zone.m <- col.sid.pos.lk1.zone$mdf
+mdf.sid.pos.lk1.zone.m$site <- rep("LK1",nrow(mdf.sid.pos.lk1.zone.m))
+
+ms.plot.lk1.pos <- plot_microshades(mdf.sid.pos.lk1.zone.m, col.sid.c.new)+
+  facet_grid(site~.,scales="free_x")+
+  theme_cowplot()+
+  #theme(axis.text.x=element_blank())+
+  xlab("")+
+  ylab("")+
+  ggtitle("Post")+
+  guides(color=guide_legend("Phylum-Class"),fill=guide_legend("Phylum-Class"))+
+  theme(axis.text.x=element_text(angle=45,hjust=1))
+```
+
+### UK1
+
+#### Pre
+
+```{r}
+ps.sid.pre.uk1.rel <- transform_sample_counts(ps.sid.pre.uk1, function(x) x / sum(x))
+ps.sid.pre.uk1.rel.zone <- merge_samples(ps.sid.pre.uk1.rel, "zone")
+ps.sid.pre.uk1.zone <- transform_sample_counts(ps.sid.pre.uk1.rel.zone, function(x) x / sum(x))
+
+mdf.sid.pre.uk1.zone <- prep_mdf(ps.sid.pre.uk1.zone,subgroup_level="Class")
+
+col.sid.pre.uk1.zone <- create_color_dfs(mdf.sid.pre.uk1.zone, top_orientation = FALSE,group_level="Phylum",subgroup_level="Class",selected_groups=c("Proteobacteria", "Bacteroidota", "Cyanobacteria"),cvd=TRUE)
+
+#mdf.rad$time <- factor(mdf.rad$time,levels=c("Pre","Irma","Post"))
+
+# Extract
+mdf.sid.pre.uk1.zone.m <- col.sid.pre.uk1.zone$mdf
+mdf.sid.pre.uk1.zone.m$site <- rep("uk1",nrow(mdf.sid.pre.uk1.zone.m))
+#col.pre.uk1.rel.zone.c <- col.pre.uk1.rel.zone$cdf
+
+ms.plot.uk1.pre <- plot_microshades(mdf.sid.pre.uk1.zone.m, col.sid.c.new)+
+  #facet_grid(site~.,scales="free_x")+
+  theme_cowplot()+
+  theme(axis.text.x=element_blank())+
+  xlab("")+
+  ggtitle("Pre")+
+  guides(color=guide_legend("Phylum-Class"),fill=guide_legend("Phylum-Class"))
+#ms.plot.uk1.pre
+```
+
+#### Irma
+
+```{r}
+ps.sid.irm.uk1.rel <- transform_sample_counts(ps.sid.irm.uk1, function(x) x / sum(x))
+ps.sid.irm.uk1.rel.zone <- merge_samples(ps.sid.irm.uk1.rel, "zone")
+ps.sid.irm.uk1.zone <- transform_sample_counts(ps.sid.irm.uk1.rel.zone, function(x) x / sum(x))
+
+mdf.sid.irm.uk1.zone <- prep_mdf(ps.sid.irm.uk1.zone,subgroup_level="Class")
+
+col.sid.irm.uk1.zone <- create_color_dfs(mdf.sid.irm.uk1.zone, top_orientation = FALSE,group_level="Phylum",subgroup_level="Class",selected_groups=c("Proteobacteria", "Bacteroidota","Cyanobacteria"),cvd=TRUE)
+
+# Extract
+mdf.sid.irm.uk1.zone.m <- col.sid.irm.uk1.zone$mdf
+mdf.sid.irm.uk1.zone.m$site <- rep("UK1",nrow(mdf.sid.irm.uk1.zone.m))
+
+ms.plot.uk1.irm <- plot_microshades(mdf.sid.irm.uk1.zone.m, col.sid.c.new)+
+  #facet_grid(site~.,scales="free_x")+
+  theme_cowplot()+
+  theme(axis.text.x=element_blank())+
+  xlab("")+
+  ylab("")+
+  ggtitle("Disturb.")+
+  guides(color=guide_legend("Phylum-Class"),fill=guide_legend("Phylum-Class"))
+#ms.plot.uk1.irm
+```
+
+#### Post
+
+```{r}
+ps.sid.pos.uk1.rel <- transform_sample_counts(ps.sid.pos.uk1, function(x) x / sum(x))
+ps.sid.pos.uk1.rel.zone <- merge_samples(ps.sid.pos.uk1.rel, "zone")
+ps.sid.pos.uk1.zone <- transform_sample_counts(ps.sid.pos.uk1.rel.zone, function(x) x / sum(x))
+
+mdf.sid.pos.uk1.zone <- prep_mdf(ps.sid.pos.uk1.zone,subgroup_level="Class")
+
+col.sid.pos.uk1.zone <- create_color_dfs(mdf.sid.pos.uk1.zone, top_orientation = FALSE,group_level="Phylum",subgroup_level="Class",selected_groups=c("Proteobacteria", "Bacteroidota","Cyanobacteria"),cvd=TRUE)
+
+# Extract
+mdf.sid.pos.uk1.zone.m <- col.sid.pos.uk1.zone$mdf
+mdf.sid.pos.uk1.zone.m$site <- rep("UK1",nrow(mdf.sid.pos.uk1.zone.m))
+
+ms.plot.uk1.pos <- plot_microshades(mdf.sid.pos.uk1.zone.m, col.sid.c.new)+
+  facet_grid(site~.,scales="free_x")+
+  theme_cowplot()+
+  theme(axis.text.x=element_blank())+
+  xlab("")+
+  ylab("")+
+  ggtitle("Post")+
+  guides(color=guide_legend("Phylum-Class"),fill=guide_legend("Phylum-Class"))
+#ms.plot.uk1.pos
+```
+
+### UK2
+
+#### Pre
+
+```{r}
+ps.sid.pre.uk2.rel <- transform_sample_counts(ps.sid.pre.uk2, function(x) x / sum(x))
+ps.sid.pre.uk2.rel.zone <- merge_samples(ps.sid.pre.uk2.rel, "zone")
+ps.sid.pre.uk2.zone <- transform_sample_counts(ps.sid.pre.uk2.rel.zone, function(x) x / sum(x))
+
+mdf.sid.pre.uk2.zone <- prep_mdf(ps.sid.pre.uk2.zone,subgroup_level="Class")
+
+col.sid.pre.uk2.zone <- create_color_dfs(mdf.sid.pre.uk2.zone, top_orientation = FALSE,group_level="Phylum",subgroup_level="Class",selected_groups=c("Proteobacteria", "Bacteroidota","Cyanobacteria"),cvd=TRUE)
+
+#mdf.rad$time <- factor(mdf.rad$time,levels=c("Pre","Irma","Post"))
+
+# Extract
+mdf.sid.pre.uk2.zone.m <- col.sid.pre.uk2.zone$mdf
+mdf.sid.pre.uk2.zone.m$site <- rep("uk2",nrow(mdf.sid.pre.uk2.zone.m))
+#col.pre.uk2.rel.zone.c <- col.pre.uk2.rel.zone$cdf
+
+ms.plot.uk2.pre <- plot_microshades(mdf.sid.pre.uk2.zone.m, col.sid.c.new)+
+  #facet_grid(site~.,scales="free_x")+
+  theme_cowplot()+
+  theme(axis.text.x=element_blank())+
+  xlab("")+
+  ylab("")+
+  ggtitle("Pre")+
+  guides(color=guide_legend("Phylum-Class"),fill=guide_legend("Phylum-Class"))
+#ms.plot.uk2.pre
+```
+
+#### Irma
+
+```{r}
+ps.sid.irm.uk2.rel <- transform_sample_counts(ps.sid.irm.uk2, function(x) x / sum(x))
+ps.sid.irm.uk2.rel.zone <- merge_samples(ps.sid.irm.uk2.rel, "zone")
+ps.sid.irm.uk2.zone <- transform_sample_counts(ps.sid.irm.uk2.rel.zone, function(x) x / sum(x))
+
+mdf.sid.irm.uk2.zone <- prep_mdf(ps.sid.irm.uk2.zone,subgroup_level="Class")
+
+col.sid.irm.uk2.zone <- create_color_dfs(mdf.sid.irm.uk2.zone, top_orientation = FALSE,group_level="Phylum",subgroup_level="Class",selected_groups=c("Proteobacteria", "Bacteroidota","Cyanobacteria"),cvd=TRUE)
+
+# Extract
+mdf.sid.irm.uk2.zone.m <- col.sid.irm.uk2.zone$mdf
+mdf.sid.irm.uk2.zone.m$site <- rep("uk2",nrow(mdf.sid.irm.uk2.zone.m))
+
+ms.plot.uk2.irm <- plot_microshades(mdf.sid.irm.uk2.zone.m, col.sid.c.new)+
+  #facet_grid(site~.,scales="free_x")+
+  theme_cowplot()+
+  theme(axis.text.x=element_blank())+
+  xlab("")+
+  ylab("")+
+  ggtitle("Disturb.")+
+  guides(color=guide_legend("Phylum-Class"),fill=guide_legend("Phylum-Class"))
+#ms.plot.uk2.irm
+```
+
+#### Post
+
+```{r}
+ps.sid.pos.uk2.rel <- transform_sample_counts(ps.sid.pos.uk2, function(x) x / sum(x))
+ps.sid.pos.uk2.rel.zone <- merge_samples(ps.sid.pos.uk2.rel, "zone")
+ps.sid.pos.uk2.zone <- transform_sample_counts(ps.sid.pos.uk2.rel.zone, function(x) x / sum(x))
+
+mdf.sid.pos.uk2.zone <- prep_mdf(ps.sid.pos.uk2.zone,subgroup_level="Class")
+
+col.sid.pos.uk2.zone <- create_color_dfs(mdf.sid.pos.uk2.zone, top_orientation = FALSE,group_level="Phylum",subgroup_level="Class",selected_groups=c("Proteobacteria", "Bacteroidota","Cyanobacteria"),cvd=TRUE)
+
+# Extract
+mdf.sid.pos.uk2.zone.m <- col.sid.pos.uk2.zone$mdf
+mdf.sid.pos.uk2.zone.m$site <- rep("UK2",nrow(mdf.sid.pos.uk2.zone.m))
+
+ms.plot.uk2.pos <- plot_microshades(mdf.sid.pos.uk2.zone.m, col.sid.c.new)+
+  facet_grid(site~.,scales="free_x")+
+  theme_cowplot()+
+  theme(axis.text.x=element_blank())+
+  xlab("")+
+  ylab("")+
+  ggtitle("Post")+
+  guides(color=guide_legend("Phylum-Class"),fill=guide_legend("Phylum-Class"))
+#ms.plot.uk2.pos
+```
+
+## Sids plot! 
+
+```{r}
+leg.sid <- get_legend(ms.plot.sid)
+
+gg.sid <- ggarrange(ms.plot.uk2.pre,ms.plot.uk2.irm,ms.plot.uk2.pos,ms.plot.uk1.pre,ms.plot.uk1.irm,ms.plot.uk1.pos,ms.plot.lk1.pre,ms.plot.lk1.irm,ms.plot.lk1.pos,nrow=3,ncol=3,legend="none",align="hv")
+
+ggarrange(gg.sid,as_ggplot(leg.sid),widths=c(1.5,1))
+#ggsave("ms.sid.rz.cla.pdf",width=9,height=7)
+```
+
+## Bar plots summed by sites & times - rads
+
+### Subset data
+
+```{r}
+#Proteobacteria, Bacteroidota, Planctomycetota, Cyanobacteria
+
+mdf.rad <- prep_mdf(ps.rad.no0,subgroup_level="Class")
+
+col.rad <- create_color_dfs(mdf.rad, top_orientation = FALSE,group_level="Phylum",subgroup_level="Class",selected_groups=c("Proteobacteria", "Bacteroidota", "Planctomycetota", "Cyanobacteria"),cvd=TRUE)
+col.rad.c <- col.rad$cdf
+
+col.rad.c <- color_reassign(col.rad.c,
+                          group_assignment = c("Proteobacteria", "Bacteroidota", "Planctomycetota", "Cyanobacteria"),
+                          color_assignment = c("micro_cvd_orange","micro_cvd_purple","micro_cvd_turquoise","micro_cvd_green"))
+
+# Extract
+col.rad.m <- col.rad$mdf
+
+ms.plot.rad <- plot_microshades(col.rad.m, col.rad.c)+
+  facet_grid(site~time,scales="free_x")+
+  theme_cowplot()+
+  theme(axis.text.x=element_blank())+
+  xlab("")+
+  ylab("")+
+  ggtitle("Pre")+
+  guides(color=guide_legend("Phylum-Class"),fill=guide_legend("Phylum-Class"))+
+  theme(axis.text.x=element_text(angle=45))
+ms.plot.rad
+
+ps.rad.pre <- subset_samples(ps.rad.no0, time=="Pre")
+ps.rad.irm <- subset_samples(ps.rad.no0, time=="Irma")
+ps.rad.pos <- subset_samples(ps.rad.no0, time=="Post")
+
+ps.rad.pre.lk1 <- subset_samples(ps.rad.pre,site=="LK1")
+ps.rad.irm.lk1 <- subset_samples(ps.rad.irm,site=="LK1")
+ps.rad.pos.lk1 <- subset_samples(ps.rad.pos,site=="LK1")
+
+ps.rad.pre.uk1 <- subset_samples(ps.rad.pre,site=="UK1")
+ps.rad.irm.uk1 <- subset_samples(ps.rad.irm,site=="UK1")
+ps.rad.pos.uk1 <- subset_samples(ps.rad.pos,site=="UK1")
+
+ps.rad.pre.uk2 <- subset_samples(ps.rad.pre,site=="UK2")
+ps.rad.irm.uk2 <- subset_samples(ps.rad.irm,site=="UK2")
+ps.rad.pos.uk2 <- subset_samples(ps.rad.pos,site=="UK2")
+```
+
+### LK1
+
+#### Pre
+
+```{r}
+ps.rad.pre.lk1.rel <- transform_sample_counts(ps.rad.pre.lk1, function(x) x / sum(x))
+ps.rad.pre.lk1.rel.zone <- merge_samples(ps.rad.pre.lk1.rel, "zone")
+ps.rad.pre.lk1.zone <- transform_sample_counts(ps.rad.pre.lk1.rel.zone, function(x) x / sum(x))
+
+mdf.rad.pre.lk1.zone <- prep_mdf(ps.rad.pre.lk1.zone,subgroup_level="Class")
+
+col.rad.pre.lk1.zone <- create_color_dfs(mdf.rad.pre.lk1.zone, top_orientation = FALSE,group_level="Phylum",subgroup_level="Class",selected_groups=c("Proteobacteria", "Bacteroidota", "Planctomycetota", "Cyanobacteria"),cvd=TRUE)
+
+#mdf.rad$time <- factor(mdf.rad$time,levels=c("Pre","Irma","Post"))
+
+# Extract
+mdf.rad.pre.lk1.zone.m <- col.rad.pre.lk1.zone$mdf
+mdf.rad.pre.lk1.zone.m$site <- rep("LK1",nrow(mdf.rad.pre.lk1.zone.m))
+#col.pre.lk1.rel.zone.c <- col.pre.lk1.rel.zone$cdf
+
+ms.plot.lk1.pre <- plot_microshades(mdf.rad.pre.lk1.zone.m, col.rad.c)+
+  #facet_grid(site~.,scales="free_x")+
+  theme_cowplot()+
+  theme(axis.text.x=element_blank())+
+  xlab("")+
+  ylab("")+
+  ggtitle("Pre")+
+  guides(color=guide_legend("Phylum-Class"),fill=guide_legend("Phylum-Class"))+
+  theme(axis.text.x=element_text(angle=45))
+#ms.plot.lk1.pre
+```
+
+#### Irma
+
+```{r}
+ps.rad.irm.lk1.rel <- transform_sample_counts(ps.rad.irm.lk1, function(x) x / sum(x))
+ps.rad.irm.lk1.rel.zone <- merge_samples(ps.rad.irm.lk1.rel, "zone")
+ps.rad.irm.lk1.zone <- transform_sample_counts(ps.rad.irm.lk1.rel.zone, function(x) x / sum(x))
+
+mdf.rad.irm.lk1.zone <- prep_mdf(ps.rad.irm.lk1.zone,subgroup_level="Class")
+
+col.rad.irm.lk1.zone <- create_color_dfs(mdf.rad.irm.lk1.zone, top_orientation = FALSE,group_level="Phylum",subgroup_level="Class",selected_groups=c("Proteobacteria", "Bacteroidota", "Planctomycetota", "Cyanobacteria"),cvd=TRUE)
+
+# Extract
+mdf.rad.irm.lk1.zone.m <- col.rad.irm.lk1.zone$mdf
+mdf.rad.irm.lk1.zone.m$site <- rep("LK1",nrow(mdf.rad.irm.lk1.zone.m))
+
+ms.plot.lk1.irm <- plot_microshades(mdf.rad.irm.lk1.zone.m, col.rad.c)+
+  #facet_grid(site~.,scales="free_x")+
+  theme_cowplot()+
+  theme(axis.text.x=element_blank())+
+  xlab("")+
+  ylab("")+
+  ggtitle("Disturb.")+
+  guides(color=guide_legend("Phylum-Class"),fill=guide_legend("Phylum-Class"))+
+  theme(axis.text.x=element_text(angle=45))
+```
+
+#### Post
+
+```{r}
+ps.rad.pos.lk1.rel <- transform_sample_counts(ps.rad.pos.lk1, function(x) x / sum(x))
+ps.rad.pos.lk1.rel.zone <- merge_samples(ps.rad.pos.lk1.rel, "zone")
+ps.rad.pos.lk1.zone <- transform_sample_counts(ps.rad.pos.lk1.rel.zone, function(x) x / sum(x))
+
+mdf.rad.pos.lk1.zone <- prep_mdf(ps.rad.pos.lk1.zone,subgroup_level="Class")
+
+col.rad.pos.lk1.zone <- create_color_dfs(mdf.rad.pos.lk1.zone, top_orientation = FALSE,group_level="Phylum",subgroup_level="Class",selected_groups=c("Proteobacteria", "Bacteroidota", "Planctomycetota", "Cyanobacteria"),cvd=TRUE)
+
+# Extract
+mdf.rad.pos.lk1.zone.m <- col.rad.pos.lk1.zone$mdf
+mdf.rad.pos.lk1.zone.m$site <- rep("LK1",nrow(mdf.rad.pos.lk1.zone.m))
+
+ms.plot.lk1.pos <- plot_microshades(mdf.rad.pos.lk1.zone.m, col.rad.c)+
+  facet_grid(site~.,scales="free_x")+
+  theme_cowplot()+
+  #theme(axis.text.x=element_blank())+
+  xlab("")+
+  ylab("")+
+  ggtitle("Post")+
+  guides(color=guide_legend("Phylum-Class"),fill=guide_legend("Phylum-Class"))+
+  theme(axis.text.x=element_text(angle=45,hjust=1))
+#ms.plot.lk1.pos
+```
+
+### UK1
+
+#### Pre
+
+```{r}
+ps.rad.pre.uk1.rel <- transform_sample_counts(ps.rad.pre.uk1, function(x) x / sum(x))
+ps.rad.pre.uk1.rel.zone <- merge_samples(ps.rad.pre.uk1.rel, "zone")
+ps.rad.pre.uk1.zone <- transform_sample_counts(ps.rad.pre.uk1.rel.zone, function(x) x / sum(x))
+
+mdf.rad.pre.uk1.zone <- prep_mdf(ps.rad.pre.uk1.zone,subgroup_level="Class")
+
+col.rad.pre.uk1.zone <- create_color_dfs(mdf.rad.pre.uk1.zone, top_orientation = FALSE,group_level="Phylum",subgroup_level="Class",selected_groups=c("Proteobacteria", "Bacteroidota", "Planctomycetota", "Cyanobacteria"),cvd=TRUE)
+
+#mdf.rad$time <- factor(mdf.rad$time,levels=c("Pre","Irma","Post"))
+
+# Extract
+mdf.rad.pre.uk1.zone.m <- col.rad.pre.uk1.zone$mdf
+mdf.rad.pre.uk1.zone.m$site <- rep("uk1",nrow(mdf.rad.pre.uk1.zone.m))
+#col.pre.uk1.rel.zone.c <- col.pre.uk1.rel.zone$cdf
+
+ms.plot.uk1.pre <- plot_microshades(mdf.rad.pre.uk1.zone.m, col.rad.c)+
+  #facet_grid(site~.,scales="free_x")+
+  theme_cowplot()+
+  theme(axis.text.x=element_blank())+
+  xlab("")+
+  ggtitle("Pre")+
+  guides(color=guide_legend("Phylum-Class"),fill=guide_legend("Phylum-Class"))
+#ms.plot.uk1.pre
+```
+
+#### Irma
+
+```{r}
+ps.rad.irm.uk1.rel <- transform_sample_counts(ps.rad.irm.uk1, function(x) x / sum(x))
+ps.rad.irm.uk1.rel.zone <- merge_samples(ps.rad.irm.uk1.rel, "zone")
+ps.rad.irm.uk1.zone <- transform_sample_counts(ps.rad.irm.uk1.rel.zone, function(x) x / sum(x))
+
+mdf.rad.irm.uk1.zone <- prep_mdf(ps.rad.irm.uk1.zone,subgroup_level="Class")
+
+col.rad.irm.uk1.zone <- create_color_dfs(mdf.rad.irm.uk1.zone, top_orientation = FALSE,group_level="Phylum",subgroup_level="Class",selected_groups=c("Proteobacteria", "Bacteroidota", "Planctomycetota", "Cyanobacteria"),cvd=TRUE)
+
+# Extract
+mdf.rad.irm.uk1.zone.m <- col.rad.irm.uk1.zone$mdf
+mdf.rad.irm.uk1.zone.m$site <- rep("UK1",nrow(mdf.rad.irm.uk1.zone.m))
+
+ms.plot.uk1.irm <- plot_microshades(mdf.rad.irm.uk1.zone.m, col.rad.c)+
+  facet_grid(site~.,scales="free_x")+
+  theme_cowplot()+
+  theme(axis.text.x=element_blank())+
+  xlab("")+
+  ylab("")+
+  ggtitle("Disturb.")+
+  guides(color=guide_legend("Phylum-Class"),fill=guide_legend("Phylum-Class"))+
+  theme(axis.text.x=element_text(angle=45))
+ms.plot.uk1.irm
+```
+
+### UK2
+
+#### Pre
+
+```{r}
+ps.rad.pre.uk2.rel <- transform_sample_counts(ps.rad.pre.uk2, function(x) x / sum(x))
+ps.rad.pre.uk2.rel.zone <- merge_samples(ps.rad.pre.uk2.rel, "zone")
+ps.rad.pre.uk2.zone <- transform_sample_counts(ps.rad.pre.uk2.rel.zone, function(x) x / sum(x))
+
+mdf.rad.pre.uk2.zone <- prep_mdf(ps.rad.pre.uk2.zone,subgroup_level="Class")
+
+col.rad.pre.uk2.zone <- create_color_dfs(mdf.rad.pre.uk2.zone, top_orientation = FALSE,group_level="Phylum",subgroup_level="Class",selected_groups=c("Proteobacteria", "Bacteroidota", "Planctomycetota", "Cyanobacteria"),cvd=TRUE)
+
+#mdf.rad$time <- factor(mdf.rad$time,levels=c("Pre","Irma","Post"))
+
+# Extract
+mdf.rad.pre.uk2.zone.m <- col.rad.pre.uk2.zone$mdf
+mdf.rad.pre.uk2.zone.m$site <- rep("uk2",nrow(mdf.rad.pre.uk2.zone.m))
+#col.pre.uk2.rel.zone.c <- col.pre.uk2.rel.zone$cdf
+
+ms.plot.uk2.pre <- plot_microshades(mdf.rad.pre.uk2.zone.m, col.rad.c)+
+  #facet_grid(site~.,scales="free_x")+
+  theme_cowplot()+
+  theme(axis.text.x=element_blank())+
+  xlab("")+
+  ylab("")+
+  ggtitle("Pre")+
+  guides(color=guide_legend("Phylum-Class"),fill=guide_legend("Phylum-Class"))
+#ms.plot.uk2.pre
+```
+
+#### Irma
+
+```{r}
+ps.rad.irm.uk2.rel <- transform_sample_counts(ps.rad.irm.uk2, function(x) x / sum(x))
+ps.rad.irm.uk2.rel.zone <- merge_samples(ps.rad.irm.uk2.rel, "zone")
+ps.rad.irm.uk2.zone <- transform_sample_counts(ps.rad.irm.uk2.rel.zone, function(x) x / sum(x))
+
+mdf.rad.irm.uk2.zone <- prep_mdf(ps.rad.irm.uk2.zone,subgroup_level="Class")
+
+col.rad.irm.uk2.zone <- create_color_dfs(mdf.rad.irm.uk2.zone, top_orientation = FALSE,group_level="Phylum",subgroup_level="Class",selected_groups=c("Proteobacteria", "Bacteroidota", "Planctomycetota", "Cyanobacteria"),cvd=TRUE)
+
+# Extract
+mdf.rad.irm.uk2.zone.m <- col.rad.irm.uk2.zone$mdf
+mdf.rad.irm.uk2.zone.m$site <- rep("uk2",nrow(mdf.rad.irm.uk2.zone.m))
+
+ms.plot.uk2.irm <- plot_microshades(mdf.rad.irm.uk2.zone.m, col.rad.c)+
+  #facet_grid(site~.,scales="free_x")+
+  theme_cowplot()+
+  theme(axis.text.x=element_blank())+
+  xlab("")+
+  ylab("")+
+  ggtitle("Disturb.")+
+  guides(color=guide_legend("Phylum-Class"),fill=guide_legend("Phylum-Class"))
+#ms.plot.uk2.irm
+```
+
+#### Post
+
+```{r}
+ps.rad.pos.uk2.rel <- transform_sample_counts(ps.rad.pos.uk2, function(x) x / sum(x))
+ps.rad.pos.uk2.rel.zone <- merge_samples(ps.rad.pos.uk2.rel, "zone")
+ps.rad.pos.uk2.zone <- transform_sample_counts(ps.rad.pos.uk2.rel.zone, function(x) x / sum(x))
+
+mdf.rad.pos.uk2.zone <- prep_mdf(ps.rad.pos.uk2.zone,subgroup_level="Class")
+
+col.rad.pos.uk2.zone <- create_color_dfs(mdf.rad.pos.uk2.zone, top_orientation = FALSE,group_level="Phylum",subgroup_level="Class",selected_groups=c("Proteobacteria", "Bacteroidota", "Planctomycetota", "Cyanobacteria"),cvd=TRUE)
+
+# Extract
+mdf.rad.pos.uk2.zone.m <- col.rad.pos.uk2.zone$mdf
+mdf.rad.pos.uk2.zone.m$site <- rep("UK2",nrow(mdf.rad.pos.uk2.zone.m))
+
+ms.plot.uk2.pos <- plot_microshades(mdf.rad.pos.uk2.zone.m, col.rad.c)+
+  facet_grid(site~.,scales="free_x")+
+  theme_cowplot()+
+  theme(axis.text.x=element_blank())+
+  xlab("")+
+  ylab("")+
+  ggtitle("Post")+
+  guides(color=guide_legend("Phylum-Class"),fill=guide_legend("Phylum-Class"))
+ms.plot.uk2.pos
+```
+
+```{r}
+ms.plot.rad
+leg.rad <- get_legend(ms.plot.rad)
+
+gg.rad <- ggarrange(ms.plot.uk2.pre,ms.plot.uk2.irm,ms.plot.uk2.pos,ms.plot.uk1.pre,ms.plot.uk1.irm,NULL,ms.plot.lk1.pre,ms.plot.lk1.irm,ms.plot.lk1.pos,nrow=3,ncol=3,legend="none",align="h")
+gg.rad
+
+#ggarrange(gg.rad,as_ggplot(leg.rad),widths=c(1,2))
+#ggsave("ms.rad.rz.cla.pdf",width=5,height=7)
+
+as_ggplot(leg.rad)
+ggsave("rad.legend.pdf",width=7)
+```

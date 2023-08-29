@@ -1,0 +1,372 @@
+---
+title: "Flirma RDA"
+date: "2023-01-31"
+output:
+ rmarkdown::html_document:
+    theme: cerulean
+    toc: yes
+    toc_float: yes
+    highlight: haddock
+    number_sections: true
+editor_options: 
+  chunk_output_type: console
+---
+
+# RDA prep
+
+Going to follow [this tutorial](https://github.com/Tom-Jenkins/seascape_rda_tutorial/blob/master/4.Redundancy_analysis/4.redundancy_analysis.R)
+
+Also helpful info [here](https://r.qcbs.ca/workshop10/book-en/redundancy-analysis.html)
+
+## Libraries, working directory
+
+```{r}
+library("phyloseq")
+library("microbiome")
+library("dplyr")
+
+setwd("~/Library/CloudStorage/GoogleDrive-nicfall@bu.edu/My Drive/Flirma/flirma_networks/fl_env/rda")
+```
+
+## Microbiome data
+
+Using CLR-transformed 'raw', cleaned data
+
+```{r}
+ps.clean <- readRDS("../../fl_16s/01.generate_asv_table/fl16s.23.ps.cleaner.less.rds")
+ps.clean
+
+ps.clean.sid <- subset_samples(ps.clean,spp=="ssid")
+ps.clean.rad <- subset_samples(ps.clean,spp=="srad")
+
+##remove singletons
+ps.trim.sid <- filter_taxa(ps.clean.sid, function (x) {sum(x > 0) > 1}, prune=TRUE)
+ps.trim.sid
+# otu_table()   OTU Table:         [ 7002 taxa and 167 samples ]
+# sample_data() Sample Data:       [ 167 samples by 11 sample variables ]
+# tax_table()   Taxonomy Table:    [ 7002 taxa by 8 taxonomic ranks ]
+
+ps.trim.rad <- filter_taxa(ps.clean.rad, function (x) {sum(x > 0) > 1}, prune=TRUE)
+ps.trim.rad
+# phyloseq-class experiment-level object
+# otu_table()   OTU Table:         [ 15354 taxa and 131 samples ]
+# sample_data() Sample Data:       [ 131 samples by 11 sample variables ]
+# tax_table()   Taxonomy Table:    [ 15354 taxa by 8 taxonomic ranks ]
+
+##clr transform
+ps.trim.sid.clr <-  microbiome::transform(ps.trim.sid,"clr")
+ps.trim.rad.clr <-  microbiome::transform(ps.trim.rad,"clr")
+
+##extract data from phyloseq object
+##sequence tables are ready to go - env data needs lots of processing
+seq.trim.sid.clr <- data.frame(ps.trim.sid.clr@otu_table)
+seq.trim.rad.clr <- data.frame(ps.trim.rad.clr@otu_table)
+
+sam.trim.sid.clr <- data.frame(ps.trim.sid.clr@sam_data)
+sam.trim.rad.clr <- data.frame(ps.trim.rad.clr@sam_data)
+```
+
+## Environmental data
+
+### Main metrics
+
+```{r}
+kd.sum <- read.csv("kd.for.rda.csv",row.names=1)
+sst.sum <- read.csv("sst.for.rda.csv",row.names=1)
+chla.sum <- read.csv("chla.for.rda.csv",row.names=1)
+
+kd.sum$sz_year <- paste0(kd.sum$site_zone,"_",kd.sum$year)
+sst.sum$sz_year <- paste0(sst.sum$site_zone,"_",sst.sum$year)
+chla.sum$sz_year <- paste0(chla.sum$site_zone,"_",chla.sum$year)
+
+env.sum1 <- merge(kd.sum,sst.sum,by="sz_year",all=T)
+env.sum2 <- merge(env.sum1,chla.sum,by="sz_year",all=T)
+
+##don't need this year
+env.sum <- subset(env.sum2,year!="2019")
+```
+
+### Lat/lon, depth, damage
+
+```{r}
+env.sum.more <- env.sum %>% 
+  mutate(lat=case_when(
+    site_zone == "LK1-I" ~ 24.535409,
+    site_zone == "LK1-O" ~ 24.495846,
+    site_zone == "UK1-I" ~ 24.903837,
+    site_zone == "UK1-O" ~ 24.89525,
+    site_zone == "UK2-I" ~ 25.217965,
+    site_zone == "UK2-O" ~ 25.201217),
+    lon=case_when(
+      site_zone == "LK1-I" ~ -81.622376,
+      site_zone == "LK1-O" ~ -81.648539,
+      site_zone == "UK1-I" ~ -80.609678,
+      site_zone == "UK1-O" ~ -80.572613,
+      site_zone == "UK2-I" ~ -80.276098,
+      site_zone == "UK2-O" ~ -80.226867),
+    depth_m=case_when(
+      site_zone == "LK1-I" ~ 3.96,
+      site_zone == "LK1-O" ~ 6.40,
+      site_zone == "UK1-I" ~ 3.05,
+      site_zone == "UK1-O" ~ 5.49,
+      site_zone == "UK2-I" ~ 4.27,
+      site_zone == "UK2-O" ~ 6.86),
+    dmg=case_when(
+      sz_year == "LK1-I_2017" ~ 1.57,
+      sz_year == "LK1-O_2017" ~ 1.33,
+      sz_year == "UK1-I_2017" ~ 1.67,
+      sz_year == "UK1-O_2017" ~ 1.67,
+      sz_year == "UK2-I_2017" ~ 1.33,
+      sz_year == "UK2-O_2017" ~ 1.33,
+      .default=1),
+  )
+```
+
+## Merge sample data with env. data
+
+```{r}
+##radians
+sam.trim.rad.clr$sz_year <- paste0(sam.trim.rad.clr$site_zone,"_",sam.trim.rad.clr$year)
+
+sam.rad.env1 <- merge(sam.trim.rad.clr,env.sum.more,by="sz_year")
+
+sam.rad.env <- sam.rad.env1[!duplicated(as.list(sam.rad.env1))]
+
+colnames(sam.rad.env)
+
+row.names(sam.rad.env) <- sam.rad.env$sample_num
+
+sam.rad.ready <- sam.rad.env %>%
+  select(-sz_year,-time,-sample_num,-site_zone.x,-full_site,-sample,-spp,-year.x.1)
+
+##sids
+sam.trim.sid.clr$sz_year <- paste0(sam.trim.sid.clr$site_zone,"_",sam.trim.sid.clr$year)
+
+sam.sid.env1 <- merge(sam.trim.sid.clr,env.sum.more,by="sz_year")
+
+sam.sid.env <- sam.sid.env1[!duplicated(as.list(sam.sid.env1))]
+
+colnames(sam.sid.env)
+
+row.names(sam.sid.env) <- sam.sid.env$sample_num
+
+sam.sid.ready <- sam.sid.env %>%
+  select(-sz_year,-time,-sample_num,-full_site,-site_zone.x,-sample,-spp,-year.x.1)
+
+##saving
+#saveRDS(seq.trim.rad.clr,file="seq.trim.rad.clr.rds")
+#saveRDS(seq.trim.sid.clr,file="seq.trim.sid.clr.rds")
+
+#write.csv(sam.rad.ready,file="sample.data.rda.rad.all.csv")
+#write.csv(sam.sid.ready,file="sample.data.rda.sid.all.csv")
+```
+
+# Analysis time - can start here
+
+## Setup
+
+```{r}
+library("vegan")
+library("dplyr")
+
+#maybe:
+#install.packages("adespatial")
+library("adespatial")
+
+setwd("~/Library/CloudStorage/GoogleDrive-nicfall@bu.edu/My Drive/Flirma/flirma_networks/fl_env/rda")
+
+seq.trim.rad.clr <- readRDS("seq.trim.rad.clr.rds")
+seq.trim.sid.clr <- readRDS("seq.trim.sid.clr.rds")
+
+sam.rad.ready <- read.csv("sample.data.rda.rad.all.csv",row.names=1)
+sam.sid.ready <- read.csv("sample.data.rda.sid.all.csv",row.names=1)
+```
+
+## Check for colinearity
+
+### Radians
+
+```{r}
+heatmap(abs(cor(sam.rad.ready[,(6:18)])), 
+        # Compute pearson correlation (note they are absolute values)
+        col = rev(heat.colors(6)), 
+        Colv = NA, Rowv = NA)
+
+abs.cor.rad <- abs(cor(sam.rad.ready[,(6:18)]))
+##round 2 notes: [mean monthly data instead of annual data]
+#all kd variables correlate, plus chla variables
+#max sst correlates with mean, which leaves mean & min sst
+#min sst correlates with depth 
+#lon & lat are too close - keeping lon 
+
+##round 1 notes:
+#chla is near perfect match with turbidity
+#lon & lat are too close - keeping lon 
+#depth & mean.kd match - keeping depth
+
+##run this one
+env.rad.go  <- sam.rad.ready %>%
+  select(-max.kd,-mean.kd,-mean.chla,-min.chla,-max.chla,-lat,-max.sst,-min.sst)
+
+abs(cor(env.rad.go[,(6:10)]))
+
+heatmap(abs(cor(env.rad.go[,(6:10)])))
+```
+
+### Siderea
+
+Shouldn't be different? Checking
+
+```{r}
+heatmap(abs(cor(sam.sid.ready[,(6:18)])), 
+        # Compute pearson correlation (note they are absolute values)
+        col = rev(heat.colors(6)), 
+        Colv = NA, Rowv = NA)
+
+abs.cor.sid <- abs(cor(sam.sid.ready[,(6:18)]))
+
+##run this one
+##round 1
+#env.sid.go  <- sam.sid.ready %>%
+#  select(-min.kd,-max.kd,-mean.kd,-mean.chla,-min.chla,-max.chla,-lat)
+
+##round 2
+env.sid.go  <- sam.sid.ready %>%
+  select(-max.kd,-mean.kd,-mean.chla,-min.chla,-max.chla,-lat,-max.sst,-min.sst)
+
+abs(cor(env.sid.go[,(6:10)]))
+
+heatmap(abs(cor(env.sid.go[,(6:10)])))
+```
+
+## Normalize env data
+
+```{r}
+##radians
+env.rad.go[,6:10] <- decostand(env.rad.go[,6:10], method = "standardize")
+
+str(env.rad.go)
+
+env.rad.go[,1:5] <- lapply(env.rad.go[,1:5], as.factor)
+str(env.rad.go)
+
+##siderea
+env.sid.go[,6:10] <- decostand(env.sid.go[,6:10], method = "standardize")
+
+str(env.sid.go)
+
+env.sid.go[,1:5] <- lapply(env.sid.go[,1:5], as.factor)
+str(env.sid.go)
+```
+
+## RDA!
+
+### Radians
+
+```{r}
+all.rda.rad <- rda(seq.trim.rad.clr ~ ., data = env.rad.go)
+RsquareAdj(all.rda.rad)
+# $r.squared
+# [1] 0.1358202
+# 
+# $adj.r.squared
+# [1] 0.04793746
+
+##forward selection
+fwd.sel.rad <- ordiR2step(rda(seq.trim.rad.clr ~ 1, data = env.rad.go), # lower model limit (simple!)
+               scope = formula(all.rda.rad), # upper model limit (the "full" model)
+               direction = "forward",
+               R2scope = TRUE, # can't surpass the "full" model's R2
+               #pstep = 1000, # not sure what this one is
+               trace = TRUE) # change to TRUE to see the selection process
+
+fwd.sel.rad$call
+
+# Write our new model
+#sig.rda.rad <- rda(seq.trim.rad.clr ~ site + min.sst + zone + season + lon + depth_m, data = env.rad.go)
+##round2
+sig.rda.rad <- rda(seq.trim.rad.clr ~ site + year.x + zone + lon + depth_m, data = env.rad.go)
+
+# check the adjusted R2 (corrected for the number of
+# explanatory variables)
+RsquareAdj(sig.rda.rad)
+# $r.squared
+# [1] 0.1007956
+# 
+# $adj.r.squared
+# [1] 0.04183139
+
+anova.cca(sig.rda.rad, step = 1000, by = "term")
+```
+
+### Siderea
+
+```{r}
+all.rda.sid <- rda(seq.trim.sid.clr ~ ., data = env.sid.go)
+
+RsquareAdj(all.rda.sid)
+# $r.squared
+# [1] 0.1027679
+# 
+# $adj.r.squared
+# [1] 0.03285368
+
+##forward selection
+fwd.sel.sid <- ordiR2step(rda(seq.trim.sid.clr ~ 1, data = env.sid.go), # lower model limit (simple!)
+               scope = formula(all.rda.sid), # upper model limit (the "full" model)
+               direction = "forward",
+               R2scope = TRUE, # can't surpass the "full" model's R2
+               #pstep = 1000, # not sure what this one is
+               trace = TRUE) # change to TRUE to see the selection process
+
+fwd.sel.sid$call
+
+# Write our new model
+sig.rda.sid <- rda(seq.trim.sid.clr ~ depth_m + year.x + site + mean.sst + 
+    lon, data = env.sid.go)
+
+# check the adjusted R2 (corrected for the number of
+# explanatory variables)
+RsquareAdj(sig.rda.sid)
+
+anova.cca(sig.rda.sid, step = 1000, by = "term")
+
+```
+
+## Plotting results
+
+```{r}
+plot(sig.rda.rad,scaling=2,type="n")
+points(sig.rda.rad,"sp",col="darkgreen",pch=19)
+#text(sig.rda.rad,display="site",cex=.6)
+text(sig.rda.rad,display="cn",cex=.8,col="blue")
+
+plot(sig.rda.sid,scaling=2,type="n")
+points(sig.rda.sid,"sp",col="darkgreen",pch=19)
+#text(sig.rda.sid,display="site",cex=.6)
+text(sig.rda.sid,display="cn",cex=.8,col="blue")
+```
+
+## Partial RDA
+
+```{r}
+colnames(env.rad.go)
+
+rda.part.rad.all <- rda(seq.trim.rad.clr ~ site*zone+year.x+mean.sst+min.sst+max.sst+depth_m+dmg+  # these are the effects we are interested in
+                       Condition(season+lon), # these are the covariates
+                       data = env.rad.go)
+
+RsquareAdj(rda.part.rad.all)
+
+fwd.sel.rad <- ordiR2step(rda(seq.trim.rad.clr ~ 1, data = env.rad.go), # lower model limit (simple!)
+               scope = formula(rda.part.rad.all), # upper model limit (the "full" model)
+               direction = "forward",
+               R2scope = TRUE, # can't surpass the "full" model's R2
+               #pstep = 1000, # not sure what this one is
+               trace = TRUE) # change to TRUE to see the selection process
+
+fwd.sel.rad$call
+
+
+```
+

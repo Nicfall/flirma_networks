@@ -1,0 +1,347 @@
+sample_num,full_site,site,zone,site_zone,sample,spp,year,sequencing,time,season
+1,E Sambo,LK1,O,LK1-O,LK1-O_1,ssid,2015,ITS2,Pre,Spring
+2,E Sambo,LK1,O,LK1-O,LK1-O_2,ssid,2015,ITS2,Pre,Spring
+3,E Sambo,LK1,O,LK1-O,LK1-O_3,ssid,2015,ITS2,Pre,Spring
+4,E Sambo,LK1,O,LK1-O,LK1-O_4,ssid,2015,ITS2,Pre,Spring
+5,E Sambo,LK1,O,LK1-O,LK1-O_5,ssid,2015,ITS2,Pre,Spring
+6,E Sambo,LK1,O,LK1-O,LK1-O_6,ssid,2015,ITS2,Pre,Spring
+7,E Sambo,LK1,O,LK1-O,LK1-O_7,ssid,2015,ITS2,Pre,Spring
+8,E Sambo,LK1,O,LK1-O,LK1-O_8,ssid,2015,ITS2,Pre,Spring
+10,E Sambo,LK1,O,LK1-O,LK1-O_10,ssid,2015,ITS2,Pre,Spring
+21,E Sambo,LK1,O,LK1-O,LK1-O_21,srad,2015,ITS2,Pre,Spring
+22,E Sambo,LK1,O,LK1-O,LK1-O_22,srad,2015,ITS2,Pre,Spring
+23,E Sambo,LK1,O,LK1-O,LK1-O_23,srad,2015,ITS2,Pre,Spring
+24,E Sambo,LK1,O,LK1-O,LK1-O_24,srad,2015,ITS2,Pre,Spring
+26,E Sambo,LK1,O,LK1-O,LK1-O_26,srad,2015,ITS2,Pre,Spring
+27,E Sambo,LK1,O,LK1-O,LK1-O_27,srad,2015,ITS2,Pre,Spring
+30,E Sambo,LK1,O,LK1-O,LK1-O_30,srad,2015,ITS2,Pre,Spring
+31,Rocky Top,UK1,O,UK1-O,UK1-O_31,ssid,2015,ITS2,Pre,Spring
+32,Rocky Top,UK1,O,UK1-O,UK1-O_32,ssid,2015,ITS2,Pre,Spring
+33,Rocky Top,UK1,O,UK1-O,UK1-O_33,ssid,2015,ITS2,Pre,Spring
+34,Rocky Top,UK1,O,UK1-O,UK1-O_34,ssid,2015,ITS2,Pre,Spring
+35,Rocky Top,UK1,O,UK1-O,UK1-O_35,ssid,2015,ITS2,Pre,Spring
+36,Rocky Top,UK1,O,UK1-O,UK1-O_36,ssid,2015,ITS2,Pre,Spring
+37,Rocky Top,UK1,O,UK1-O,UK1-O_37,ssid,2015,ITS2,Pre,Spring
+38,Rocky Top,UK1,O,UK1-O,UK1-O_38,ssid,2015,ITS2,Pre,Spring
+39,Rocky Top,UK1,O,UK1-O,UK1-O_39,ssid,2015,ITS2,Pre,Spring
+40,Rocky Top,UK1,O,UK1-O,UK1-O_40,ssid,2015,ITS2,Pre,Spring
+51,Rocky Top,UK1,O,UK1-O,UK1-O_51,srad,2015,ITS2,Pre,Spring
+54,Rocky Top,UK1,O,UK1-O,UK1-O_54,srad,2015,ITS2,Pre,Spring
+56,Rocky Top,UK1,O,UK1-O,UK1-O_56,srad,2015,ITS2,Pre,Spring
+57,Rocky Top,UK1,O,UK1-O,UK1-O_57,srad,2015,ITS2,Pre,Spring
+58,Rocky Top,UK1,O,UK1-O,UK1-O_58,srad,2015,ITS2,Pre,Spring
+61,Cheeca Rocks,UK1,I,UK1-I,UK1-I_61,ssid,2015,ITS2,Pre,Spring
+62,Cheeca Rocks,UK1,I,UK1-I,UK1-I_62,ssid,2015,ITS2,Pre,Spring
+63,Cheeca Rocks,UK1,I,UK1-I,UK1-I_63,ssid,2015,ITS2,Pre,Spring
+64,Cheeca Rocks,UK1,I,UK1-I,UK1-I_64,ssid,2015,ITS2,Pre,Spring
+65,Cheeca Rocks,UK1,I,UK1-I,UK1-I_65,ssid,2015,ITS2,Pre,Spring
+66,Cheeca Rocks,UK1,I,UK1-I,UK1-I_66,ssid,2015,ITS2,Pre,Spring
+67,Cheeca Rocks,UK1,I,UK1-I,UK1-I_67,ssid,2015,ITS2,Pre,Spring
+68,Cheeca Rocks,UK1,I,UK1-I,UK1-I_68,ssid,2015,ITS2,Pre,Spring
+69,Cheeca Rocks,UK1,I,UK1-I,UK1-I_69,ssid,2015,ITS2,Pre,Spring
+70,Cheeca Rocks,UK1,I,UK1-I,UK1-I_70,ssid,2015,ITS2,Pre,Spring
+81,Cheeca Rocks,UK1,I,UK1-I,UK1-I_81,srad,2015,ITS2,Pre,Spring
+82,Cheeca Rocks,UK1,I,UK1-I,UK1-I_82,srad,2015,ITS2,Pre,Spring
+84,Cheeca Rocks,UK1,I,UK1-I,UK1-I_84,srad,2015,ITS2,Pre,Spring
+85,Cheeca Rocks,UK1,I,UK1-I,UK1-I_85,srad,2015,ITS2,Pre,Spring
+86,Cheeca Rocks,UK1,I,UK1-I,UK1-I_86,srad,2015,ITS2,Pre,Spring
+89,Cheeca Rocks,UK1,I,UK1-I,UK1-I_89,srad,2015,ITS2,Pre,Spring
+91,Carysfort,UK2,O,UK2-O,UK2-O_91,ssid,2015,ITS2,Pre,Spring
+92,Carysfort,UK2,O,UK2-O,UK2-O_92,ssid,2015,ITS2,Pre,Spring
+93,Carysfort,UK2,O,UK2-O,UK2-O_93,ssid,2015,ITS2,Pre,Spring
+94,Carysfort,UK2,O,UK2-O,UK2-O_94,ssid,2015,ITS2,Pre,Spring
+95,Carysfort,UK2,O,UK2-O,UK2-O_95,ssid,2015,ITS2,Pre,Spring
+96,Carysfort,UK2,O,UK2-O,UK2-O_96,ssid,2015,ITS2,Pre,Spring
+97,Carysfort,UK2,O,UK2-O,UK2-O_97,ssid,2015,ITS2,Pre,Spring
+98,Carysfort,UK2,O,UK2-O,UK2-O_98,ssid,2015,ITS2,Pre,Spring
+99,Carysfort,UK2,O,UK2-O,UK2-O_99,ssid,2015,ITS2,Pre,Spring
+100,Carysfort,UK2,O,UK2-O,UK2-O_100,ssid,2015,ITS2,Pre,Spring
+111,Carysfort,UK2,O,UK2-O,UK2-O_111,srad,2015,ITS2,Pre,Spring
+112,Carysfort,UK2,O,UK2-O,UK2-O_112,srad,2015,ITS2,Pre,Spring
+113,Carysfort,UK2,O,UK2-O,UK2-O_113,srad,2015,ITS2,Pre,Spring
+114,Carysfort,UK2,O,UK2-O,UK2-O_114,srad,2015,ITS2,Pre,Spring
+115,Carysfort,UK2,O,UK2-O,UK2-O_115,srad,2015,ITS2,Pre,Spring
+116,Carysfort,UK2,O,UK2-O,UK2-O_116,srad,2015,ITS2,Pre,Spring
+117,Carysfort,UK2,O,UK2-O,UK2-O_117,srad,2015,ITS2,Pre,Spring
+118,Carysfort,UK2,O,UK2-O,UK2-O_118,srad,2015,ITS2,Pre,Spring
+119,Carysfort,UK2,O,UK2-O,UK2-O_119,srad,2015,ITS2,Pre,Spring
+120,Carysfort,UK2,O,UK2-O,UK2-O_120,srad,2015,ITS2,Pre,Spring
+121,Basin Hill,UK2,I,UK2-I,UK2-I_121,ssid,2015,ITS2,Pre,Spring
+122,Basin Hill,UK2,I,UK2-I,UK2-I_122,ssid,2015,ITS2,Pre,Spring
+123,Basin Hill,UK2,I,UK2-I,UK2-I_123,ssid,2015,ITS2,Pre,Spring
+124,Basin Hill,UK2,I,UK2-I,UK2-I_124,ssid,2015,ITS2,Pre,Spring
+125,Basin Hill,UK2,I,UK2-I,UK2-I_125,ssid,2015,ITS2,Pre,Spring
+126,Basin Hill,UK2,I,UK2-I,UK2-I_126,ssid,2015,ITS2,Pre,Spring
+127,Basin Hill,UK2,I,UK2-I,UK2-I_127,ssid,2015,ITS2,Pre,Spring
+128,Basin Hill,UK2,I,UK2-I,UK2-I_128,ssid,2015,ITS2,Pre,Spring
+129,Basin Hill,UK2,I,UK2-I,UK2-I_129,ssid,2015,ITS2,Pre,Spring
+130,Basin Hill,UK2,I,UK2-I,UK2-I_130,ssid,2015,ITS2,Pre,Spring
+143,Basin Hill,UK2,I,UK2-I,UK2-I_143,srad,2015,ITS2,Pre,Spring
+144,Basin Hill,UK2,I,UK2-I,UK2-I_144,srad,2015,ITS2,Pre,Spring
+145,Basin Hill,UK2,I,UK2-I,UK2-I_145,srad,2015,ITS2,Pre,Spring
+147,Basin Hill,UK2,I,UK2-I,UK2-I_147,srad,2015,ITS2,Pre,Spring
+148,Basin Hill,UK2,I,UK2-I,UK2-I_148,srad,2015,ITS2,Pre,Spring
+149,Basin Hill,UK2,I,UK2-I,UK2-I_149,srad,2015,ITS2,Pre,Spring
+150,Basin Hill,UK2,I,UK2-I,UK2-I_150,srad,2015,ITS2,Pre,Spring
+701,Cheeca Rocks,UK1,I,UK1-I,UK1-I_701,ssid,2017,ITS2,Irma,Fall
+702,Cheeca Rocks,UK1,I,UK1-I,UK1-I_702,ssid,2017,ITS2,Irma,Fall
+703,Cheeca Rocks,UK1,I,UK1-I,UK1-I_703,ssid,2017,ITS2,Irma,Fall
+704,Cheeca Rocks,UK1,I,UK1-I,UK1-I_704,ssid,2017,ITS2,Irma,Fall
+705,Cheeca Rocks,UK1,I,UK1-I,UK1-I_705,ssid,2017,ITS2,Irma,Fall
+706,Cheeca Rocks,UK1,I,UK1-I,UK1-I_706,ssid,2017,ITS2,Irma,Fall
+707,Cheeca Rocks,UK1,I,UK1-I,UK1-I_707,ssid,2017,ITS2,Irma,Fall
+708,Cheeca Rocks,UK1,I,UK1-I,UK1-I_708,ssid,2017,ITS2,Irma,Fall
+709,Cheeca Rocks,UK1,I,UK1-I,UK1-I_709,ssid,2017,ITS2,Irma,Fall
+710,Cheeca Rocks,UK1,I,UK1-I,UK1-I_710,ssid,2017,ITS2,Irma,Fall
+711,Cheeca Rocks,UK1,I,UK1-I,UK1-I_711,ssid,2017,ITS2,Irma,Fall
+725,Cheeca Rocks,UK1,I,UK1-I,UK1-I_725,ssid,2017,ITS2,Irma,Fall
+726,Cheeca Rocks,UK1,I,UK1-I,UK1-I_726,srad,2017,ITS2,Irma,Fall
+727,Cheeca Rocks,UK1,I,UK1-I,UK1-I_727,srad,2017,ITS2,Irma,Fall
+731,Cheeca Rocks,UK1,I,UK1-I,UK1-I_731,srad,2017,ITS2,Irma,Fall
+732,Cheeca Rocks,UK1,I,UK1-I,UK1-I_732,srad,2017,ITS2,Irma,Fall
+733,Cheeca Rocks,UK1,I,UK1-I,UK1-I_733,srad,2017,ITS2,Irma,Fall
+735,Cheeca Rocks,UK1,I,UK1-I,UK1-I_735,srad,2017,ITS2,Irma,Fall
+761,Rocky Top,UK1,O,UK1-O,UK1-O_761,ssid,2017,ITS2,Irma,Fall
+762,Rocky Top,UK1,O,UK1-O,UK1-O_762,ssid,2017,ITS2,Irma,Fall
+763,Rocky Top,UK1,O,UK1-O,UK1-O_763,ssid,2017,ITS2,Irma,Fall
+764,Rocky Top,UK1,O,UK1-O,UK1-O_764,ssid,2017,ITS2,Irma,Fall
+765,Rocky Top,UK1,O,UK1-O,UK1-O_765,ssid,2017,ITS2,Irma,Fall
+766,Rocky Top,UK1,O,UK1-O,UK1-O_766,ssid,2017,ITS2,Irma,Fall
+767,Rocky Top,UK1,O,UK1-O,UK1-O_767,ssid,2017,ITS2,Irma,Fall
+768,Rocky Top,UK1,O,UK1-O,UK1-O_768,ssid,2017,ITS2,Irma,Fall
+769,Rocky Top,UK1,O,UK1-O,UK1-O_769,ssid,2017,ITS2,Irma,Fall
+770,Rocky Top,UK1,O,UK1-O,UK1-O_770,ssid,2017,ITS2,Irma,Fall
+771,Rocky Top,UK1,O,UK1-O,UK1-O_771,ssid,2017,ITS2,Irma,Fall
+772,Rocky Top,UK1,O,UK1-O,UK1-O_772,ssid,2017,ITS2,Irma,Fall
+783,Rocky Top,UK1,O,UK1-O,UK1-O_783,ssid,2017,ITS2,Irma,Fall
+798,Carysfort,UK2,O,UK2-O,UK2-O_798,ssid,2017,ITS2,Irma,Fall
+800,Carysfort,UK2,O,UK2-O,UK2-O_800,ssid,2017,ITS2,Irma,Fall
+801,Basin Hill,UK2,I,UK2-I,UK2-I_801,ssid,2017,ITS2,Irma,Fall
+807,Basin Hill,UK2,I,UK2-I,UK2-I_807,ssid,2017,ITS2,Irma,Fall
+808,Basin Hill,UK2,I,UK2-I,UK2-I_808,ssid,2017,ITS2,Irma,Fall
+809,Basin Hill,UK2,I,UK2-I,UK2-I_809,ssid,2017,ITS2,Irma,Fall
+820,Carysfort,UK2,O,UK2-O,UK2-O_820,ssid,2017,ITS2,Irma,Fall
+821,Basin Hill,UK2,I,UK2-I,UK2-I_821,ssid,2017,ITS2,Irma,Fall
+822,Basin Hill,UK2,I,UK2-I,UK2-I_822,ssid,2017,ITS2,Irma,Fall
+823,Basin Hill,UK2,I,UK2-I,UK2-I_823,ssid,2017,ITS2,Irma,Fall
+824,Basin Hill,UK2,I,UK2-I,UK2-I_824,ssid,2017,ITS2,Irma,Fall
+825,Basin Hill,UK2,I,UK2-I,UK2-I_825,ssid,2017,ITS2,Irma,Fall
+826,Basin Hill,UK2,I,UK2-I,UK2-I_826,ssid,2017,ITS2,Irma,Fall
+827,Basin Hill,UK2,I,UK2-I,UK2-I_827,ssid,2017,ITS2,Irma,Fall
+828,Basin Hill,UK2,I,UK2-I,UK2-I_828,ssid,2017,ITS2,Irma,Fall
+829,Basin Hill,UK2,I,UK2-I,UK2-I_829,ssid,2017,ITS2,Irma,Fall
+830,Basin Hill,UK2,I,UK2-I,UK2-I_830,ssid,2017,ITS2,Irma,Fall
+846,Basin Hill,UK2,I,UK2-I,UK2-I_846,srad,2017,ITS2,Irma,Fall
+847,Basin Hill,UK2,I,UK2-I,UK2-I_847,srad,2017,ITS2,Irma,Fall
+848,Basin Hill,UK2,I,UK2-I,UK2-I_848,srad,2017,ITS2,Irma,Fall
+849,Basin Hill,UK2,I,UK2-I,UK2-I_849,srad,2017,ITS2,Irma,Fall
+850,Basin Hill,UK2,I,UK2-I,UK2-I_850,srad,2017,ITS2,Irma,Fall
+851,Basin Hill,UK2,I,UK2-I,UK2-I_851,srad,2017,ITS2,Irma,Fall
+852,Basin Hill,UK2,I,UK2-I,UK2-I_852,srad,2017,ITS2,Irma,Fall
+853,Basin Hill,UK2,I,UK2-I,UK2-I_853,srad,2017,ITS2,Irma,Fall
+854,Basin Hill,UK2,I,UK2-I,UK2-I_854,srad,2017,ITS2,Irma,Fall
+855,Basin Hill,UK2,I,UK2-I,UK2-I_855,srad,2017,ITS2,Irma,Fall
+881,Carysfort,UK2,O,UK2-O,UK2-O_881,ssid,2017,ITS2,Irma,Fall
+882,Carysfort,UK2,O,UK2-O,UK2-O_882,ssid,2017,ITS2,Irma,Fall
+883,Carysfort,UK2,O,UK2-O,UK2-O_883,ssid,2017,ITS2,Irma,Fall
+884,Carysfort,UK2,O,UK2-O,UK2-O_884,ssid,2017,ITS2,Irma,Fall
+885,Carysfort,UK2,O,UK2-O,UK2-O_885,ssid,2017,ITS2,Irma,Fall
+886,Carysfort,UK2,O,UK2-O,UK2-O_886,ssid,2017,ITS2,Irma,Fall
+887,Carysfort,UK2,O,UK2-O,UK2-O_887,ssid,2017,ITS2,Irma,Fall
+888,Carysfort,UK2,O,UK2-O,UK2-O_888,ssid,2017,ITS2,Irma,Fall
+889,Carysfort,UK2,O,UK2-O,UK2-O_889,ssid,2017,ITS2,Irma,Fall
+890,Carysfort,UK2,O,UK2-O,UK2-O_890,ssid,2017,ITS2,Irma,Fall
+907,Carysfort,UK2,O,UK2-O,UK2-O_907,srad,2017,ITS2,Irma,Fall
+908,Carysfort,UK2,O,UK2-O,UK2-O_908,srad,2017,ITS2,Irma,Fall
+909,Carysfort,UK2,O,UK2-O,UK2-O_909,srad,2017,ITS2,Irma,Fall
+912,Carysfort,UK2,O,UK2-O,UK2-O_912,srad,2017,ITS2,Irma,Fall
+913,Carysfort,UK2,O,UK2-O,UK2-O_913,srad,2017,ITS2,Irma,Fall
+914,Carysfort,UK2,O,UK2-O,UK2-O_914,srad,2017,ITS2,Irma,Fall
+915,Carysfort,UK2,O,UK2-O,UK2-O_915,srad,2017,ITS2,Irma,Fall
+916,E Sambo,LK1,O,LK1-O,LK1-O_916,ssid,2017,ITS2,Irma,Fall
+917,E Sambo,LK1,O,LK1-O,LK1-O_917,ssid,2017,ITS2,Irma,Fall
+919,E Sambo,LK1,O,LK1-O,LK1-O_919,ssid,2017,ITS2,Irma,Fall
+921,E Sambo,LK1,O,LK1-O,LK1-O_921,ssid,2017,ITS2,Irma,Fall
+922,E Sambo,LK1,O,LK1-O,LK1-O_922,ssid,2017,ITS2,Irma,Fall
+923,E Sambo,LK1,O,LK1-O,LK1-O_923,ssid,2017,ITS2,Irma,Fall
+925,E Sambo,LK1,O,LK1-O,LK1-O_925,ssid,2017,ITS2,Irma,Fall
+926,E Sambo,LK1,O,LK1-O,LK1-O_926,srad,2017,ITS2,Irma,Fall
+927,E Sambo,LK1,O,LK1-O,LK1-O_927,srad,2017,ITS2,Irma,Fall
+928,E Sambo,LK1,O,LK1-O,LK1-O_928,srad,2017,ITS2,Irma,Fall
+929,E Sambo,LK1,O,LK1-O,LK1-O_929,srad,2017,ITS2,Irma,Fall
+931,E Sambo,LK1,O,LK1-O,LK1-O_931,srad,2017,ITS2,Irma,Fall
+932,E Sambo,LK1,O,LK1-O,LK1-O_932,srad,2017,ITS2,Irma,Fall
+935,E Sambo,LK1,O,LK1-O,LK1-O_935,srad,2017,ITS2,Irma,Fall
+943,E Sambo,LK1,O,LK1-O,LK1-O_943,ssid,2017,ITS2,Irma,Fall
+947,W Washer,LK1,I,LK1-I,LK1-I_947,ssid,2017,ITS2,Irma,Fall
+948,W Washer,LK1,I,LK1-I,LK1-I_948,ssid,2017,ITS2,Irma,Fall
+949,W Washer,LK1,I,LK1-I,LK1-I_949,ssid,2017,ITS2,Irma,Fall
+950,W Washer,LK1,I,LK1-I,LK1-I_950,ssid,2017,ITS2,Irma,Fall
+951,W Washer,LK1,I,LK1-I,LK1-I_951,ssid,2017,ITS2,Irma,Fall
+955,W Washer,LK1,I,LK1-I,LK1-I_955,ssid,2017,ITS2,Irma,Fall
+956,W Washer,LK1,I,LK1-I,LK1-I_956,srad,2017,ITS2,Irma,Fall
+958,W Washer,LK1,I,LK1-I,LK1-I_958,srad,2017,ITS2,Irma,Fall
+961,W Washer,LK1,I,LK1-I,LK1-I_961,srad,2017,ITS2,Irma,Fall
+962,W Washer,LK1,I,LK1-I,LK1-I_962,srad,2017,ITS2,Irma,Fall
+963,W Washer,LK1,I,LK1-I,LK1-I_963,srad,2017,ITS2,Irma,Fall
+964,W Washer,LK1,I,LK1-I,LK1-I_964,srad,2017,ITS2,Irma,Fall
+965,W Washer,LK1,I,LK1-I,LK1-I_965,ssid,2017,ITS2,Irma,Fall
+976,W Washer,LK1,I,LK1-I,LK1-I_976,srad,2017,ITS2,Irma,Fall
+977,W Washer,LK1,I,LK1-I,LK1-I_977,ssid,2016,ITS2,Pre,Spring
+978,W Washer,LK1,I,LK1-I,LK1-I_978,ssid,2016,ITS2,Pre,Spring
+979,W Washer,LK1,I,LK1-I,LK1-I_979,ssid,2016,ITS2,Pre,Spring
+980,W Washer,LK1,I,LK1-I,LK1-I_980,ssid,2016,ITS2,Pre,Spring
+981,W Washer,LK1,I,LK1-I,LK1-I_981,ssid,2016,ITS2,Pre,Spring
+982,W Washer,LK1,I,LK1-I,LK1-I_982,ssid,2016,ITS2,Pre,Spring
+983,W Washer,LK1,I,LK1-I,LK1-I_983,ssid,2016,ITS2,Pre,Spring
+984,W Washer,LK1,I,LK1-I,LK1-I_984,ssid,2016,ITS2,Pre,Spring
+985,W Washer,LK1,I,LK1-I,LK1-I_985,ssid,2016,ITS2,Pre,Spring
+986,W Washer,LK1,I,LK1-I,LK1-I_986,ssid,2016,ITS2,Pre,Spring
+988,W Washer,LK1,I,LK1-I,LK1-I_988,srad,2016,ITS2,Pre,Spring
+990,W Washer,LK1,I,LK1-I,LK1-I_990,srad,2016,ITS2,Pre,Spring
+992,W Washer,LK1,I,LK1-I,LK1-I_992,srad,2016,ITS2,Pre,Spring
+993,W Washer,LK1,I,LK1-I,LK1-I_993,srad,2016,ITS2,Pre,Spring
+994,W Washer,LK1,I,LK1-I,LK1-I_994,srad,2016,ITS2,Pre,Spring
+995,W Washer,LK1,I,LK1-I,LK1-I_995,srad,2016,ITS2,Pre,Spring
+996,W Washer,LK1,I,LK1-I,LK1-I_996,srad,2016,ITS2,Pre,Spring
+1007,Fowey Rocks,UK3,O,UK3-O,UK3-O_1007,ssid,2016,ITS2,Pre,Spring
+1008,Fowey Rocks,UK3,O,UK3-O,UK3-O_1008,ssid,2016,ITS2,Pre,Spring
+1009,Fowey Rocks,UK3,O,UK3-O,UK3-O_1009,ssid,2016,ITS2,Pre,Spring
+1010,Fowey Rocks,UK3,O,UK3-O,UK3-O_1010,ssid,2016,ITS2,Pre,Spring
+1011,Fowey Rocks,UK3,O,UK3-O,UK3-O_1011,ssid,2016,ITS2,Pre,Spring
+1013,Fowey Rocks,UK3,O,UK3-O,UK3-O_1013,ssid,2016,ITS2,Pre,Spring
+1014,Fowey Rocks,UK3,O,UK3-O,UK3-O_1014,ssid,2016,ITS2,Pre,Spring
+1015,Fowey Rocks,UK3,O,UK3-O,UK3-O_1015,ssid,2016,ITS2,Pre,Spring
+1016,Fowey Rocks,UK3,O,UK3-O,UK3-O_1016,ssid,2016,ITS2,Pre,Spring
+1017,Fowey Rocks,UK3,O,UK3-O,UK3-O_1017,srad,2016,ITS2,Pre,Spring
+1018,Fowey Rocks,UK3,O,UK3-O,UK3-O_1018,srad,2016,ITS2,Pre,Spring
+1019,Fowey Rocks,UK3,O,UK3-O,UK3-O_1019,srad,2016,ITS2,Pre,Spring
+1020,Fowey Rocks,UK3,O,UK3-O,UK3-O_1020,srad,2016,ITS2,Pre,Spring
+1022,Fowey Rocks,UK3,O,UK3-O,UK3-O_1022,srad,2016,ITS2,Pre,Spring
+1023,Fowey Rocks,UK3,O,UK3-O,UK3-O_1023,srad,2016,ITS2,Pre,Spring
+1024,Fowey Rocks,UK3,O,UK3-O,UK3-O_1024,srad,2016,ITS2,Pre,Spring
+1025,Fowey Rocks,UK3,O,UK3-O,UK3-O_1025,srad,2016,ITS2,Pre,Spring
+1026,Fowey Rocks,UK3,O,UK3-O,UK3-O_1026,srad,2016,ITS2,Pre,Spring
+1037,Bache Shoals,UK3,I,UK3-I,UK3-I_1037,ssid,2016,ITS2,Pre,Spring
+1039,Bache Shoals,UK3,I,UK3-I,UK3-I_1039,ssid,2016,ITS2,Pre,Spring
+1040,Bache Shoals,UK3,I,UK3-I,UK3-I_1040,ssid,2016,ITS2,Pre,Spring
+1041,Bache Shoals,UK3,I,UK3-I,UK3-I_1041,ssid,2016,ITS2,Pre,Spring
+1042,Bache Shoals,UK3,I,UK3-I,UK3-I_1042,ssid,2016,ITS2,Pre,Spring
+1045,Bache Shoals,UK3,I,UK3-I,UK3-I_1045,ssid,2016,ITS2,Pre,Spring
+1046,Bache Shoals,UK3,I,UK3-I,UK3-I_1046,ssid,2016,ITS2,Pre,Spring
+1048,Bache Shoals,UK3,I,UK3-I,UK3-I_1048,srad,2016,ITS2,Pre,Spring
+1049,Bache Shoals,UK3,I,UK3-I,UK3-I_1049,srad,2016,ITS2,Pre,Spring
+1050,Bache Shoals,UK3,I,UK3-I,UK3-I_1050,srad,2016,ITS2,Pre,Spring
+1051,Bache Shoals,UK3,I,UK3-I,UK3-I_1051,srad,2016,ITS2,Pre,Spring
+1052,Bache Shoals,UK3,I,UK3-I,UK3-I_1052,srad,2016,ITS2,Pre,Spring
+1053,Bache Shoals,UK3,I,UK3-I,UK3-I_1053,srad,2016,ITS2,Pre,Spring
+1054,Bache Shoals,UK3,I,UK3-I,UK3-I_1054,srad,2016,ITS2,Pre,Spring
+1071,Basin Hill,UK2,I,UK2-I,UK2-I_1071,srad,2018,ITS2,Post,Fall
+1072,Basin Hill,UK2,I,UK2-I,UK2-I_1072,srad,2018,ITS2,Post,Fall
+1074,Basin Hill,UK2,I,UK2-I,UK2-I_1074,srad,2018,ITS2,Post,Fall
+1075,Basin Hill,UK2,I,UK2-I,UK2-I_1075,srad,2018,ITS2,Post,Fall
+1076,Basin Hill,UK2,I,UK2-I,UK2-I_1076,srad,2018,ITS2,Post,Fall
+1077,Basin Hill,UK2,I,UK2-I,UK2-I_1077,srad,2018,ITS2,Post,Fall
+1078,Basin Hill,UK2,I,UK2-I,UK2-I_1078,srad,2018,ITS2,Post,Fall
+1080,Basin Hill,UK2,I,UK2-I,UK2-I_1080,ssid,2018,ITS2,Post,Fall
+1081,Basin Hill,UK2,I,UK2-I,UK2-I_1081,ssid,2018,ITS2,Post,Fall
+1082,Basin Hill,UK2,I,UK2-I,UK2-I_1082,ssid,2018,ITS2,Post,Fall
+1083,Basin Hill,UK2,I,UK2-I,UK2-I_1083,ssid,2018,ITS2,Post,Fall
+1084,Basin Hill,UK2,I,UK2-I,UK2-I_1084,ssid,2018,ITS2,Post,Fall
+1085,Basin Hill,UK2,I,UK2-I,UK2-I_1085,ssid,2018,ITS2,Post,Fall
+1086,Basin Hill,UK2,I,UK2-I,UK2-I_1086,ssid,2018,ITS2,Post,Fall
+1087,Basin Hill,UK2,I,UK2-I,UK2-I_1087,ssid,2018,ITS2,Post,Fall
+1088,Basin Hill,UK2,I,UK2-I,UK2-I_1088,ssid,2018,ITS2,Post,Fall
+1089,Basin Hill,UK2,I,UK2-I,UK2-I_1089,ssid,2018,ITS2,Post,Fall
+1100,Carysfort,UK2,O,UK2-O,UK2-O_1100,srad,2018,ITS2,Post,Fall
+1101,Carysfort,UK2,O,UK2-O,UK2-O_1101,srad,2018,ITS2,Post,Fall
+1102,Carysfort,UK2,O,UK2-O,UK2-O_1102,srad,2018,ITS2,Post,Fall
+1103,Carysfort,UK2,O,UK2-O,UK2-O_1103,srad,2018,ITS2,Post,Fall
+1105,Carysfort,UK2,O,UK2-O,UK2-O_1105,srad,2018,ITS2,Post,Fall
+1106,Carysfort,UK2,O,UK2-O,UK2-O_1106,srad,2018,ITS2,Post,Fall
+1107,Carysfort,UK2,O,UK2-O,UK2-O_1107,srad,2018,ITS2,Post,Fall
+1108,Carysfort,UK2,O,UK2-O,UK2-O_1108,srad,2018,ITS2,Post,Fall
+1109,Carysfort,UK2,O,UK2-O,UK2-O_1109,srad,2018,ITS2,Post,Fall
+1112,Carysfort,UK2,O,UK2-O,UK2-O_1112,ssid,2018,ITS2,Post,Fall
+1113,Carysfort,UK2,O,UK2-O,UK2-O_1113,ssid,2018,ITS2,Post,Fall
+1115,Carysfort,UK2,O,UK2-O,UK2-O_1115,ssid,2018,ITS2,Post,Fall
+1116,Carysfort,UK2,O,UK2-O,UK2-O_1116,ssid,2018,ITS2,Post,Fall
+1117,Carysfort,UK2,O,UK2-O,UK2-O_1117,ssid,2018,ITS2,Post,Fall
+1118,Carysfort,UK2,O,UK2-O,UK2-O_1118,ssid,2018,ITS2,Post,Fall
+1119,Carysfort,UK2,O,UK2-O,UK2-O_1119,ssid,2018,ITS2,Post,Fall
+1140,Cheeca Rocks,UK1,I,UK1-I,UK1-I_1140,ssid,2018,ITS2,Post,Fall
+1141,Cheeca Rocks,UK1,I,UK1-I,UK1-I_1141,ssid,2018,ITS2,Post,Fall
+1142,Cheeca Rocks,UK1,I,UK1-I,UK1-I_1142,ssid,2018,ITS2,Post,Fall
+1143,Cheeca Rocks,UK1,I,UK1-I,UK1-I_1143,ssid,2018,ITS2,Post,Fall
+1144,Cheeca Rocks,UK1,I,UK1-I,UK1-I_1144,ssid,2018,ITS2,Post,Fall
+1145,Cheeca Rocks,UK1,I,UK1-I,UK1-I_1145,ssid,2018,ITS2,Post,Fall
+1146,Cheeca Rocks,UK1,I,UK1-I,UK1-I_1146,ssid,2018,ITS2,Post,Fall
+1147,Cheeca Rocks,UK1,I,UK1-I,UK1-I_1147,ssid,2018,ITS2,Post,Fall
+1148,Cheeca Rocks,UK1,I,UK1-I,UK1-I_1148,ssid,2018,ITS2,Post,Fall
+1149,Cheeca Rocks,UK1,I,UK1-I,UK1-I_1149,ssid,2018,ITS2,Post,Fall
+1170,Rocky Top,UK1,O,UK1-O,UK1-O_1170,ssid,2018,ITS2,Post,Fall
+1171,Rocky Top,UK1,O,UK1-O,UK1-O_1171,ssid,2018,ITS2,Post,Fall
+1172,Rocky Top,UK1,O,UK1-O,UK1-O_1172,ssid,2018,ITS2,Post,Fall
+1173,Rocky Top,UK1,O,UK1-O,UK1-O_1173,ssid,2018,ITS2,Post,Fall
+1174,Rocky Top,UK1,O,UK1-O,UK1-O_1174,ssid,2018,ITS2,Post,Fall
+1175,Rocky Top,UK1,O,UK1-O,UK1-O_1175,ssid,2018,ITS2,Post,Fall
+1176,Rocky Top,UK1,O,UK1-O,UK1-O_1176,ssid,2018,ITS2,Post,Fall
+1177,Rocky Top,UK1,O,UK1-O,UK1-O_1177,ssid,2018,ITS2,Post,Fall
+1178,Rocky Top,UK1,O,UK1-O,UK1-O_1178,ssid,2018,ITS2,Post,Fall
+1179,Rocky Top,UK1,O,UK1-O,UK1-O_1179,ssid,2018,ITS2,Post,Fall
+1190,W Washer,LK1,I,LK1-I,LK1-I_1190,srad,2018,ITS2,Post,Fall
+1191,W Washer,LK1,I,LK1-I,LK1-I_1191,srad,2018,ITS2,Post,Fall
+1192,W Washer,LK1,I,LK1-I,LK1-I_1192,srad,2018,ITS2,Post,Fall
+1193,W Washer,LK1,I,LK1-I,LK1-I_1193,srad,2018,ITS2,Post,Fall
+1194,W Washer,LK1,I,LK1-I,LK1-I_1194,srad,2018,ITS2,Post,Fall
+1195,W Washer,LK1,I,LK1-I,LK1-I_1195,srad,2018,ITS2,Post,Fall
+1196,W Washer,LK1,I,LK1-I,LK1-I_1196,srad,2018,ITS2,Post,Fall
+1197,W Washer,LK1,I,LK1-I,LK1-I_1197,srad,2018,ITS2,Post,Fall
+1198,W Washer,LK1,I,LK1-I,LK1-I_1198,srad,2018,ITS2,Post,Fall
+1199,W Washer,LK1,I,LK1-I,LK1-I_1199,srad,2018,ITS2,Post,Fall
+1200,W Washer,LK1,I,LK1-I,LK1-I_1200,ssid,2018,ITS2,Post,Fall
+1201,W Washer,LK1,I,LK1-I,LK1-I_1201,ssid,2018,ITS2,Post,Fall
+1202,W Washer,LK1,I,LK1-I,LK1-I_1202,ssid,2018,ITS2,Post,Fall
+1203,W Washer,LK1,I,LK1-I,LK1-I_1203,ssid,2018,ITS2,Post,Fall
+1204,W Washer,LK1,I,LK1-I,LK1-I_1204,ssid,2018,ITS2,Post,Fall
+1206,W Washer,LK1,I,LK1-I,LK1-I_1206,ssid,2018,ITS2,Post,Fall
+1207,W Washer,LK1,I,LK1-I,LK1-I_1207,ssid,2018,ITS2,Post,Fall
+1208,W Washer,LK1,I,LK1-I,LK1-I_1208,ssid,2018,ITS2,Post,Fall
+1209,W Washer,LK1,I,LK1-I,LK1-I_1209,ssid,2018,ITS2,Post,Fall
+1221,E Sambo,LK1,O,LK1-O,LK1-O_1221,srad,2018,ITS2,Post,Fall
+1222,E Sambo,LK1,O,LK1-O,LK1-O_1222,srad,2018,ITS2,Post,Fall
+1223,E Sambo,LK1,O,LK1-O,LK1-O_1223,srad,2018,ITS2,Post,Fall
+1226,E Sambo,LK1,O,LK1-O,LK1-O_1226,srad,2018,ITS2,Post,Fall
+1227,E Sambo,LK1,O,LK1-O,LK1-O_1227,srad,2018,ITS2,Post,Fall
+1228,E Sambo,LK1,O,LK1-O,LK1-O_1228,srad,2018,ITS2,Post,Fall
+1229,E Sambo,LK1,O,LK1-O,LK1-O_1229,srad,2018,ITS2,Post,Fall
+1230,E Sambo,LK1,O,LK1-O,LK1-O_1230,ssid,2018,ITS2,Post,Fall
+1231,E Sambo,LK1,O,LK1-O,LK1-O_1231,ssid,2018,ITS2,Post,Fall
+1232,E Sambo,LK1,O,LK1-O,LK1-O_1232,ssid,2018,ITS2,Post,Fall
+1233,E Sambo,LK1,O,LK1-O,LK1-O_1233,ssid,2018,ITS2,Post,Fall
+1235,E Sambo,LK1,O,LK1-O,LK1-O_1235,ssid,2018,ITS2,Post,Fall
+1236,E Sambo,LK1,O,LK1-O,LK1-O_1236,ssid,2018,ITS2,Post,Fall
+1237,E Sambo,LK1,O,LK1-O,LK1-O_1237,ssid,2018,ITS2,Post,Fall
+1238,E Sambo,LK1,O,LK1-O,LK1-O_1238,ssid,2018,ITS2,Post,Fall
+1239,E Sambo,LK1,O,LK1-O,LK1-O_1239,ssid,2018,ITS2,Post,Fall
+1250,cores,FAL,E,FALSE,FALSE_1250,cores,2018,ITS2,Post,Fall
+1251,cores,FAL,E,FALSE,FALSE_1251,cores,2018,ITS2,Post,Fall
+1252,cores,FAL,E,FALSE,FALSE_1252,cores,2018,ITS2,Post,Fall
+1253,cores,FAL,E,FALSE,FALSE_1253,cores,2018,ITS2,Post,Fall
+1254,cores,FAL,E,FALSE,FALSE_1254,cores,2018,ITS2,Post,Fall
+AB6,RI/BUMP,FAL,E,FALSE,FALSE_AB6,apoc,2018,ITS2,Post,Fall
+AI5,RI/BUMP,FAL,E,FALSE,FALSE_AI5,apoc,2018,ITS2,Post,Fall
+AJ2,RI/BUMP,FAL,E,FALSE,FALSE_AJ2,apoc,2018,ITS2,Post,Fall
+AL2,RI/BUMP,FAL,E,FALSE,FALSE_AL2,apoc,2018,ITS2,Post,Fall
+AN5,RI/BUMP,FAL,E,FALSE,FALSE_AN5,apoc,2018,ITS2,Post,Fall
+AQ1,RI/BUMP,FAL,E,FALSE,FALSE_AQ1,apoc,2018,ITS2,Post,Fall
+AR1,RI/BUMP,FAL,E,FALSE,FALSE_AR1,apoc,2018,ITS2,Post,Fall
+AT5,RI/BUMP,FAL,E,FALSE,FALSE_AT5,apoc,2018,ITS2,Post,Fall
+OC1,UNC/BUMP,FAL,E,FALSE,FALSE_OC1,oarb,2018,ITS2,Post,Fall
+OC2,UNC/BUMP,FAL,E,FALSE,FALSE_OC2,oarb,2018,ITS2,Post,Fall
+OC3,UNC/BUMP,FAL,E,FALSE,FALSE_OC3,oarb,2018,ITS2,Post,Fall
+OC4,UNC/BUMP,FAL,E,FALSE,FALSE_OC4,oarb,2018,ITS2,Post,Fall
+PA,BUMP,FAL,E,FALSE,FALSE_PA,pdam,2018,ITS2,Post,Fall
+PB,BUMP,FAL,E,FALSE,FALSE_PB,pdam,2018,ITS2,Post,Fall
+PC,BUMP,FAL,E,FALSE,FALSE_PC,pdam,2018,ITS2,Post,Fall
+0,Rocky Top,UK1,O,UK1-O,UK1-O_000,srad,2017,ITS2,Irma,Fall

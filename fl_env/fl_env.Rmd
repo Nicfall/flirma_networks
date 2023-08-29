@@ -1,0 +1,1049 @@
+---
+title: "Florida map & env. variables"
+author: "Nicola Kriefall"
+date: "8/27/2022"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+# Kd490
+
+## Setup
+
+### Libraries
+
+```{r packages}
+library("ggplot2")
+library("Rmisc")
+library("cowplot")
+library("ggpubr")
+library("readr")
+library("car")
+library("lubridate")
+library("dplyr")
+library("tidyverse")
+```
+
+### Kd490 data
+
+```{r kd490 data}
+setwd("~/Library/CloudStorage/GoogleDrive-nicfall@bu.edu/My Drive/Flirma/fl_env/kd490")
+
+kd490.lk1i <- read_csv("kd490_raw_lk1i_erdMH1kd4901day_10ff_0584_ad18.csv", skip = 1)
+kd490.lk1o <- read_csv("kd490_raw_lk1o_erdMH1kd4901day_cefe_e0de_053a.csv", skip = 1)
+
+kd490.uk1i <- read_csv("kd490_raw_uk1i_erdMH1kd4901day_0de0_5067_fcf5.csv", skip = 1)
+kd490.uk1o <- read_csv("kd490_raw_uk1o_erdMH1kd4901day_cd9b_5837_f774.csv", skip = 1)
+
+kd490.uk2i <- read_csv("kd490_raw_uk2i_erdMH1kd4901day_c963_e917_7fd7.csv", skip = 1)
+kd490.uk2o <- read_csv("kd490_raw_uk2o_erdMH1kd4901day_580f_71f4_dabf.csv", skip = 1)
+```
+
+### Adding variable info
+
+```{r kd490 process}
+kd490.lk1i$site_zone <- rep("LK1-I",nrow(kd490.lk1i))
+kd490.lk1i$site <- rep("LK1",nrow(kd490.lk1i))
+kd490.lk1i$zone <- rep("Inshore",nrow(kd490.lk1i))
+
+kd490.lk1o$site_zone <- rep("LK1-O",nrow(kd490.lk1o))
+kd490.lk1o$site <- rep("LK1",nrow(kd490.lk1o))
+kd490.lk1o$zone <- rep("Offshore",nrow(kd490.lk1o))
+
+kd490.uk1i$site_zone <- rep("UK1-I",nrow(kd490.uk1i))
+kd490.uk1i$site <- rep("UK1",nrow(kd490.uk1i))
+kd490.uk1i$zone <- rep("Inshore",nrow(kd490.uk1i))
+
+kd490.uk1o$site_zone <- rep("UK1-O",nrow(kd490.uk1o))
+kd490.uk1o$site <- rep("UK1",nrow(kd490.uk1o))
+kd490.uk1o$zone <- rep("Offshore",nrow(kd490.uk1o))
+
+kd490.uk2i$site_zone <- rep("UK2-I",nrow(kd490.uk2i))
+kd490.uk2i$site <- rep("UK2",nrow(kd490.uk2i))
+kd490.uk2i$zone <- rep("Inshore",nrow(kd490.uk2i))
+
+kd490.uk2o$site_zone <- rep("UK2-O",nrow(kd490.uk2o))
+kd490.uk2o$site <- rep("UK2",nrow(kd490.uk2o))
+kd490.uk2o$zone <- rep("Offshore",nrow(kd490.uk2o))
+
+kd490.all <- rbind(kd490.lk1i,kd490.lk1o,kd490.uk1i,kd490.uk1o,kd490.uk2i,kd490.uk2o)
+
+colnames(kd490.all) <- c("date","lat","lon","kd","site_zone","site","zone")
+
+kd490.lk1 <- subset(kd490.all,site=="LK1")
+kd490.uk1 <- subset(kd490.all,site=="UK1")
+kd490.uk2 <- subset(kd490.all,site=="UK2")
+```
+
+## Plot - all
+
+```{r}
+kd490.all.com <- kd490.all[complete.cases(kd490.all),]
+kd490.all.se <- summarySE(kd490.all.com,measurevar="kd",groupvars=c("site","zone"))
+kd490.all.se
+
+ggplot(kd490.all,aes(x=date,y=kd,color=zone,linetype=site,shape=zone,fill=zone))+
+  theme_cowplot()+
+  geom_point(alpha=0.4)+
+  geom_smooth(se=FALSE)+
+  scale_color_manual(name="Reef zone",values=c("#3BBA76","#453882"))+
+  scale_fill_manual(name="Reef zone",values=c("#3BBA76","#453882"))+
+  scale_shape_manual(values=c(21,23),name="Reef zone")+
+  scale_linetype_manual(name="Site",values=c("solid","longdash","twodash"))+
+  geom_vline(xintercept=as.numeric(as.POSIXct("2017-09-10 12:00:00")),linetype="dotted",color="#8b5107")+
+  geom_vline(xintercept=as.numeric(as.POSIXct("2015-04-28 12:00:00")),linetype="dotted")+
+  geom_vline(xintercept=as.numeric(as.POSIXct("2017-10-26 12:00:00")),linetype="dotted")+
+  geom_vline(xintercept=as.numeric(as.POSIXct("2018-10-16 12:00:00")),linetype="dotted")+
+  geom_vline(xintercept=as.numeric(as.POSIXct("2016-04-10 12:00:00")),linetype="dotted")+
+  guides(linetype=guide_legend(keywidth = 3, keyheight = 1))+
+  xlab("")+
+  ylab("Kd490")
+
+#ggsave("gg.kd490.all.pdf",width=5,height=2.5) 
+```
+
+## Plots by site{.tabset}
+
+### LK1 kd490
+
+```{r}
+gg.kd490.lk1 <- ggplot(kd490.lk1,aes(x=date,y=kd,color=zone,shape=zone))+
+  theme_cowplot()+
+  geom_point(alpha=0.5)+
+  #geom_hline(yintercept=0.11162019,color="#3BBA76",linetype="dashed")+
+  #geom_hline(yintercept=0.06183251,color="#453882",linetype="longdash")+
+  scale_color_manual(name="Reef zone",values=c("#6BBE99","#14505C"))+
+  scale_fill_manual(name="Reef zone",values=c("#6BBE99","#14505C"))+
+  scale_shape_manual(values=c(16,18),name="Reef zone")+
+  geom_vline(xintercept=as.numeric(as.POSIXct("2017-09-10 12:00:00")),linetype="longdash",color="#8b5107")+
+  geom_vline(xintercept=as.numeric(as.POSIXct("2015-04-28 12:00:00")),linetype="dashed",alpha=0.7)+
+  geom_vline(xintercept=as.numeric(as.POSIXct("2017-10-26 12:00:00")),linetype="dashed",alpha=0.7)+
+  geom_vline(xintercept=as.numeric(as.POSIXct("2018-10-16 12:00:00")),linetype="dashed",alpha=0.7)+
+  geom_vline(xintercept=as.numeric(as.POSIXct("2016-04-10 12:00:00")),linetype="dotdash",alpha=0.7)+
+  geom_smooth(aes(fill=zone))+
+  ylim(0,0.3702)+
+  xlab("")+
+  facet_grid(vars(site))+
+  ylab("")
+
+gg.kd490.lk1
+```
+
+### UK1 kd490
+
+```{r}
+gg.kd490.uk1 <- ggplot(kd490.uk1,aes(x=date,y=kd,color=zone,shape=zone))+
+  theme_cowplot()+
+  geom_point(alpha=0.5)+
+  #geom_hline(yintercept=0.11162019,color="#3BBA76",linetype="dashed")+
+  #geom_hline(yintercept=0.06183251,color="#453882",linetype="longdash")+
+  scale_color_manual(name="Reef zone",values=c("#6BBE99","#14505C"))+
+  scale_fill_manual(name="Reef zone",values=c("#6BBE99","#14505C"))+
+  scale_shape_manual(values=c(16,18),name="Reef zone")+
+  geom_vline(xintercept=as.numeric(as.POSIXct("2017-09-10 12:00:00")),linetype="longdash",color="#8b5107")+
+  geom_vline(xintercept=as.numeric(as.POSIXct("2015-04-28 12:00:00")),linetype="dashed",alpha=0.7)+
+  geom_vline(xintercept=as.numeric(as.POSIXct("2017-10-26 12:00:00")),linetype="dashed",alpha=0.7)+
+  geom_vline(xintercept=as.numeric(as.POSIXct("2018-10-16 12:00:00")),linetype="dashed",alpha=0.7)+
+  geom_vline(xintercept=as.numeric(as.POSIXct("2016-04-10 12:00:00")),linetype="dotdash",alpha=0.7)+
+  geom_smooth(aes(fill=zone))+
+  ylim(0,0.3702)+
+  xlab("")+
+  facet_grid(vars(site))+
+  ylab("Kd490")
+gg.kd490.uk1
+```
+
+### UK2 kd490
+
+```{r}
+gg.kd490.uk2 <- ggplot(kd490.uk2,aes(x=date,y=kd,color=zone,shape=zone))+
+  theme_cowplot()+
+  geom_point(alpha=0.5)+
+  #geom_hline(yintercept=0.11162019,color="#3BBA76",linetype="dashed")+
+  #geom_hline(yintercept=0.06183251,color="#453882",linetype="longdash")+
+  scale_color_manual(name="Reef zone",values=c("#6BBE99","#14505C"))+
+  scale_fill_manual(name="Reef zone",values=c("#6BBE99","#14505C"))+
+  scale_shape_manual(values=c(16,18),name="Reef zone")+
+  geom_vline(xintercept=as.numeric(as.POSIXct("2017-09-10 12:00:00")),linetype="longdash",color="#8b5107")+
+  geom_vline(xintercept=as.numeric(as.POSIXct("2015-04-28 12:00:00")),linetype="dashed",alpha=0.7)+
+  geom_vline(xintercept=as.numeric(as.POSIXct("2017-10-26 12:00:00")),linetype="dashed",alpha=0.7)+
+  geom_vline(xintercept=as.numeric(as.POSIXct("2018-10-16 12:00:00")),linetype="dashed",alpha=0.7)+
+  geom_vline(xintercept=as.numeric(as.POSIXct("2016-04-10 12:00:00")),linetype="dotdash",alpha=0.7)+
+  geom_smooth(aes(fill=zone))+
+  ylim(0,0.3702)+
+  xlab("")+
+  facet_grid(vars(site))+
+  ylab("")
+gg.kd490.uk2
+```
+
+## Multi-panel plot
+
+```{r}
+gg.kd490 <- ggarrange(gg.kd490.uk2,gg.kd490.uk1,gg.kd490.lk1,nrow=3,ncol=1,common.legend=TRUE,legend="right")
+gg.kd490
+
+#ggsave("kd490.pdf",width=4.99,height=6.21) #4.99 x 6.21
+```
+
+## Kd490 stats
+
+```{r}
+kd490.lk1i <- subset(kd490.all.com,site_zone=="LK1-I")
+kd490.lk1o <- subset(kd490.all.com,site_zone=="LK1-O")
+
+var(kd490.lk1i$kd) #0.002345926
+var(kd490.lk1o$kd) #0.000556887
+
+leveneTest(kd~zone,data=kd490.lk1) #sig
+#        Df F value    Pr(>F)    
+# group   1   185.1 < 2.2e-16 ***
+#       678                      
+wilcox.test(kd~zone,data=kd490.lk1) #sig
+# data:  kd by zone
+# W = 95162, p-value < 2.2e-16
+
+kd490.uk1i <- subset(kd490.all.com,site_zone=="UK1-I")
+kd490.uk1o <- subset(kd490.all.com,site_zone=="UK1-O")
+
+var(kd490.uk1i$kd) #0.00284924
+var(kd490.uk1o$kd) #0.001324837
+
+leveneTest(kd~zone,data=kd490.uk1) #sig p < 0.001***
+#        Df F value    Pr(>F)    
+# group   1  42.465 1.875e-10 ***
+#       465                      
+wilcox.test(kd~zone,data=kd490.uk1) #sig p < 0.001***
+#W = 37540, p-value < 2.2e-16
+
+kd490.uk2i <- subset(kd490.all.com,site_zone=="UK2-I")
+kd490.uk2o <- subset(kd490.all.com,site_zone=="UK2-O")
+
+var(kd490.uk2i$kd) #0.001563182
+var(kd490.uk2o$kd) #0.001175876
+
+leveneTest(kd~zone,data=kd490.uk2) #ns!
+#        Df F value Pr(>F)
+# group   1   0.047 0.8284
+wilcox.test(kd~zone,data=kd490.uk2) #sig p < 0.001***
+#W = 37172, p-value < 2.2e-16
+```
+
+## Outliers during Irma plot
+
+```{r}
+kd490.all.com.irm <- mutate(kd490.all.com, Conditions = case_when(
+         date <= "2017-09-09" ~ "Ambient",
+         date >= "2017-09-30" ~ "Ambient",
+         TRUE ~ "Irma"))
+       
+ggplot(kd490.all.com.irm,aes(x=site_zone,y=kd,alpha=Conditions))+
+  #geom_boxplot(outlier.shape=NA,alpha=0.2,width=0.4)+
+  geom_boxplot(aes(x=site_zone,y=kd),color="black",alpha=1,width=0.4,outlier.shape=NA)+
+  geom_jitter(aes(color=Conditions,size=Conditions),width=0.2)+
+  theme_bw()+
+  ylab("Kd490")+
+  xlab("Site-zone")+
+  scale_color_manual(values=c("grey","red"))+
+  theme(axis.text.x=element_text(angle=45,hjust=1))+
+  scale_alpha_manual(values=c(0.1,1))+
+  scale_size_manual(values=c(1,2))
+
+#ggsave("gg.kd490.disturb.pdf",height=3)  
+```
+
+### Who are the outliers
+
+Outliers = 1.5*IQR
+
+```{r kd490 outliers}
+##lower keys 1 inshore
+kd490.lk1i <- subset(kd490.all.com.irm,site_zone=="LK1-I")
+
+quartiles <- quantile(kd490.lk1i$kd, probs=c(.25, .75), na.rm = FALSE)
+IQR <- IQR(kd490.lk1i$kd)
+ 
+Lower <- quartiles[1] - 1.5*IQR
+Upper <- quartiles[2] + 1.5*IQR 
+ 
+kd490.lk1i.outs <- subset(kd490.lk1i, kd490.lk1i$kd > Upper)
+kd490.lk1i.outs #2/2 is Irma
+# 1 2017-09-15 12:00:00  24.5 -81.6 0.358 LK1-I     LK1   Inshore Irma      
+# 2 2017-09-17 12:00:00  24.5 -81.6 0.292 LK1-I     LK1   Inshore Irma     
+
+##lower keys 1 offshore
+kd490.lk1o <- subset(kd490.all.com.irm,site_zone=="LK1-O")
+
+quartiles <- quantile(kd490.lk1o$kd, probs=c(.25, .75), na.rm = FALSE)
+IQR <- IQR(kd490.lk1o$kd)
+ 
+Lower <- quartiles[1] - 1.5*IQR
+Upper <- quartiles[2] + 1.5*IQR 
+ 
+kd490.lk1o.outs <- subset(kd490.lk1o, kd490.lk1o$kd > Upper)
+kd490.lk1o.outs #1/24 is Irma
+
+##upper keys 1 inshore
+kd490.uk1i <- subset(kd490.all.com.irm,site_zone=="UK1-I")
+
+quartiles <- quantile(kd490.uk1i$kd, probs=c(.25, .75), na.rm = FALSE)
+IQR <- IQR(kd490.uk1i$kd)
+ 
+Lower <- quartiles[1] - 1.5*IQR
+Upper <- quartiles[2] + 1.5*IQR 
+ 
+kd490.uk1i.outs <- subset(kd490.uk1i, kd490.uk1i$kd > Upper)
+kd490.uk1i.outs #2/3 is Irma
+
+##upper keys 1 offshore
+kd490.uk1o <- subset(kd490.all.com.irm,site_zone=="UK1-O")
+
+quartiles <- quantile(kd490.uk1o$kd, probs=c(.25, .75), na.rm = FALSE)
+IQR <- IQR(kd490.uk1o$kd)
+ 
+Lower <- quartiles[1] - 1.5*IQR
+Upper <- quartiles[2] + 1.5*IQR 
+ 
+kd490.uk1o.outs <- subset(kd490.uk1o, kd490.uk1o$kd > Upper)
+kd490.uk1o.outs #1/4 is Irma [the highest one]
+
+##upper keys 2 inshore
+kd490.uk2i <- subset(kd490.all.com.irm,site_zone=="UK2-I")
+
+quartiles <- quantile(kd490.uk2i$kd, probs=c(.25, .75), na.rm = FALSE)
+IQR <- IQR(kd490.uk2i$kd)
+ 
+Lower <- quartiles[1] - 1.5*IQR
+Upper <- quartiles[2] + 1.5*IQR 
+ 
+kd490.uk2i.outs <- subset(kd490.uk2i, kd490.uk2i$kd > Upper)
+kd490.uk2i.outs #1/2 is Irma [highest one]
+
+##upper keys 2 offshore
+kd490.uk2o <- subset(kd490.all.com.irm,site_zone=="UK2-O")
+
+quartiles <- quantile(kd490.uk2o$kd, probs=c(.25, .75), na.rm = FALSE)
+IQR <- IQR(kd490.uk2o$kd)
+ 
+Lower <- quartiles[1] - 1.5*IQR
+Upper <- quartiles[2] + 1.5*IQR 
+ 
+kd490.uk2o.outs <- subset(kd490.uk2o, kd490.uk2o$kd > Upper)
+kd490.uk2o.outs #no irma
+```
+
+## Saving summary stats for RDA
+
+```{r}
+kd490.all.com$year <- year(kd490.all.com$date)
+
+kd.sum <- kd490.all.com %>% 
+  group_by(site_zone,year) %>%
+  dplyr::summarise(mean.kd=mean(kd),
+                   min.kd=min(kd),max.kd=max(kd),.groups='drop') %>%
+  as.data.frame()
+
+#write.csv(kd.sum,file="kd.for.rda.csv")
+
+kd490.all.com$year <- year(kd490.all.com$date)
+kd490.all.com$month <- month(kd490.all.com$date)
+
+#monthly mean, max, min
+kd.sum1 <- kd490.all.com %>% 
+  group_by(site_zone,year,month) %>%
+  dplyr::summarise(mean.kd1=mean(kd),min.kd1=min(kd),max.kd1=max(kd))
+
+kd.sum <- kd.sum1 %>% 
+  group_by(site_zone,year) %>%
+  dplyr::summarise(mean.kd=mean(mean.kd1),
+                   min.kd=mean(min.kd1),max.kd=mean(max.kd1))              
+
+#write.csv(kd.sum,file="kd.for.rda.csv")
+```
+
+# SST
+
+## Setup
+
+### Data
+
+```{r sst data}
+setwd("~/Library/CloudStorage/GoogleDrive-nicfall@bu.edu/My Drive/Flirma/fl_env")
+
+sst.lk1i <- read_csv("./sst/sst_lk1i_jplMURSST41_d238_b840_1199.csv", skip = 1)
+sst.lk1o <- read_csv("./sst/sst_lk1o_jplMURSST41_001d_fbac_764f.csv", skip = 1)
+
+sst.uk1i <- read_csv("./sst/sst_uk1i_jplMURSST41_55fe_e4dd_25da.csv", skip = 1)
+sst.uk1o <- read_csv("./sst/sst_uk1o_jplMURSST41_8533_a86a_7e07.csv", skip = 1)
+
+sst.uk2i <- read_csv("./sst/sst_uk2i_jplMURSST41_6185_eb06_e596.csv", skip = 1)
+sst.uk2o <- read_csv("./sst/sst_uk2o_jplMURSST41_96cd_3ead_95a9.csv", skip = 1)
+```
+
+### Adding variable info
+
+```{r sst process}
+sst.lk1i$site_zone <- rep("LK1-I",nrow(sst.lk1i))
+sst.lk1i$site <- rep("LK1",nrow(sst.lk1i))
+sst.lk1i$zone <- rep("Inshore",nrow(sst.lk1i))
+
+sst.lk1o$site_zone <- rep("LK1-O",nrow(sst.lk1o))
+sst.lk1o$site <- rep("LK1",nrow(sst.lk1o))
+sst.lk1o$zone <- rep("Offshore",nrow(sst.lk1o))
+
+sst.uk1i$site_zone <- rep("UK1-I",nrow(sst.uk1i))
+sst.uk1i$site <- rep("UK1",nrow(sst.uk1i))
+sst.uk1i$zone <- rep("Inshore",nrow(sst.uk1i))
+
+sst.uk1o$site_zone <- rep("UK1-O",nrow(sst.uk1o))
+sst.uk1o$site <- rep("UK1",nrow(sst.uk1o))
+sst.uk1o$zone <- rep("Offshore",nrow(sst.uk1o))
+
+sst.uk2i$site_zone <- rep("UK2-I",nrow(sst.uk2i))
+sst.uk2i$site <- rep("UK2",nrow(sst.uk2i))
+sst.uk2i$zone <- rep("Inshore",nrow(sst.uk2i))
+
+sst.uk2o$site_zone <- rep("UK2-O",nrow(sst.uk2o))
+sst.uk2o$site <- rep("UK2",nrow(sst.uk2o))
+sst.uk2o$zone <- rep("Offshore",nrow(sst.uk2o))
+
+sst.all <- rbind(sst.lk1i,sst.lk1o,sst.uk1i,sst.uk1o,sst.uk2i,sst.uk2o)
+
+colnames(sst.all) <- c("date","lat","lon","sst","error","mask","ice","site_zone","site","zone")
+
+sst.lk1 <- subset(sst.all,site=="LK1")
+sst.uk1 <- subset(sst.all,site=="UK1")
+sst.uk2 <- subset(sst.all,site=="UK2")
+```
+
+## Plot - all
+
+```{r}
+sst.all.se <- summarySE(sst.all,measurevar="sst",groupvars=c("site","zone"))
+sst.all.se
+
+ggplot(sst.all,aes(x=date,y=sst,color=zone,linetype=site,shape=zone,fill=zone))+
+  theme_cowplot()+
+  geom_point(alpha=0.4)+
+  geom_smooth(se=FALSE)+
+  scale_color_manual(name="Reef zone",values=c("#3BBA76","#453882"))+
+  scale_fill_manual(name="Reef zone",values=c("#3BBA76","#453882"))+
+  scale_shape_manual(values=c(21,23),name="Reef zone")+
+  scale_linetype_manual(name="Site",values=c("solid","longdash","twodash"))+
+  geom_vline(xintercept=as.numeric(as.POSIXct("2017-09-10 12:00:00")),linetype="dotted",color="#8b5107")+
+  geom_vline(xintercept=as.numeric(as.POSIXct("2015-04-28 12:00:00")),linetype="dotted")+
+  geom_vline(xintercept=as.numeric(as.POSIXct("2017-10-26 12:00:00")),linetype="dotted")+
+  geom_vline(xintercept=as.numeric(as.POSIXct("2018-10-16 12:00:00")),linetype="dotted")+
+  geom_vline(xintercept=as.numeric(as.POSIXct("2016-04-10 12:00:00")),linetype="dotted")+
+  guides(linetype=guide_legend(keywidth = 3, keyheight = 1))+
+  xlab("")+
+  ylab("sst")
+
+#ggsave("gg.sst.all.pdf",width=5,height=2.5) 
+```
+
+## Plots by site{.tabset}
+
+### LK1 sst
+
+```{r}
+gg.sst.lk1 <- ggplot(sst.lk1,aes(x=date,y=sst,color=zone,shape=zone))+
+  theme_cowplot()+
+  geom_point(alpha=0.5)+
+  #geom_hline(yintercept=0.11162019,color="#3BBA76",linetype="dashed")+
+  #geom_hline(yintercept=0.06183251,color="#453882",linetype="longdash")+
+  scale_color_manual(name="Reef zone",values=c("#6BBE99","#14505C"))+
+  scale_fill_manual(name="Reef zone",values=c("#6BBE99","#14505C"))+
+  scale_shape_manual(values=c(16,18),name="Reef zone")+
+  geom_vline(xintercept=as.numeric(as.POSIXct("2017-09-10 12:00:00")),linetype="longdash",color="#8b5107")+
+  geom_vline(xintercept=as.numeric(as.POSIXct("2015-04-28 12:00:00")),linetype="dashed",alpha=0.7)+
+  geom_vline(xintercept=as.numeric(as.POSIXct("2017-10-26 12:00:00")),linetype="dashed",alpha=0.7)+
+  geom_vline(xintercept=as.numeric(as.POSIXct("2018-10-16 12:00:00")),linetype="dashed",alpha=0.7)+
+  geom_vline(xintercept=as.numeric(as.POSIXct("2016-04-10 12:00:00")),linetype="dotdash",alpha=0.7)+
+  geom_smooth(aes(fill=zone))+
+  #ylim(0,0.3702)+
+  xlab("")+
+  facet_grid(vars(site))+
+  ylab("")
+
+gg.sst.lk1
+```
+
+### UK1 sst
+
+```{r}
+gg.sst.uk1 <- ggplot(sst.uk1,aes(x=date,y=sst,color=zone,shape=zone))+
+  theme_cowplot()+
+  geom_point(alpha=0.5)+
+  #geom_hline(yintercept=0.11162019,color="#3BBA76",linetype="dashed")+
+  #geom_hline(yintercept=0.06183251,color="#453882",linetype="longdash")+
+  scale_color_manual(name="Reef zone",values=c("#6BBE99","#14505C"))+
+  scale_fill_manual(name="Reef zone",values=c("#6BBE99","#14505C"))+
+  scale_shape_manual(values=c(16,18),name="Reef zone")+
+  geom_vline(xintercept=as.numeric(as.POSIXct("2017-09-10 12:00:00")),linetype="longdash",color="#8b5107")+
+  geom_vline(xintercept=as.numeric(as.POSIXct("2015-04-28 12:00:00")),linetype="dashed",alpha=0.7)+
+  geom_vline(xintercept=as.numeric(as.POSIXct("2017-10-26 12:00:00")),linetype="dashed",alpha=0.7)+
+  geom_vline(xintercept=as.numeric(as.POSIXct("2018-10-16 12:00:00")),linetype="dashed",alpha=0.7)+
+  geom_vline(xintercept=as.numeric(as.POSIXct("2016-04-10 12:00:00")),linetype="dotdash",alpha=0.7)+
+  geom_smooth(aes(fill=zone))+
+  #ylim(0,0.3702)+
+  xlab("")+
+  facet_grid(vars(site))+
+  ylab("SST (˚C)")
+gg.sst.uk1
+```
+
+### UK2 sst
+
+```{r}
+gg.sst.uk2 <- ggplot(sst.uk2,aes(x=date,y=sst,color=zone,shape=zone))+
+  theme_cowplot()+
+  geom_point(alpha=0.5)+
+  #geom_hline(yintercept=0.11162019,color="#3BBA76",linetype="dashed")+
+  #geom_hline(yintercept=0.06183251,color="#453882",linetype="longdash")+
+  scale_color_manual(name="Reef zone",values=c("#6BBE99","#14505C"))+
+  scale_fill_manual(name="Reef zone",values=c("#6BBE99","#14505C"))+
+  scale_shape_manual(values=c(16,18),name="Reef zone")+
+  geom_vline(xintercept=as.numeric(as.POSIXct("2017-09-10 12:00:00")),linetype="longdash",color="#8b5107")+
+  geom_vline(xintercept=as.numeric(as.POSIXct("2015-04-28 12:00:00")),linetype="dashed",alpha=0.7)+
+  geom_vline(xintercept=as.numeric(as.POSIXct("2017-10-26 12:00:00")),linetype="dashed",alpha=0.7)+
+  geom_vline(xintercept=as.numeric(as.POSIXct("2018-10-16 12:00:00")),linetype="dashed",alpha=0.7)+
+  geom_vline(xintercept=as.numeric(as.POSIXct("2016-04-10 12:00:00")),linetype="dotdash",alpha=0.7)+
+  geom_smooth(aes(fill=zone))+
+  #ylim(0,0.3702)+
+  xlab("")+
+  facet_grid(vars(site))+
+  ylab("")
+gg.sst.uk2
+```
+
+## Multi-panel plot
+
+```{r}
+gg.sst <- ggarrange(gg.sst.uk2,gg.sst.uk1,gg.sst.lk1,nrow=3,ncol=1,common.legend=TRUE,legend="right")
+gg.sst
+
+#ggsave("sst.pdf") #4.99 x 6.21
+```
+
+## Stats
+
+```{r}
+sst.all$zone <- as.factor(sst.all$zone)
+
+sst.lk1i <- subset(sst.all,site_zone=="LK1-I")
+sst.lk1o <- subset(sst.all,site_zone=="LK1-O")
+
+var(sst.lk1i$sst) #7.37
+var(sst.lk1o$sst) #6.34
+
+leveneTest(sst~zone,data=sst.lk1) #sig
+# Levene's Test for Homogeneity of Variance (center = median)
+#         Df F value    Pr(>F)    
+# group    1  13.067 0.0003057 ***
+#       2922                      
+# ---
+# Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+wilcox.test(sst~zone,data=sst.lk1) #ns
+
+sst.uk1i <- subset(sst.all,site_zone=="UK1-I")
+sst.uk1o <- subset(sst.all,site_zone=="UK1-O")
+
+var(sst.uk1i$sst) #6.55
+var(sst.uk1o$sst) #5.91
+
+leveneTest(sst~zone,data=sst.uk1) #sig p < 0.05*
+# Levene's Test for Homogeneity of Variance (center = median)
+#         Df F value  Pr(>F)  
+# group    1  6.0814 0.01372 *
+#       2922                  
+# ---
+# Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+wilcox.test(sst~zone,data=sst.uk1) #ns
+
+sst.uk2i <- subset(sst.all,site_zone=="UK2-I")
+sst.uk2o <- subset(sst.all,site_zone=="UK2-O")
+
+var(sst.uk2i$sst) #5.91
+var(sst.uk2o$sst) #4.98
+
+leveneTest(sst~zone,data=sst.uk2) 
+# Levene's Test for Homogeneity of Variance (center = median)
+#         Df F value    Pr(>F)    
+# group    1  17.338 3.219e-05 ***
+#       2922                      
+wilcox.test(sst~zone,data=sst.uk2) #ns
+```
+
+## SST during Irma plot
+
+```{r}
+sst.all.irm <- subset(sst.all,date>="2017-08-31"&date<="2017-10-01")
+
+sst.all.irm$site <- factor(sst.all.irm$site,levels=c("UK2","UK1","LK1"))
+
+#library("colorBlindness")
+sst.irm <- ggplot(sst.all.irm,aes(x=date,y=sst,color=zone,shape=zone))+
+  facet_grid(site~.)+
+  theme_cowplot()+
+  geom_point()+
+  geom_line()+
+  xlab("")+
+  ylab("Sea surface temperature (˚C)")+
+  scale_color_manual(values=c("#6BBE99","#14505C"))+
+  geom_vline(xintercept=as.numeric(as.POSIXct("2017-09-10 12:00:00")),linetype="longdash",color="#8b5107")+
+  ylim(28.5,31.5)
+#cvdPlot(sst.check)
+sst.irm
+
+#ggsave("sst.irm.pdf")
+```
+
+## Outliers?
+
+```{r}
+sst.all.irm <- mutate(sst.all, Conditions = case_when(
+         date <= "2017-09-09" ~ "Ambient",
+         date >= "2017-09-30" ~ "Ambient",
+         TRUE ~ "Irma"))
+       
+ggplot(sst.all.irm,aes(x=site_zone,y=sst,alpha=Conditions))+
+  geom_boxplot()+
+  #geom_boxplot(aes(x=site_zone,y=sst),color="black",alpha=1,width=0.4)+
+  geom_jitter(aes(color=Conditions,size=Conditions),width=0.2)+
+  theme_bw()+
+  ylab("Chlorophyll a (mg*m-3)")+
+  xlab("Site-zone")+
+  scale_color_manual(values=c("grey","red"))+
+  theme(axis.text.x=element_text(angle=45,hjust=1))+
+  scale_alpha_manual(values=c(0.1,1))+
+  scale_size_manual(values=c(1,2))
+
+#ggsave("gg.sst.disturb.pdf",height=3)  
+```
+
+### Who are the outliers
+
+Outliers = 1.5*IQR
+
+```{r sst490 outliers}
+##lower keys 1 inshore
+sst.lk1i <- subset(sst.all,site_zone=="LK1-I")
+
+quartiles <- quantile(sst.lk1i$sst, probs=c(.25, .75), na.rm = FALSE)
+IQR <- IQR(sst.lk1i$sst)
+ 
+Lower <- quartiles[1] - 1.5*IQR
+Upper <- quartiles[2] + 1.5*IQR 
+ 
+sst.lk1i <- subset(sst.lk1i, sst.lk1i$sst > Upper)
+sst.lk1i #none
+
+##lower keys 1 offshore
+sst.lk1o <- subset(sst.all,site_zone=="LK1-O")
+
+quartiles <- quantile(sst.lk1o$sst, probs=c(.25, .75), na.rm = FALSE)
+IQR <- IQR(sst.lk1o$sst)
+ 
+Lower <- quartiles[1] - 1.5*IQR
+Upper <- quartiles[2] + 1.5*IQR 
+ 
+sst.lk1o.outs <- subset(sst.lk1o, sst.lk1o$sst > Upper)
+sst.lk1o.outs 
+
+#Nada
+```
+
+## Saving summary stats for RDA
+
+```{r}
+sst.all$year <- year(sst.all$date)
+
+sst.sum <- sst.all %>% 
+  group_by(site_zone,year) %>%
+  dplyr::summarise(mean.sst=mean(sst),
+                   min.sst=min(sst),max.sst=max(sst),.groups='drop')
+
+#write.csv(sst.sum,file="sst.for.rda.csv")
+
+sst.all$year <- year(sst.all$date)
+sst.all$month <- month(sst.all$date)
+
+#monthly mean, max, min
+sst.sum1 <- sst.all %>% 
+  group_by(site_zone,year,month) %>%
+  dplyr::summarise(mean.sst1=mean(sst),min.sst1=min(sst),max.sst1=max(sst))
+
+sst.sum <- sst.sum1 %>% 
+  group_by(site_zone,year) %>%
+  dplyr::summarise(mean.sst=mean(mean.sst1),
+                   min.sst=mean(min.sst1),max.sst=mean(max.sst1))              
+
+#write.csv(sst.sum,file="sst.for.rda.csv")
+```
+
+# Chlorophyll a
+
+## Setup
+
+### Data
+
+```{r chla data}
+setwd("~/Library/CloudStorage/GoogleDrive-nicfall@bu.edu/My Drive/Flirma/fl_env")
+
+chla.lk1i <- read_csv("./chla/chla_lk1i_erdMH1chla1day_fe38_e834_e4ff.csv", skip = 1)
+chla.lk1o <- read_csv("./chla/chla_lk1o_erdMH1chla1day_8ec0_5ab7_9903.csv", skip = 1)
+
+chla.uk1i <- read_csv("./chla/chla_uk1i_erdMH1chla1day_f196_3b14_0596.csv", skip = 1)
+chla.uk1o <- read_csv("./chla/chla_uk1o_erdMH1chla1day_b2a5_06bd_6178.csv", skip = 1)
+
+chla.uk2i <- read_csv("./chla/chla_uk2i_erdMH1chla1day_81c7_7691_902c.csv", skip = 1)
+chla.uk2o <- read_csv("./chla/chla_uk2o_erdMH1chla1day_f92d_65cc_2509.csv", skip = 1)
+```
+
+### Adding variable info
+
+```{r chla process}
+chla.lk1i$site_zone <- rep("LK1-I",nrow(chla.lk1i))
+chla.lk1i$site <- rep("LK1",nrow(chla.lk1i))
+chla.lk1i$zone <- rep("Inshore",nrow(chla.lk1i))
+
+chla.lk1o$site_zone <- rep("LK1-O",nrow(chla.lk1o))
+chla.lk1o$site <- rep("LK1",nrow(chla.lk1o))
+chla.lk1o$zone <- rep("Offshore",nrow(chla.lk1o))
+
+chla.uk1i$site_zone <- rep("UK1-I",nrow(chla.uk1i))
+chla.uk1i$site <- rep("UK1",nrow(chla.uk1i))
+chla.uk1i$zone <- rep("Inshore",nrow(chla.uk1i))
+
+chla.uk1o$site_zone <- rep("UK1-O",nrow(chla.uk1o))
+chla.uk1o$site <- rep("UK1",nrow(chla.uk1o))
+chla.uk1o$zone <- rep("Offshore",nrow(chla.uk1o))
+
+chla.uk2i$site_zone <- rep("UK2-I",nrow(chla.uk2i))
+chla.uk2i$site <- rep("UK2",nrow(chla.uk2i))
+chla.uk2i$zone <- rep("Inshore",nrow(chla.uk2i))
+
+chla.uk2o$site_zone <- rep("UK2-O",nrow(chla.uk2o))
+chla.uk2o$site <- rep("UK2",nrow(chla.uk2o))
+chla.uk2o$zone <- rep("Offshore",nrow(chla.uk2o))
+
+chla.all1 <- rbind(chla.lk1i,chla.lk1o,chla.uk1i,chla.uk1o,chla.uk2i,chla.uk2o)
+
+colnames(chla.all1) <- c("date","lat","lon","chla","site_zone","site","zone")
+
+chla.all <- chla.all1[complete.cases(chla.all1),]
+
+chla.lk1 <- subset(chla.all,site=="LK1")
+chla.uk1 <- subset(chla.all,site=="UK1")
+chla.uk2 <- subset(chla.all,site=="UK2")
+```
+
+## Plot - all
+
+```{r}
+chla.all.se <- summarySE(chla.all,measurevar="chla",groupvars=c("site","zone"))
+chla.all.se
+
+ggplot(chla.all,aes(x=date,y=chla,color=zone,linetype=site,shape=zone,fill=zone))+
+  theme_cowplot()+
+  geom_point(alpha=0.4)+
+  geom_smooth(se=FALSE)+
+  scale_color_manual(name="Reef zone",values=c("#3BBA76","#453882"))+
+  scale_fill_manual(name="Reef zone",values=c("#3BBA76","#453882"))+
+  scale_shape_manual(values=c(21,23),name="Reef zone")+
+  scale_linetype_manual(name="Site",values=c("solid","longdash","twodash"))+
+  geom_vline(xintercept=as.numeric(as.POSIXct("2017-09-10 12:00:00")),linetype="dotted",color="#8b5107")+
+  geom_vline(xintercept=as.numeric(as.POSIXct("2015-04-28 12:00:00")),linetype="dotted")+
+  geom_vline(xintercept=as.numeric(as.POSIXct("2017-10-26 12:00:00")),linetype="dotted")+
+  geom_vline(xintercept=as.numeric(as.POSIXct("2018-10-16 12:00:00")),linetype="dotted")+
+  geom_vline(xintercept=as.numeric(as.POSIXct("2016-04-10 12:00:00")),linetype="dotted")+
+  guides(linetype=guide_legend(keywidth = 3, keyheight = 1))+
+  xlab("")+
+  ylab("chla")
+
+#ggsave("gg.chla.all.pdf",width=5,height=2.5) 
+```
+
+## Plots by site{.tabset}
+
+### LK1 chla
+
+```{r}
+gg.chla.lk1 <- ggplot(chla.lk1,aes(x=date,y=chla,color=zone,shape=zone))+
+  theme_cowplot()+
+  geom_point(alpha=0.5)+
+  #geom_hline(yintercept=0.11162019,color="#3BBA76",linetype="dashed")+
+  #geom_hline(yintercept=0.06183251,color="#453882",linetype="longdash")+
+  scale_color_manual(name="Reef zone",values=c("#6BBE99","#14505C"))+
+  scale_fill_manual(name="Reef zone",values=c("#6BBE99","#14505C"))+
+  scale_shape_manual(values=c(16,18),name="Reef zone")+
+  geom_vline(xintercept=as.numeric(as.POSIXct("2017-09-10 12:00:00")),linetype="longdash",color="#8b5107")+
+  geom_vline(xintercept=as.numeric(as.POSIXct("2015-04-28 12:00:00")),linetype="dashed",alpha=0.7)+
+  geom_vline(xintercept=as.numeric(as.POSIXct("2017-10-26 12:00:00")),linetype="dashed",alpha=0.7)+
+  geom_vline(xintercept=as.numeric(as.POSIXct("2018-10-16 12:00:00")),linetype="dashed",alpha=0.7)+
+  geom_vline(xintercept=as.numeric(as.POSIXct("2016-04-10 12:00:00")),linetype="dotdash",alpha=0.7)+
+  geom_smooth(aes(fill=zone))+
+  #ylim(0,0.3702)+
+  xlab("")+
+  facet_grid(vars(site))+
+  ylab("")
+
+gg.chla.lk1
+```
+
+### UK1 chla
+
+```{r}
+gg.chla.uk1 <- ggplot(chla.uk1,aes(x=date,y=chla,color=zone,shape=zone))+
+  theme_cowplot()+
+  geom_point(alpha=0.5)+
+  #geom_hline(yintercept=0.11162019,color="#3BBA76",linetype="dashed")+
+  #geom_hline(yintercept=0.06183251,color="#453882",linetype="longdash")+
+  scale_color_manual(name="Reef zone",values=c("#6BBE99","#14505C"))+
+  scale_fill_manual(name="Reef zone",values=c("#6BBE99","#14505C"))+
+  scale_shape_manual(values=c(16,18),name="Reef zone")+
+  geom_vline(xintercept=as.numeric(as.POSIXct("2017-09-10 12:00:00")),linetype="longdash",color="#8b5107")+
+  geom_vline(xintercept=as.numeric(as.POSIXct("2015-04-28 12:00:00")),linetype="dashed",alpha=0.7)+
+  geom_vline(xintercept=as.numeric(as.POSIXct("2017-10-26 12:00:00")),linetype="dashed",alpha=0.7)+
+  geom_vline(xintercept=as.numeric(as.POSIXct("2018-10-16 12:00:00")),linetype="dashed",alpha=0.7)+
+  geom_vline(xintercept=as.numeric(as.POSIXct("2016-04-10 12:00:00")),linetype="dotdash",alpha=0.7)+
+  geom_smooth(aes(fill=zone))+
+  #ylim(0,0.3702)+
+  xlab("")+
+  facet_grid(vars(site))+
+  ylab("Chl-a (mg*m-3)")
+gg.chla.uk1
+```
+
+### UK2 chla
+
+```{r}
+gg.chla.uk2 <- ggplot(chla.uk2,aes(x=date,y=chla,color=zone,shape=zone))+
+  theme_cowplot()+
+  geom_point(alpha=0.5)+
+  #geom_hline(yintercept=0.11162019,color="#3BBA76",linetype="dashed")+
+  #geom_hline(yintercept=0.06183251,color="#453882",linetype="longdash")+
+  scale_color_manual(name="Reef zone",values=c("#6BBE99","#14505C"))+
+  scale_fill_manual(name="Reef zone",values=c("#6BBE99","#14505C"))+
+  scale_shape_manual(values=c(16,18),name="Reef zone")+
+  geom_vline(xintercept=as.numeric(as.POSIXct("2017-09-10 12:00:00")),linetype="longdash",color="#8b5107")+
+  geom_vline(xintercept=as.numeric(as.POSIXct("2015-04-28 12:00:00")),linetype="dashed",alpha=0.7)+
+  geom_vline(xintercept=as.numeric(as.POSIXct("2017-10-26 12:00:00")),linetype="dashed",alpha=0.7)+
+  geom_vline(xintercept=as.numeric(as.POSIXct("2018-10-16 12:00:00")),linetype="dashed",alpha=0.7)+
+  geom_vline(xintercept=as.numeric(as.POSIXct("2016-04-10 12:00:00")),linetype="dotdash",alpha=0.7)+
+  geom_smooth(aes(fill=zone))+
+  #ylim(0,0.3702)+
+  xlab("")+
+  facet_grid(vars(site))+
+  ylab("")
+gg.chla.uk2
+```
+
+## Multi-panel plot
+
+```{r}
+gg.chla <- ggarrange(gg.chla.uk2,gg.chla.uk1,gg.chla.lk1,nrow=3,ncol=1,common.legend=TRUE,legend="right")
+gg.chla
+
+#ggsave("chla.pdf") #4.99 x 6.21
+```
+
+## Chla stats
+
+```{r}
+chla.all$zone <- as.factor(chla.all$zone)
+
+chla.lk1i <- subset(chla.all,site_zone=="LK1-I")
+chla.lk1o <- subset(chla.all,site_zone=="LK1-O")
+
+var(chla.lk1i$chla) #0.604
+var(chla.lk1o$chla) #0.112
+
+leveneTest(chla~zone,data=chla.lk1) #sig
+# Levene's Test for Homogeneity of Variance (center = median)
+#        Df F value    Pr(>F)    
+# group   1  234.45 < 2.2e-16 ***
+#       676                      
+# ---
+# Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+wilcox.test(chla~zone,data=chla.lk1) #W = 94605, p-value < 2.2e-16
+
+chla.uk1i <- subset(chla.all,site_zone=="UK1-I")
+chla.uk1o <- subset(chla.all,site_zone=="UK1-O")
+
+var(chla.uk1i$chla) #0.750
+var(chla.uk1o$chla) #0.308
+
+leveneTest(chla~zone,data=chla.uk1) #sig 
+# Levene's Test for Homogeneity of Variance (center = median)
+#        Df F value    Pr(>F)    
+# group   1  48.506 1.132e-11 ***
+#       464                      
+# ---
+# Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+wilcox.test(chla~zone,data=chla.uk1) #W = 37442, p-value < 2.2e-16
+
+chla.uk2i <- subset(chla.all,site_zone=="UK2-I")
+chla.uk2o <- subset(chla.all,site_zone=="UK2-O")
+
+var(chla.uk2i$chla) #0.4236998
+var(chla.uk2o$chla) #0.2791436
+
+leveneTest(chla~zone,data=chla.uk2) #ns
+wilcox.test(chla~zone,data=chla.uk2) #sig
+#W = 37090, p-value < 2.2e-16
+```
+
+## Plots during Irma
+
+Ugly plot
+
+```{r}
+chla.all.irm <- subset(chla.all,date>="2017-08-31"&date<="2017-10-01")
+
+chla.all.irm$site <- factor(chla.all.irm$site,levels=c("UK2","UK1","LK1"))
+
+#library("colorBlindness")
+chla.irm <- ggplot(chla.all.irm,aes(x=date,y=chla,color=zone,shape=zone))+
+  facet_grid(site~.)+
+  theme_cowplot()+
+  geom_point()+
+  geom_line()+
+  xlab("")+
+  #ylab("Sea surface temperature (˚C)")+
+  scale_color_manual(values=c("#6BBE99","#14505C"))+
+  geom_vline(xintercept=as.numeric(as.POSIXct("2017-09-10 12:00:00")),linetype="longdash",color="#8b5107")
+  #ylim(28.5,31.5)
+#cvdPlot(chla.check)
+chla.irm
+
+#14505C
+#6BBE99
+
+#ggsave("chla.irm.pdf")
+```
+
+Different plot
+
+```{r}
+chla.all.irm <- mutate(chla.all, Conditions = case_when(
+         date <= "2017-09-09" ~ "Ambient",
+         date >= "2017-09-30" ~ "Ambient",
+         TRUE ~ "Irma"))
+       
+ggplot(chla.all.irm,aes(x=site_zone,y=chla,alpha=Conditions))+
+  geom_boxplot(outlier.shape=NA,alpha=0.2,width=0.4)+
+  #geom_boxplot(aes(x=site_zone,y=chla),color="black",alpha=1,width=0.4)+
+  geom_jitter(aes(color=Conditions,size=Conditions),width=0.2)+
+  theme_bw()+
+  ylab("Chlorophyll a (mg*m-3)")+
+  xlab("Site-zone")+
+  scale_color_manual(values=c("grey","red"))+
+  theme(axis.text.x=element_text(angle=45,hjust=1))+
+  scale_alpha_manual(values=c(0.1,1))+
+  scale_size_manual(values=c(1,2))
+
+#ggsave("gg.chla.disturb.pdf",height=3)  
+```
+
+### Who are the outliers
+
+Outliers = 1.5*IQR
+
+```{r chla outliers}
+##lower keys 1 inshore
+chla.lk1i  <- subset(chla.all.irm,site_zone=="LK1-I")
+
+quartiles <- quantile(chla.lk1i$chla, probs=c(.25, .75), na.rm = FALSE)
+IQR <- IQR(chla.lk1i$chla)
+ 
+Lower <- quartiles[1] - 1.5*IQR
+Upper <- quartiles[2] + 1.5*IQR 
+ 
+chla.lk1i.outs <- subset(chla.lk1i, chla.lk1i$chla > Upper)
+chla.lk1i.outs #2/2 is Irma
+# 1 2017-09-15 12:00:00  24.5 -81.6  5.41 LK1-I     LK1   Inshore Irma      
+# 2 2017-09-17 12:00:00  24.5 -81.6  4.29 LK1-I     LK1   Inshore Irma   
+
+##lower keys 1 offshore
+chla.lk1o <- subset(chla.all.irm,site_zone=="LK1-O")
+
+quartiles <- quantile(chla.lk1o$chla, probs=c(.25, .75), na.rm = FALSE)
+IQR <- IQR(chla.lk1o$chla)
+ 
+Lower <- quartiles[1] - 1.5*IQR
+Upper <- quartiles[2] + 1.5*IQR 
+ 
+chla.lk1o.outs <- subset(chla.lk1o, chla.lk1o$chla > Upper)
+chla.lk1o.outs #1/32 is Irma, not highest
+
+##upper keys 1 inshore
+chla.uk1i <- subset(chla.all.irm,site_zone=="UK1-I")
+
+quartiles <- quantile(chla.uk1i$chla, probs=c(.25, .75), na.rm = FALSE)
+IQR <- IQR(chla.uk1i$chla)
+ 
+Lower <- quartiles[1] - 1.5*IQR
+Upper <- quartiles[2] + 1.5*IQR 
+ 
+chla.uk1i.outs <- subset(chla.uk1i, chla.uk1i$chla > Upper)
+chla.uk1i.outs #2/4 is Irma, highest one
+
+##upper keys 1 offshore
+chla.uk1o <- subset(chla.all.irm,site_zone=="UK1-O")
+
+quartiles <- quantile(chla.uk1o$chla, probs=c(.25, .75), na.rm = FALSE)
+IQR <- IQR(chla.uk1o$chla)
+ 
+Lower <- quartiles[1] - 1.5*IQR
+Upper <- quartiles[2] + 1.5*IQR 
+ 
+chla.uk1o.outs <- subset(chla.uk1o, chla.uk1o$chla > Upper)
+chla.uk1o.outs #1/7 is Irma [the highest one]
+
+##upper keys 2 inshore
+chla.uk2i <- subset(chla.all.irm,site_zone=="UK2-I")
+
+quartiles <- quantile(chla.uk2i$chla, probs=c(.25, .75), na.rm = FALSE)
+IQR <- IQR(chla.uk2i$chla)
+ 
+Lower <- quartiles[1] - 1.5*IQR
+Upper <- quartiles[2] + 1.5*IQR 
+ 
+chla.uk2i.outs <- subset(chla.uk2i, chla.uk2i$chla > Upper)
+chla.uk2i.outs #1/2 is Irma [highest one]
+
+##upper keys 2 offshore
+chla.uk2o <- subset(chla.all.irm,site_zone=="UK2-O")
+
+quartiles <- quantile(chla.uk2o$chla, probs=c(.25, .75), na.rm = FALSE)
+IQR <- IQR(chla.uk2o$chla)
+ 
+Lower <- quartiles[1] - 1.5*IQR
+Upper <- quartiles[2] + 1.5*IQR 
+ 
+chla.uk2o.outs <- subset(chla.uk2o, chla.uk2o$chla > Upper)
+chla.uk2o.outs #no irma
+```
+
+## Saving summary things for RDA
+
+```{r}
+chla.all$year <- year(chla.all$date)
+chla.all$month <- month(chla.all$date)
+
+#monthly mean, max, min
+chla.sum1 <- chla.all %>% 
+  group_by(site_zone,year,month) %>%
+  dplyr::summarise(mean.chla1=mean(chla),min.chla1=min(chla),max.chla1=max(chla))
+
+chla.sum <- chla.sum1 %>% 
+  group_by(site_zone,year) %>%
+  dplyr::summarise(mean.chla=mean(mean.chla1),
+                   min.chla=mean(min.chla1),max.chla=mean(max.chla1))              
+
+#write.csv(chla.sum,file="chla.for.rda.csv")
+```
+

@@ -1,0 +1,248 @@
+---
+title: "FL Irma damage mapped"
+author: "Nicola Kriefall"
+date: "Feb. 15th, 2023"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+# Map
+
+## Setup
+
+Following instructions here:
+polarmicrobes.org
+
+Amazing resource for downloading GSHHG maps:
+https://www.arcgis.com/home/item.html?id=2be2d19544414752b3088b81ae3f70dd
+
+```{r}
+setwd("~/Library/CloudStorage/GoogleDrive-nicfall@bu.edu/My Drive/Flirma/flirma_networks/fl_env")
+
+#install.packages("sf")
+library(sf)
+#install.packages("maps")
+library(maps)
+#install.packages("mapdata")
+library(mapdata)
+#install.packages("maptools")
+library(maptools)
+library(ggplot2)
+#install.packages("rnaturalearth")
+library("rnaturalearth")
+#install.packages("rnaturalearthdata")
+library("rnaturalearthdata")
+library(cowplot)
+```
+
+```{r}
+fname <- "./zipfolder/coastline_highest_resolution.shp"
+fname
+flkeys <- st_read(fname)
+
+##basic plot:
+#plot(st_geometry(flkeys),axes=TRUE)
+
+#coordinates for points:
+sites.pts <- read.csv("fl_latlon_nobiscayne.csv")
+#coordinates for damage assessment:
+sites.dmg <- read.csv("NCCOS download - dmg_impacts.csv")
+
+ggplot() + 
+  geom_sf(data = flkeys)+
+  theme_cowplot()+
+  geom_point(data=sites.dmg,aes(x=Longitude,y=Latitude),size=1,alpha=0.5)+
+  geom_point(data=sites.pts,aes(x=lon,y=lat,shape=reef_zone,fill=reef_zone))+
+  scale_fill_manual(name="Reef zone",values=c("#3BBA76","#453882"))+
+  scale_shape_manual(values=c(21,23),name="Reef zone")+
+ # annotate("point", x = -82, y = 25, colour = "red", size = 4)+
+  xlab("")+
+  ylab("")
+```
+
+Alternative method, following here: https://r-spatial.github.io/sf/articles/sf5.html
+
+```{r, eval=F}
+#install.packages("tmap")
+library(tmap)
+qtm(flkeys)
+```
+
+# Damage assessment data
+
+> Data is organized where tier 3 is low damage, tier 1 is high damage (i.e. restoration priorities)
+
+Context: pulled two datasets from NOAA/affiliates - the round 2 one contains the round 1, but I had to reformat them slightly to match. 
+
+**Round 1 dataset**
+
+Very important Irma damage assessment links:
+https://www.arcgis.com/apps/MapJournal/index.html?appid=4f7e03fe4c3748849426d15e12491d22
+
+>> Figure out how to cite
+
+**Round 2 dataset**
+
+https://coastalscience.noaa.gov/data_reports/nccos-assessment-coral-disturbance-response-monitoring-drm-along-the-florida-reef-tract-following-hurricane-irma-from-2017-10-09-to-2017-10-18-ncei-accession-0179071/
+
+how to cite:
+
+Viehman, S., S. Gittings, S. Groves, J. Moore, T. Moore, and J. Stein. in press. NCCOS Assessment: Coral Disturbance Response Monitoring (DRM) along the Florida Reef Tract following Hurricane Irma from 2017-10-09 to 2017-10-18 (NCEI Accession 0179071). NOAA National Centers for Environmental Information. Dataset. doi:10.25921/sscd-6h41
+
+```{r}
+dmg <- read.csv("dmg_mixed_cleaned.csv")
+
+gg.map.dmg <- ggplot() + 
+  geom_sf(data = flkeys)+
+  theme_cowplot()+
+  geom_point(data=dmg,aes(x=Longitude,y=Latitude,color=score),alpha=0.8,size=2,pch=15)+
+  scale_color_gradientn(colours=hcl.colors(12,"Peach",rev=T),limits=c(1,3),name="Damage")+
+  geom_point(data=sites.pts,aes(x=lon,y=lat,shape=reef_zone),size=3)+
+  #scale_fill_manual(name="Reef zone",values=c("#3BBA76","#453882"))+
+  #scale_size_continuous(limits=c(1.00,3.00))+ ,size=score
+  scale_shape_manual(values=c(21,23),name="Reef zone",labels=c("Inshore","Offshore"))+
+ # annotate("point", x = -82, y = 25, colour = "red", size = 4)+
+  xlab("")+
+  ylab("")+
+  ggtitle("Damage score (NCCOS & affiliates)")
+
+gg.map.dmg
+```
+
+## Finding closest points
+
+https://gis.stackexchange.com/questions/351085/r-find-n-closest-points-to-each-point-in-spatialpointsdataframe
+
+```{r}
+dmg.pts <- dmg[,c("Latitude","Longitude")]
+
+colnames(dmg.pts) <- c("lat","lon")
+sites <- sites.pts[,c("lat","lon")]
+
+points <- rbind(dmg.pts,sites)
+
+points.dist <- dist(points)
+points.mat <- as.matrix(points.dist)
+
+mat.1 <- data.frame(points.mat[60,])
+order(mat.1)
+#site 1 = 51, 42, 46, 38, 40
+##e. sambo - off
+
+# pts.1 <- rbind(dmg[51,],dmg[42,],dmg[46,],dmg[38,],dmg[40,])
+# pts.1$site <- rep("site1",5)
+pts.1 <- rbind(dmg[51,],dmg[42,],dmg[46,])
+pts.1$site <- rep("site1",3)
+
+mat.2 <- data.frame(points.mat[61,])
+order(mat.2)
+#site 2 = 57, 12, 13, 11, 56
+##rocky top - off
+
+# pts.2 <- rbind(dmg[57,],dmg[12,],dmg[13,],dmg[11,],dmg[56,])
+# pts.2$site <- rep("site2",5)
+pts.2 <- rbind(dmg[57,],dmg[12,],dmg[13,])
+pts.2$site <- rep("site2",3)
+
+mat.3 <- data.frame(points.mat[62,])
+order(mat.3)
+#12, 57, 13, 11, 18
+##cheeca rocks - in
+
+# pts.3 <- rbind(dmg[57,],dmg[12,],dmg[13,],dmg[11,],dmg[18,])
+# pts.3$site <- rep("site3",5)
+pts.3 <- rbind(dmg[57,],dmg[12,],dmg[13,])
+pts.3$site <- rep("site3",3)
+
+mat.4 <- data.frame(points.mat[63,])
+order(mat.4)
+#59, 7, 1, 5, 4
+##carysfort - off
+
+# pts.4 <- rbind(dmg[59,],dmg[7,],dmg[1,],dmg[5,],dmg[4,])
+# pts.4$site <- rep("site4",5)
+pts.4 <- rbind(dmg[59,],dmg[7,],dmg[1,])
+pts.4$site <- rep("site4",3)
+
+mat.5 <- data.frame(points.mat[64,])
+order(mat.5)
+#59, 7, 1, 5, 4
+##basin hill - in
+
+# pts.5 <- rbind(dmg[59,],dmg[7,],dmg[1,])
+# pts.5$site <- rep("site5",3)
+
+mat.6 <- data.frame(points.mat[65,])
+order(mat.6)
+#40, 38, 43, 42, 44
+##w washer
+
+# pts.6 <- rbind(dmg[40,],dmg[38,],dmg[43,],dmg[42,],dmg[44,])
+# pts.6$site <- rep("site6",5)
+pts.6 <- rbind(dmg[40,],dmg[38,],dmg[43,])
+pts.6$site <- rep("site6",3)
+
+closest.pts <- rbind(pts.1,pts.2,pts.3,pts.4,pts.6)
+
+ggplot() + 
+  geom_sf(data = flkeys)+
+  theme_cowplot()+
+  geom_point(data=closest.pts,aes(x=Longitude,y=Latitude,color=score,size=score,alpha=0.5))+
+  scale_color_gradient(low="blue",high="yellow")+
+  geom_point(data=sites.pts,aes(x=lon,y=lat,shape=reef_zone,fill=reef_zone))+
+  scale_fill_manual(name="Reef zone",values=c("#3BBA76","#453882"))+
+  scale_shape_manual(values=c(21,23),name="Reef zone")+
+ # annotate("point", x = -82, y = 25, colour = "red", size = 4)+
+  xlab("")+
+  ylab("")
+
+library("dplyr")
+
+closer <- closest.pts %>%
+  group_by(site) %>%
+  mutate(site.mean=mean(score))
+
+ggplot(closest.pts,aes(x=site,y=score))+
+  geom_boxplot()+
+  geom_point()
+
+##closest average of 3 points:
+sites.pts$score <- c(1.33,1.67,1.67,1.33,1.33,1.57)
+
+##closest average of 5 points:
+#sites.pts$score <- c(1.34,1.66,2.00,1.3,1.3,1.56)
+#only one that changed is site 3 [cheeca]
+
+#install.packages("ggrepel")
+library("ggrepel")
+
+gg.map.dmg.avg <- ggplot() + 
+  geom_sf(data = flkeys)+
+  theme_cowplot()+
+  geom_point(data=sites.pts,aes(x=lon,y=lat,shape=reef_zone,fill=score),color="black",size=3)+
+  scale_fill_gradientn(colours=hcl.colors(12,"Peach",rev=T),limits=c(1,3),name="Damage")+
+  #geom_point(data=sites.pts,aes(x=lon,y=lat,shape=reef_zone),size=3)+
+  #scale_fill_manual(name="Reef zone",values=c("#3BBA76","#453882"))+
+  scale_shape_manual(values=c(21,23),name="Reef zone",labels=c("Inshore","Offshore"))+
+ # annotate("point", x = -82, y = 25, colour = "red", size = 4)+
+  scale_size_continuous(limits=c(1,3))+
+  xlab("")+
+  ylab("")+
+  ggtitle("Mean damage score of five nearest sites")+
+  geom_label_repel(data=sites.pts,aes(x=lon,y=lat,label=score))
+gg.map.dmg.avg
+```
+
+Multi-panel fig
+
+```{r}
+#library("ggpubr")
+
+ggarrange(gg.map.dmg,gg.map.dmg.avg,nrow=2,ncol=1,labels=c("(a)","(b)"),common.legend=T,legend="right")
+
+#ggsave("gg.map.dmg.both.pdf",height=9,width=8.2)
+```
+
+Must cite Florida resilience program for these zones
+
