@@ -18,17 +18,26 @@ editor_options:
 ## Packages
 
 ```{r}
+library(phyloseq)
 library(cowplot)
 library(ggplot2)
-library(phyloseq)
+library(nlme)
+library(emmeans)
 library("Rmisc")
+library("bestNormalize")
+
+
+library(car)
+library(multcomp)
+
 library(car)
 library("dplyr")
 
 #home
+setwd("~/nicfall@bu.edu - Google Drive/My Drive/Flirma/flirma_networks/fl_16s/02.diversity")
 
 #work
-setwd("~/Library/CloudStorage/GoogleDrive-nicfall@bu.edu/My Drive/Flirma/flirma_networks/fl_16s/02.diversity")
+#setwd("~/Library/CloudStorage/GoogleDrive-nicfall@bu.edu/My Drive/Flirma/flirma_networks/fl_16s/02.diversity")
 ```
 
 ## Read in data
@@ -36,10 +45,14 @@ setwd("~/Library/CloudStorage/GoogleDrive-nicfall@bu.edu/My Drive/Flirma/flirma_
 Be careful, I tried different data inputs [i.e. not rare, or rare]
 
 ```{r}
-ps.clean <- readRDS("../01.generate_asv_table/fl16s.23.ps.clean.trim.less.rds")
+ps.clean1 <- readRDS("../01.generate_asv_table/flpub.ps.lulu.trim.clean.rds")
+ps.clean2 <- subset_samples(ps.clean1,site_zone!="FALSE"&site!="UK3")
+ps.clean <- prune_taxa(taxa_sums(ps.clean2)>0,ps.clean2)
+ps.clean #7017 taxa and 314 samples
 
 samdf <- data.frame(ps.clean@sam_data)
 table(samdf$site_zone)
+
 ```
 
 ## Calculate metrics
@@ -83,19 +96,22 @@ df.div %>%
   filter(spp=="ssid") %>%
   summarise(sd.obs=sd(Observed), av.obs=mean(Observed))
 #     sd.obs   av.obs
-# 1 197.5431 194.7725
+# 1 45.87478 75.80447
 
 df.div %>%
   filter(spp=="srad") %>%
   summarise(sd.obs=sd(Observed), av.obs=mean(Observed))
 #     sd.obs   av.obs
-# 1 376.3091 517.0992
+# 1 52.62415 106.8593
 
 df.div$zone <- as.factor(df.div$zone)
 df.div$time <- factor(df.div$time,levels=c("Pre","Irma","Post"))
 
 #separate species
-df.div.rad <- subset(df.div,spp=="srad")
+df.div.rad1 <- subset(df.div,spp=="srad")
+##for rads, taking out UK1 because it makes the stats uneven
+df.div.rad <- subset(df.div.rad1,site!="UK1")
+
 df.div.sid <- subset(df.div,spp=="ssid")
 ```
 
@@ -114,327 +130,201 @@ wilcox.test(Shannon~spp,data=df.div)
 ### Shannon sids plot(s)
 
 ```{r}
-gg.sh.sids.yr <- ggplot(df.div.sid,aes(x=time,y=Shannon,fill=time,color=time,shape=zone))+
-  #facet_grid(site~zone)+  
-  facet_grid(.~zone)+  
-  geom_jitter(aes(alpha=zone),position = position_jitterdodge())+
-  #add color="black" here for outlines
-  geom_boxplot(outlier.shape=NA,color="black",aes(alpha=zone))+
-  ylab("Shannon diversity")+
-  xlab("Time point")+
-  #ylim(0,1.05)+
-  theme_bw()+
+ggplot(df.div.sid,aes(x=time,y=Shannon,fill=time,color=time,shape=site))+
+  geom_jitter(position = position_jitterdodge())+
+  facet_grid(.~zone)+
+  geom_boxplot(outlier.shape=NA,color="black",alpha=0.5)+
+  theme_cowplot()+
   scale_color_manual(values=c("#3B0F70","#FA7F53","#A8327D"))+
   scale_fill_manual(values=c("#3B0F70","#FA7F53","#A8327D"))+
-  scale_shape_manual(values=c(21,23),name="Reef zone")+
-  theme(plot.title=element_text(face = "italic"),axis.text.x=element_text(angle=45,vjust=1.1,hjust=1))+
   ggtitle("S. siderea")+
-  scale_alpha_manual(values=c(0.45,0.75),name="Reef zone")+
-  guides(fill="none",color="none",alpha="none",shape="none")+
-  scale_x_discrete(labels=c("Pre","Disturb.","Post"))
-gg.sh.sids.yr  
-
-#ggsave(gg.sh.sids.yr,file="gg.sids.shannon.pdf",width=3.5,height=3)
-
-gg.sh.sids.yr.site <- ggplot(df.div.sid,aes(x=time,y=Shannon,fill=time,color=time,shape=zone))+
-  facet_grid(site~zone)+  
-  #facet_grid(.~zone)+  
-  geom_jitter(aes(alpha=zone),position = position_jitterdodge())+
-  #add color="black" here for outlines
-  geom_boxplot(outlier.shape=NA,color="black",aes(alpha=zone))+
+  scale_shape_manual(values=c(0,2,3),name="Site")+
   ylab("Shannon diversity")+
   xlab("Time point")+
-  #ylim(0,1.05)+
-  theme_bw()+
-  scale_color_manual(values=c("#3B0F70","#FA7F53","#A8327D"))+
-  scale_fill_manual(values=c("#3B0F70","#FA7F53","#A8327D"))+
-  scale_shape_manual(values=c(21,23),name="Reef zone")+
-  theme(plot.title=element_text(face = "italic"),axis.text.x=element_text(angle=45,vjust=1.1,hjust=1))+
-  ggtitle("S. siderea")+
-  scale_alpha_manual(values=c(0.45,0.75),name="Reef zone")+
-  guides(fill="none",color="none",alpha="none",shape="none")+
-  scale_x_discrete(labels=c("Pre","Disturb.","Post"))
-gg.sh.sids.yr.site
-
-df.div.sid.se <- summarySE(data=df.div.sid,measurevar="Shannon",groupvars=c("time","site","zone"))
-
-##trying to add site data for no reason
-ggplot(df.div.sid,aes(x=time,y=Shannon,fill=time,color=time))+
-  #facet_grid(site~zone)+  
-  facet_grid(.~zone)+  
-  geom_jitter(aes(alpha=zone,shape=site),position=position_jitterdodge(0.4))+
-  #geom_errorbar(data=df.div.sid.se,aes(ymin=Shannon-sd,ymax=Shannon+sd),position=position_dodge(0.6),width=0.2)+
-  geom_point(data=df.div.sid.se,aes(x=time,y=Shannon,shape=site,alpha=zone),color="black",position=position_dodge(0.6),size=4)+
-  #geom_jitter(aes(alpha=zone),position = position_jitterdodge())+
-  #add color="black" here for outlines
-  #geom_boxplot(outlier.shape=NA,color="black",aes(alpha=zone))+
-  ylab("Shannon diversity")+
-  xlab("Time point")+
-  ylim(0,6.5)+
-  theme_bw()+
-  scale_color_manual(values=c("#3B0F70","#FA7F53","#A8327D"))+
-  scale_fill_manual(values=c("#3B0F70","#FA7F53","#A8327D"))+
-  scale_shape_manual(values=c(7,4,8),name="Site")+
-  theme(plot.title=element_text(face = "italic"),axis.text.x=element_text(angle=45,vjust=1.1,hjust=1))+
-  ggtitle("S. siderea")+
-  geom_boxplot(aes(group=time),fill="white",alpha=0)+
-  scale_alpha_manual(values=c(0.45,0.75),name="Reef zone")+
-  guides(fill="none",color="none",alpha="none")+
-  scale_x_discrete(labels=c("Pre","Disturb.","Post"))
-
-##stats say no main effect of time or zone, but pre-offshore is different than irma & post offshore
-
-df.div.sid.se <- summarySE(data=df.div.sid,measurevar="Shannon",groupvars=c("time","site","zone"))
-
-ggplot(df.div.sid.se,aes(x=time,y=Shannon,color=time,shape=site))+
-  geom_point(position=position_dodge(width=0.4))+
-  geom_errorbar(aes(ymin=Shannon-se,ymax=Shannon+se),width=0.2,position=position_dodge(width=0.4))+
-  #geom_boxplot()+
-  facet_wrap(~zone)
+  guides(color="none",fill="none")+
+  scale_x_discrete(labels=c("Pre","Disturb.","Post"))+
+  theme(plot.title=element_text(face = "italic"),axis.text.x=element_text(angle=45,vjust=1.1,hjust=1))
+  #scale_alpha_manual(values=c(0.45,0.75),name="Reef zone")+
 
 #ggsave(gg.sh.sids.yr,file="gg.sids.shannon.pdf",width=3.5,height=4)
+
+### dots & error bars
+df.div.sid.shan.se <- summarySE(df.div.sid,measurevar="Shannon",groupvars=c("time","site","zone"))
+
+ggplot(df.div.sid.shan.se,aes(x=time,y=Shannon,color=time,shape=site))+
+  geom_jitter(data=df.div.sid,position = position_jitterdodge(),alpha=0.3)+
+  facet_grid(.~zone)+
+  geom_errorbar(aes(ymin=Shannon-se,ymax=Shannon+se),position=position_dodge(0.5),width=0.2)+
+  #geom_boxplot(outlier.shape=NA,color="black",alpha=0.5)+
+  geom_point(position=position_dodge(0.5),fill="white")+
+  theme_cowplot()+
+  scale_color_manual(values=c("#3B0F70","#FA7F53","#A8327D"))+
+  scale_shape_manual(values=c(25,22,24),name="Site")
+
 ```
 
-### Stats all together
-
-#### Stats libraries
+### Shannon rads plot(s)
 
 ```{r}
-library(car)
-library("bestNormalize")
-library(nlme)
-library(multcomp)
-library(emmeans)
+ggplot(df.div.rad,aes(x=time,y=Shannon,fill=time,color=time,shape=site))+
+  geom_jitter(position = position_jitterdodge())+
+  facet_grid(.~zone)+
+  geom_boxplot(outlier.shape=NA,color="black",alpha=0.5)+
+  theme_cowplot()+
+  scale_color_manual(values=c("#3B0F70","#FA7F53","#A8327D"))+
+  scale_fill_manual(values=c("#3B0F70","#FA7F53","#A8327D"))+
+  ggtitle("S. radians")+
+  scale_shape_manual(values=c(0,2,3),name="Site")+
+  ylab("Shannon diversity")+
+  xlab("Time point")+
+  guides(color="none",fill="none")+
+  scale_x_discrete(labels=c("Pre","Disturb.","Post"))+
+  theme(plot.title=element_text(face = "italic"),axis.text.x=element_text(angle=45,vjust=1.1,hjust=1))
+  #scale_alpha_manual(values=c(0.45,0.75),name="Reef zone")+
+
+#ggsave(gg.sh.rads.yr,file="gg.rads.shannon.pdf",width=3.5,height=4)
+
+### dots & error bars
+df.div.rad.shan.se <- summarySE(df.div.rad,measurevar="Shannon",groupvars=c("time","site","zone"))
+
+ggplot(df.div.rad.shan.se,aes(x=time,y=Shannon,color=time,shape=site))+
+  geom_jitter(data=df.div.rad,position = position_jitterdodge(),alpha=0.3)+
+  facet_grid(.~zone)+
+  geom_errorbar(aes(ymin=Shannon-se,ymax=Shannon+se),position=position_dodge(0.5),width=0.2)+
+  #geom_boxplot(outlier.shape=NA,color="black",alpha=0.5)+
+  geom_point(position=position_dodge(0.5),fill="white")+
+  theme_cowplot()+
+  scale_color_manual(values=c("#3B0F70","#FA7F53","#A8327D"))+
+  scale_shape_manual(values=c(25,24),name="Site")
 ```
 
-#### Running Shannon things
+### Shannon sids stats
 
 ```{r}
-##check variance here
-
-
 shapiro.test(log(df.div.sid$Shannon))
-df.div.sid$sh.norm <- bestNormalize(df.div.sid$Shannon)$x.t
-shapiro.test(df.div.sid$sh.norm)
-#leveneTest(Shannon~time*site*zone,data=df.div.sid)
-##normalization didn't help for anova
-
-##following nested info here: https://rpubs.com/MarkusLoew/198899
-my.aov <- aov(Shannon ~ time*site*zone,data = df.div.sid)
-summary(my.aov)
-
-my.aov <- aov(log(Shannon) ~ time*site*zone,data = df.div.sid)
-summary(my.aov)
-
-my.aov <- aov(sh.norm ~ time*site*zone,data = df.div.sid)
-summary(my.aov)
-# 
-# my.aov <- aov(Shannon ~ time*site*zone+Error(site/zone),data = df.div.sid)
-# summary(my.aov)
-
-demo1.aov <- aov(sh.norm ~  time*zone+Error(site_zone), data = df.div.sid)
-summary(demo1.aov)
-
-#install.packages("TukeyC")
-library(TukeyC)
-
-tk1 <-  TukeyC(demo1.aov,
-                   which='time')
-summary(tk1)
-
-tk2 <-  TukeyC(demo1.aov,
-                   which='zone')
-summary(tk2)
-
-tk3 <-  TukeyC(demo1.aov,
-                   which='time:zone')
-summary(tk3)
-
-
+shapiro.test(df.div.sid$Shannon)
 #df.div.sid$sh.norm <- bestNormalize(df.div.sid$Shannon)$x.t
+#shapiro.test(df.div.sid$sh.norm)
+#leveneTest(Shannon~time*site*zone,data=df.div.sid)
+
+sid.a1 <- aov(Shannon~time*site/zone,data=df.div.sid)
+summary(sid.a1)
+TukeyHSD(sid.a1)
+
+#DunnettTest(df.div.sid$Shannon, df.div.sid$time)
+
+emmip(sid.a1,  ~ time | site:zone)
+
+emmeans(sid.a1, ~time|site/zone)
+
+with(df.div.sid, table(time, site, zone))
+
 
 #I think I'm going with this one:
-my.lme <- lme(sh.norm ~ time*zone,
-              random = ~ 1|site_zone,
+lme.shan.sid <- lme(Shannon ~ time*zone,
+              random = ~ 1|site,
               data=df.div.sid)
 
-summary(my.lme)
-anova(my.lme)
+summary(lme.shan.sid)
+anova(lme.shan.sid)
 #             numDF denDF  F-value p-value
-# (Intercept)     1   157 0.000117  0.9914
-# time            2   157 0.962987  0.3840
-# zone            1     4 0.026938  0.8776
-# time:zone       2   157 3.306175  0.0392
+# (Intercept)     1   171 851.9163  <.0001
+# time            2   171   1.2950  0.2766
+# zone            1   171   0.0939  0.7596
+# time:zone       2   171   3.1316  0.0462
 
-shapiro.test(residuals(my.lme))
-qqnorm(residuals(my.lme))
-qqline(residuals(my.lme), col="red")
-##the sh.norm was better than the log(shannon) or raw shannon
+shapiro.test(residuals(lme.shan.sid))
+qqnorm(residuals(lme.shan.sid))
+qqline(residuals(lme.shan.sid), col="red")
+plot(lme.shan.sid)
 
-plot(my.lme)
-
-qqnorm(my.lme, ~ranef(., level=1)) #one per random level if I understand this site correctly:
+#qqnorm(my.lme, ~ranef(., level=1)) #one per random level if I understand this site correctly:
 #https://stats.stackexchange.com/questions/77891/checking-assumptions-lmer-lme-mixed-models-in-r
 
-##comparing fixed effects vs. random effects
-model.fixed = gls(sh.norm ~ time*zone,
-                  data=df.div.sid,
-                  method="REML")
-
-anova(my.lme,
-      model.fixed)
-
-hist(residuals(model.fixed),
-     col="darkgray")
-
-hist(residuals(my.lme),
-     col="darkgray")
-
-
 ### posthoc things ###
-emmeans(my.lme, list(pairwise ~ time), adjust = "none")
+emmeans(lme.shan.sid, list(pairwise ~ time:zone), adjust = "none")
 #nada
-
-emmeans(my.lme, list(pairwise ~ time:zone), adjust = "none")
 
 #following Bonferroni explanation down at the bottom of this page:
 #http://rstudio-pubs-static.s3.amazonaws.com/5832_87bb0ddcaa9d49d59e1998bc7438a297.html
 #from google: Bonferroni correction, divide the critical P value (α) by the number of comparisons being made. For example, if 10 hypotheses are being tested, the new critical P value would be α/10. 
 
 ##I'm interested in:
-# Pre Inshore - Pre Offshore     -0.5690 0.328   4  -1.734  0.1579
-# Irma Inshore - Irma Offshore    0.2196 0.317   4   0.692  0.5272
-# Post Inshore - Post Offshore    0.2717 0.360   4   0.754  0.4929
+ # Pre Inshore - Pre Offshore     -0.5576 0.302 171  -1.847  0.0664
+ # Irma Inshore - Irma Offshore    0.2557 0.283 171   0.904  0.3672
+ # Post Inshore - Post Offshore    0.4519 0.310 171   1.458  0.1466
 
-##none significant at 0.017 level - so no effect of reef zone
+##none significant 
 
 ##also:
 ##inshore
- # Pre Inshore - Irma Inshore     -0.1587 0.246 157  -0.644  0.5202
- # Pre Inshore - Post Inshore     -0.2301 0.284 157  -0.810  0.4193
- # Irma Inshore - Post Inshore    -0.0714 0.281 157  -0.254  0.7999
+# Pre Inshore - Irma Inshore     -0.0645 0.290 171  -0.223  0.8241
+# Pre Inshore - Post Inshore     -0.3330 0.305 171  -1.093  0.2761
+# Irma Inshore - Post Inshore    -0.2684 0.298 171  -0.901  0.3691
 
 ##nada
 ##offshore
-# Pre Offshore - Irma Offshore    0.6299 0.249 157   2.532  0.0123 #only one different
-# Pre Offshore - Post Offshore    0.6107 0.266 157   2.293  0.0232
-# Irma Offshore - Post Offshore  -0.0193 0.257 157  -0.075  0.9402
-##Pre different from both offshore at 0.017 level
-```
-
-### Shannon rads
-
-```{r shannon rads}
-gg.sh.rads.yr <- ggplot(df.div.rad,aes(x=time,y=Shannon,fill=time,color=time,shape=zone))+
-  facet_grid(.~zone)+  
-  geom_jitter(aes(alpha=zone),position = position_jitterdodge())+
-  #add color="black" here for outlines
-  geom_boxplot(outlier.shape=NA,color="black",aes(alpha=zone))+
-  ylab("Shannon index")+
-  xlab("Time point")+
-  ylim(0,7.6)+
-  theme_bw()+
-  scale_color_manual(values=c("#3B0F70","#FA7F53","#A8327D"))+
-  scale_fill_manual(values=c("#3B0F70","#FA7F53","#A8327D"))+
-  scale_shape_manual(values=c(21,23),name="Reef zone")+
-  theme(plot.title=element_text(face = "italic"),axis.text.x=element_text(angle=45,vjust=1.1,hjust=1))+
-  ggtitle("S. radians")+
-  scale_alpha_manual(values=c(0.45,0.75),name="Reef zone")+
-  guides(fill="none",color="none")+
-  scale_x_discrete(labels=c("Pre","Disturb.","Post"))
-  
-gg.sh.rads.yr
-
-#ggsave(gg.sh.rads.yr,file="gg.sha.rads.year.pdf",width=3.5,height=4)
+# Pre Offshore - Irma Offshore    0.7488 0.295 171   2.537  0.0121
+# Pre Offshore - Post Offshore    0.6765 0.307 171   2.204  0.0289
+# Irma Offshore - Post Offshore  -0.0723 0.295 171  -0.245  0.8069
+##Pre different from offshore Irma at 0.017 level
 ```
 
 ### Shannon rads stats
 
 ```{r}
-#diagnostic plots didn't look great below, normalizing 
-bestNormalize(df.div.rad$Shannon)
-#orderNorm Transformation with 133 nonmissing obs and no ties 
+shapiro.test(df.div.rad$Shannon)
+shapiro.test(log(df.div.rad$Shannon))
 df.div.rad$sh.norm <- bestNormalize(df.div.rad$Shannon)$x.t
+shapiro.test(df.div.rad$sh.norm)
+#leveneTest(Shannon~time*site*zone,data=df.div.rad)
 
-#df.div.rad$sh.log <- log(df.div.rad$Shannon)
-rad.lme <- lme(sh.norm ~ time*zone,
+lme.shan.rad <- lme(Shannon ~ time*zone,
               random = ~ 1|site,
               data=df.div.rad)
 
-summary(rad.lme)
-anova(rad.lme)
-#             numDF denDF  F-value p-value
-# (Intercept)     1   125 744.2085  <.0001
-# time            2   125  47.2367  <.0001
-# zone            1   125   1.0613  0.3049
-# time:zone       2   125   1.3763  0.2563
-##time is very very significant - post goes way down which is weird
+summary(lme.shan.rad)
+anova(lme.shan.rad)
+#             numDF denDF   F-value p-value
+# (Intercept)     1   101 262.22447  <.0001
+# time            2   101  35.05105  <.0001
+# zone            1   101   0.45971  0.4993
+# time:zone       2   101   1.29843  0.2775
 
-##after normalizing:
-#             numDF denDF  F-value p-value
-# (Intercept)     1   125  0.08199  0.7751
-# time            2   125 39.53644  <.0001
-# zone            1   125  2.85579  0.0935
-# time:zone       2   125  2.28306  0.1062
-#different in terms of numbers, not different in terms of level of significance
+shapiro.test(residuals(lme.shan.rad))
+qqnorm(residuals(lme.shan.rad))
+qqline(residuals(lme.shan.rad), col="red")
+plot(lme.shan.rad)
 
-shapiro.test(residuals(rad.lme))
-qqnorm(residuals(rad.lme))
-qqline(residuals(rad.lme), col="red")
-
-#plot(predict(rad.lme), reraduals(rad.lme))
-plot(rad.lme)
-
-qqnorm(rad.lme, ~ranef(., level=1)) #one per random level if I understand this site correctly:
-##https://stats.stackexchange.com/questions/77891/checking-assumptions-lmer-lme-mixed-models-in-r
-
-##comparing fixed effects vs. random effects
-model.fixed = gls(sh.norm ~ time*zone,
-                  data=df.div.rad,
-                  method="REML")
-
-anova(rad.lme,
-      model.fixed)
-
-hist(residuals(rad.lme),
-     col="darkgray")
-
-plot(fitted(rad.lme),
-     residuals(rad.lme)) 
+#qqnorm(my.lme, ~ranef(., level=1)) #one per random level if I understand this site correctly:
+#https://stats.stackexchange.com/questions/77891/checking-assumptions-lmer-lme-mixed-models-in-r
 
 ### posthoc things ###
-emmeans(rad.lme, list(pairwise ~ time), adjust = "none")
-##all different:
-# $`pairwise differences of time`
-#  1           estimate    SE  df t.ratio p.value
-#  Pre - Irma     0.690 0.156 125   4.428  <.0001
-#  Pre - Post     1.553 0.178 125   8.726  <.0001
-#  Irma - Post    0.863 0.182 125   4.745  <.0001
-
-emmeans(rad.lme, list(pairwise ~ time:zone), adjust = "none")
+emmeans(lme.shan.rad, list(pairwise ~ time:zone), adjust = "none")
 
 #following Bonferroni explanation down at the bottom of this page:
 #http://rstudio-pubs-static.s3.amazonaws.com/5832_87bb0ddcaa9d49d59e1998bc7438a297.html
 #from google: Bonferroni correction, divide the critical P value (α) by the number of comparisons being made. For example, if 10 hypotheses are being tested, the new critical P value would be α/10. 
 
 ##I'm interested in:
- # Pre Inshore - Pre Offshore     -0.5469 0.204 125  -2.678  0.0084
- # Irma Inshore - Irma Offshore   -0.0577 0.233 125  -0.248  0.8047
- # Post Inshore - Post Offshore    0.1217 0.278 125   0.438  0.6621
-##in vs. off was different during pre, not super interesting
+ # Pre Inshore - Pre Offshore     -0.0615 0.364 101  -0.169  0.8661
+ # Irma Inshore - Irma Offshore   -0.5729 0.358 101  -1.601  0.1126
+ # Post Inshore - Post Offshore    0.2654 0.389 101   0.683  0.4963
+
+##none significant 
 
 ##also:
 ##inshore
- # Pre Inshore - Irma Inshore      0.4456 0.214 125   2.083  0.0393
- # Pre Inshore - Post Inshore      1.2190 0.243 125   5.019  <.0001
- # Irma Inshore - Post Inshore     0.7734 0.245 125   3.161  0.0020
-##post different than both, although pre vs. irma was almost there :/ 
+#  Pre Inshore - Irma Inshore      0.9423 0.368 101   2.558  0.0120
+#  Pre Inshore - Post Inshore      2.0300 0.368 101   5.509  <.0001*
+#  Irma Inshore - Post Inshore     1.0877 0.358 101   3.038  0.0030*
+# 
+# ##offshore
+#  Pre Offshore - Irma Offshore    0.4309 0.353 101   1.219  0.2257
+#  Pre Offshore - Post Offshore    2.3570 0.384 101   6.131  <.0001*
+#  Irma Offshore - Post Offshore   1.9260 0.389 101   4.956  <.0001*
 
-##offshore
- # Pre Offshore - Irma Offshore    0.9349 0.225 125   4.155  0.0001
- # Pre Offshore - Post Offshore    1.8876 0.253 125   7.473  <.0001
- # Irma Offshore - Post Offshore   0.9527 0.268 125   3.552  0.0005
-##all different!
+#stars indicate < 0.0055 level 
 ```
 
 ## ASV richness{.tabset}
@@ -449,93 +339,48 @@ wilcox.test(Observed~spp,data=df.div)
 #super sig
 ```
 
-### Observed sids plot(s)
+### Shannon sids plot(s)
 
 ```{r}
-gg.ob.sids.yr <- ggplot(df.div.sid,aes(x=time,y=Observed,fill=time,color=time,shape=zone))+
-  facet_grid(.~zone)+  
-  #facet_grid(site~.,scales="free_y")+  
-  geom_jitter(aes(alpha=zone),position = position_jitterdodge())+
-  #add color="black" here for outlines
-  geom_boxplot(outlier.shape=NA,color="black",aes(alpha=zone))+
-  ylab("ASV richness")+
-  xlab("Time point")+
-  ylim(0,1700)+
-  theme_bw()+
+ggplot(df.div.sid,aes(x=time,y=Observed,fill=time,color=time,shape=site))+
+  geom_jitter(position = position_jitterdodge())+
+  facet_grid(.~zone)+
+  geom_boxplot(outlier.shape=NA,color="black",alpha=0.5)+
+  theme_cowplot()+
   scale_color_manual(values=c("#3B0F70","#FA7F53","#A8327D"))+
   scale_fill_manual(values=c("#3B0F70","#FA7F53","#A8327D"))+
-  scale_shape_manual(values=c(21,23),name="Reef zone")+
-  theme(plot.title=element_text(face = "italic"),axis.text.x=element_text(angle=45,vjust=1.1,hjust=1))+
   ggtitle("S. siderea")+
-  scale_alpha_manual(values=c(0.45,0.75),name="Reef zone")+
-  guides(fill="none",color="none",alpha="none",shape="none")+
-  scale_x_discrete(labels=c("Pre","Disturb.","Post"))
-gg.ob.sids.yr  
-
-gg.ob.rads.yr <- ggplot(df.div.rad,aes(x=time,y=Observed,fill=time,color=time,shape=zone))+
-  facet_grid(.~zone)+  
-  #facet_grid(site~.,scales="free_y")+  
-  geom_jitter(aes(alpha=zone),position = position_jitterdodge())+
-  #add color="black" here for outlines
-  geom_boxplot(outlier.shape=NA,color="black",aes(alpha=zone))+
-  ylab("ASV richness")+
-  xlab("Time point")+
-  #ylim(0,1.05)+
-  theme_bw()+
-  scale_color_manual(values=c("#3B0F70","#FA7F53","#A8327D"))+
-  scale_fill_manual(values=c("#3B0F70","#FA7F53","#A8327D"))+
-  scale_shape_manual(values=c(21,23),name="Reef zone")+
-  theme(plot.title=element_text(face = "italic"),axis.text.x=element_text(angle=45,vjust=1.1,hjust=1))+
-  ggtitle("S. radians")+
-  ylim(0,1700)+
-  scale_alpha_manual(values=c(0.45,0.75),name="Reef zone")+
-  guides(fill="none",color="none",alpha="none",shape="none")+
-  scale_x_discrete(labels=c("Pre","Disturb.","Post"))
-gg.ob.rads.yr  
-
-# 
-# gg.sh.sids.yr <- ggplot(df.div.sid,aes(x=time,y=Observed,fill=time,color=time,shape=zone))+
-#   facet_grid(site~.)+  
-#   geom_jitter(aes(alpha=zone),position = position_jitterdodge())+
-#   #add color="black" here for outlines
-#   geom_boxplot(outlier.shape=NA,color="black",aes(alpha=zone))+
-#   ylab("Observed index")+
-#   xlab("Time point")+
-#   ylim(0,6.7)+
-#   theme_bw()+
-#   scale_color_manual(values=c("#3B0F70","#FA7F53","#A8327D"))+
-#   scale_fill_manual(values=c("#3B0F70","#FA7F53","#A8327D"))+
-#   scale_shape_manual(values=c(21,23),name="Reef zone")+
-#   theme(plot.title=element_text(face = "italic"),axis.text.x=element_text(angle=45,vjust=1.1,hjust=1))+
-#   ggtitle("S. siderea")+
-#   scale_alpha_manual(values=c(0.45,0.75),name="Reef zone")+
-#   guides(fill="none",color="none")+
-#   scale_x_discrete(labels=c("Pre","Disturb.","Post"))
-# gg.sh.sids.yr
-
-ggplot(df.div.sid,aes(x=time,y=Observed,fill=time,color=time,shape=zone))+
-  #facet_grid(site~zone)+  
-  #facet_grid(site~.,scales="free_y")+  
-  geom_jitter(aes(alpha=zone),position = position_jitterdodge())+
-  #add color="black" here for outlines
-  geom_boxplot(outlier.shape=NA,color="black")+
+  scale_shape_manual(values=c(0,2,3),name="Site")+
   ylab("Observed diversity")+
   xlab("Time point")+
-  #ylim(0,1.05)+
-  theme_bw()+
+  guides(color="none",fill="none")+
+  scale_x_discrete(labels=c("Pre","Disturb.","Post"))+
+  theme(plot.title=element_text(face = "italic"),axis.text.x=element_text(angle=45,vjust=1.1,hjust=1))
+  #scale_alpha_manual(values=c(0.45,0.75),name="Reef zone")+
+
+#ggsave(gg.sh.sids.yr,file="gg.sids.Observed.pdf",width=3.5,height=4)
+```
+
+### Observed rads plot(s)
+
+```{r}
+ggplot(df.div.rad,aes(x=time,y=Observed,fill=time,color=time,shape=site))+
+  geom_jitter(position = position_jitterdodge())+
+  facet_grid(.~zone)+
+  geom_boxplot(outlier.shape=NA,color="black",alpha=0.5)+
+  theme_cowplot()+
   scale_color_manual(values=c("#3B0F70","#FA7F53","#A8327D"))+
   scale_fill_manual(values=c("#3B0F70","#FA7F53","#A8327D"))+
-  #scale_shape_manual(values=c(21,23),name="Reef zone")+
-  theme(plot.title=element_text(face = "italic"),axis.text.x=element_text(angle=45,vjust=1.1,hjust=1))+
-  ggtitle("S. siderea")+
+  ggtitle("S. radians")+
+  scale_shape_manual(values=c(0,2,3),name="Site")+
+  ylab("Observed diversity")+
+  xlab("Time point")+
+  guides(color="none",fill="none")+
+  scale_x_discrete(labels=c("Pre","Disturb.","Post"))+
+  theme(plot.title=element_text(face = "italic"),axis.text.x=element_text(angle=45,vjust=1.1,hjust=1))
   #scale_alpha_manual(values=c(0.45,0.75),name="Reef zone")+
-  guides(fill="none",color="none",alpha="none",shape="none")+
-  scale_x_discrete(labels=c("Pre","Disturb.","Post"))
-#gg.sh.sids.yr 
 
-#absolutely no effect of time
-
-#ggsave(gg.obs.year,file="gg.sids.Observed.pdf",width=3.5,height=4)
+#ggsave(gg.sh.rads.yr,file="gg.rads.Observed.pdf",width=3.5,height=4)
 ```
 
 ### Stats all together
@@ -764,95 +609,48 @@ wilcox.test(even~spp,data=df.div)
 #super sig
 ```
 
-### even sids plot(s)
+### Even sids plot(s)
 
 ```{r}
-gg.ev.sids.yr <- ggplot(df.div.sid,aes(x=time,y=even,fill=time,color=time,shape=zone))+
-  #facet_grid(site~zone)+  
+ggplot(df.div.sid,aes(x=time,y=even,fill=time,color=time,shape=site))+
+  geom_jitter(position = position_jitterdodge())+
   facet_grid(.~zone)+
-  #facet_grid(site~.,scales="free_y")+  
-  geom_jitter(aes(alpha=zone),position = position_jitterdodge())+
-  #add color="black" here for outlines
-  geom_boxplot(outlier.shape=NA,color="black",aes(alpha=zone))+
-  ylab("Bacterial community evenness")+
-  xlab("Time point")+
-  ylim(0,0.95)+
-  theme_bw()+
+  geom_boxplot(outlier.shape=NA,color="black",alpha=0.5)+
+  theme_cowplot()+
   scale_color_manual(values=c("#3B0F70","#FA7F53","#A8327D"))+
   scale_fill_manual(values=c("#3B0F70","#FA7F53","#A8327D"))+
-  scale_shape_manual(values=c(21,23),name="Reef zone")+
-  theme(plot.title=element_text(face = "italic"),axis.text.x=element_text(angle=45,vjust=1.1,hjust=1))+
   ggtitle("S. siderea")+
-  scale_alpha_manual(values=c(0.45,0.75),name="Reef zone")+
-  guides(fill="none",color="none",alpha="none",shape="none")+
-  scale_x_discrete(labels=c("Pre","Disturb.","Post"))
-gg.ev.sids.yr  
-
-gg.ev.rads.yr <- ggplot(df.div.rad,aes(x=time,y=even,fill=time,color=time,shape=zone))+
-  #facet_grid(site~zone)+  
-  facet_grid(.~zone)+
-  #facet_grid(site~.,scales="free_y")+  
-  geom_jitter(aes(alpha=zone),position = position_jitterdodge())+
-  #add color="black" here for outlines
-  geom_boxplot(outlier.shape=NA,color="black",aes(alpha=zone))+
-  ylab("Bacterial community evenness")+
+  scale_shape_manual(values=c(0,2,3),name="Site")+
+  ylab("Evenness")+
   xlab("Time point")+
-  ylim(0,0.95)+
-  theme_bw()+
-  scale_color_manual(values=c("#3B0F70","#FA7F53","#A8327D"))+
-  scale_fill_manual(values=c("#3B0F70","#FA7F53","#A8327D"))+
-  scale_shape_manual(values=c(21,23),name="Reef zone")+
-  theme(plot.title=element_text(face = "italic"),axis.text.x=element_text(angle=45,vjust=1.1,hjust=1))+
-  ggtitle("S. radians")+
-  scale_alpha_manual(values=c(0.45,0.75),name="Reef zone")+
-  guides(fill="none",color="none",alpha="none",shape="none")+
-  scale_x_discrete(labels=c("Pre","Disturb.","Post"))
-gg.ev.rads.yr 
-# 
-# gg.sh.sids.yr <- ggplot(df.div.sid,aes(x=time,y=even,fill=time,color=time,shape=zone))+
-#   facet_grid(site~.)+  
-#   geom_jitter(aes(alpha=zone),position = position_jitterdodge())+
-#   #add color="black" here for outlines
-#   geom_boxplot(outlier.shape=NA,color="black",aes(alpha=zone))+
-#   ylab("even index")+
-#   xlab("Time point")+
-#   ylim(0,6.7)+
-#   theme_bw()+
-#   scale_color_manual(values=c("#3B0F70","#FA7F53","#A8327D"))+
-#   scale_fill_manual(values=c("#3B0F70","#FA7F53","#A8327D"))+
-#   scale_shape_manual(values=c(21,23),name="Reef zone")+
-#   theme(plot.title=element_text(face = "italic"),axis.text.x=element_text(angle=45,vjust=1.1,hjust=1))+
-#   ggtitle("S. siderea")+
-#   scale_alpha_manual(values=c(0.45,0.75),name="Reef zone")+
-#   guides(fill="none",color="none")+
-#   scale_x_discrete(labels=c("Pre","Disturb.","Post"))
-# gg.sh.sids.yr
-
-ggplot(df.div.sid,aes(x=time,y=even,fill=time,color=time,shape=zone))+
-  #facet_grid(site~zone)+  
-  #facet_grid(site~.,scales="free_y")+  
-  geom_jitter(aes(alpha=zone),position = position_jitterdodge())+
-  #add color="black" here for outlines
-  geom_boxplot(outlier.shape=NA,color="black")+
-  ylab("even diversity")+
-  xlab("Time point")+
-  ylim(0,0.9)+
-  theme_bw()+
-  scale_color_manual(values=c("#3B0F70","#FA7F53","#A8327D"))+
-  scale_fill_manual(values=c("#3B0F70","#FA7F53","#A8327D"))+
-  #scale_shape_manual(values=c(21,23),name="Reef zone")+
-  theme(plot.title=element_text(face = "italic"),axis.text.x=element_text(angle=45,vjust=1.1,hjust=1))+
-  ggtitle("S. siderea")+
+  guides(color="none",fill="none")+
+  scale_x_discrete(labels=c("Pre","Disturb.","Post"))+
+  theme(plot.title=element_text(face = "italic"),axis.text.x=element_text(angle=45,vjust=1.1,hjust=1))
   #scale_alpha_manual(values=c(0.45,0.75),name="Reef zone")+
-  guides(fill="none",color="none",alpha="none",shape="none")+
-  scale_x_discrete(labels=c("Pre","Disturb.","Post"))
-#gg.sh.sids.yr 
 
-#absolutely no effect of time
+#ggsave(gg.sh.sids.yr,file="gg.sids.even.pdf",width=3.5,height=4)
+```
 
-ggarrange(gg.ob.sids.yr,gg.ob.rads.yr,gg.ev.sids.yr,gg.ev.rads.yr,nrow=2,ncol=2,labels=c("(a)","(b)","(c)","(d)"))
+### Even rads plot(s)
 
-ggsave("gg.div.yr.pdf",width=6,height=6)
+```{r}
+ggplot(df.div.rad,aes(x=time,y=even,fill=time,color=time,shape=site))+
+  geom_jitter(position = position_jitterdodge())+
+  facet_grid(.~zone)+
+  geom_boxplot(outlier.shape=NA,color="black",alpha=0.5)+
+  theme_cowplot()+
+  scale_color_manual(values=c("#3B0F70","#FA7F53","#A8327D"))+
+  scale_fill_manual(values=c("#3B0F70","#FA7F53","#A8327D"))+
+  ggtitle("S. radians")+
+  scale_shape_manual(values=c(0,2,3),name="Site")+
+  ylab("Evenness")+
+  xlab("Time point")+
+  guides(color="none",fill="none")+
+  scale_x_discrete(labels=c("Pre","Disturb.","Post"))+
+  theme(plot.title=element_text(face = "italic"),axis.text.x=element_text(angle=45,vjust=1.1,hjust=1))
+  #scale_alpha_manual(values=c(0.45,0.75),name="Reef zone")+
+
+#ggsave(gg.sh.rads.yr,file="gg.rads.even.pdf",width=3.5,height=4)
 ```
 
 # Stats even

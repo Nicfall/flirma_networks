@@ -9,116 +9,44 @@ output:
     toc_float: yes
     highlight: haddock
     number_sections: true
+editor_options: 
+  chunk_output_type: console
 ---
 
 # Setup
 
 ```{r packages used composition}
-library(stringr)
+#library(stringr)
 library(ggpubr)
-library(vegan)
+#library(vegan)
 library(cowplot)
 library(ggplot2)
-library(tidyverse)
+#library(tidyverse)
 library(phyloseq)
-library(funfuns)
+#library(funfuns)
 
 #install.packages("devtools")
 #library("devtools")
 #install_github("pmartinezarbizu/pairwiseAdonis/pairwiseAdonis")
 ##didn't work, copying function, don't forget to cite!
-source("pairwise.adonis2.R")
+#source("pairwise.adonis2.R")
 ```
 
 Read in data
 
 ```{r read in data}
-setwd("/Volumes/GoogleDrive/My Drive/Flirma/flirma_networks/fl_16s/03.comm_comp")
+setwd("~/nicfall@bu.edu - Google Drive/My Drive/Flirma/flirma_networks/fl_16s/03.comm_comp")
 
-ps.clean <- readRDS("../01.generate_asv_table/runthrough2023/fl16s.23.ps.cleaner.rare6000.rds")
-#ps.clean <- readRDS("../01.generate_asv_table/ps.cleanest.less.rds")
-
-#made these below:
-# ps.fam <- readRDS("ps.asvsnamed.fam.RDS")
-# ps.cla <- readRDS("ps.asvsnamed.cla.RDS")
-#ps.clean <- readRDS("ps.asvsnamed.clean.RDS")
-
-#made this elsewhere:
-#ps.clean <- readRDS("../04.networks/nets_revised/ps.rare.asvsnamed.rds")
+ps.clean <- readRDS("../01.generate_asv_table/flpub.ps.lulu.trim.clean.rds")
+ps.clean #7289 taxa, 359 samples
 ```
 
-Rename ASVs to be more informative
-
-(ran once then skip)
-
-```{r rename ASVs, eval=F}
-tax <- as.data.frame(ps.clean@tax_table@.Data)
-
-tax.clean <- data.frame(row.names = row.names(tax),
-                        Kingdom = str_replace(tax[,1], "D_0__",""),
-                        Phylum = str_replace(tax[,2], "D_1__",""),
-                        Class = str_replace(tax[,3], "D_2__",""),
-                        Order = str_replace(tax[,4], "D_3__",""),
-                        Family = str_replace(tax[,5], "D_4__",""),
-                        Genus = str_replace(tax[,6], "D_5__",""),
-                        Species = str_replace(tax[,7], "D_6__",""),
-                        stringsAsFactors = FALSE)
-tax.clean[is.na(tax.clean)] <- ""
-
-for (i in 1:7){ tax.clean[,i] <- as.character(tax.clean[,i])}
-####### Fill holes in the tax table
-tax.clean[is.na(tax.clean)] <- ""
-for (i in 1:nrow(tax.clean)){
-  if (tax.clean[i,2] == ""){
-    kingdom <- paste("Kingdom_", tax.clean[i,1], sep = "")
-    tax.clean[i, 2:7] <- kingdom
-  } else if (tax.clean[i,3] == ""){
-    phylum <- paste("Phylum_", tax.clean[i,2], sep = "")
-    tax.clean[i, 3:7] <- phylum
-  } else if (tax.clean[i,4] == ""){
-    class <- paste("Class_", tax.clean[i,3], sep = "")
-    tax.clean[i, 4:7] <- class
-  } else if (tax.clean[i,5] == ""){
-    order <- paste("Order_", tax.clean[i,4], sep = "")
-    tax.clean[i, 5:7] <- order
-  } else if (tax.clean[i,6] == ""){
-    family <- paste("Family_", tax.clean[i,5], sep = "")
-    tax.clean[i, 6:7] <- family
-  } else if (tax.clean[i,7] == ""){
-    tax.clean$Species[i] <- paste("Genus",tax.clean$Genus[i], sep = "_")
-  }
-}
-
-tax_table(ps.clean) <- as.matrix(tax.clean)
-
-# #sum by genus
-# ps.clean.gen <- tax_glom(ps.clean,"Genus")
-# 
-# #sum by family
-# ps.clean.fam <- tax_glom(ps.clean,"Family")
-# 
-# #sum by class
-# ps.clean.cla <- tax_glom(ps.clean,"Class")
-```
-
-Saving
-
-```{r save renamed files, eval=FALSE}
-# saveRDS(ps.clean.gen,"ps.asvsnamed.gen.RDS")
-# saveRDS(ps.clean.fam,"ps.asvsnamed.fam.RDS")
-# saveRDS(ps.clean.cla,"ps.asvsnamed.cla.RDS")
-#saveRDS(ps.clean,"ps.asvsnamed.clean.RDS")
-```
-
-# Pcoa {.tabset}
+# PCoA {.tabset}
 
 Subset samples
 
 ```{r}
-ps.clean <- readRDS("../01.generate_asv_table/ps.cleanest.less.rds")
-
 ##option to clr transform here or not
-#ps.clr <-  microbiome::transform(ps.clean,"clr")
 #ps.temp <- subset_samples(ps.clr,site!="UK3")
 
 ##other option
@@ -132,20 +60,35 @@ ps.clean.rad <- subset_samples(ps.temp,spp=="srad")
 
 ### Sids
 
-#### All data
-
 https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6755255/
 Clustering and classification
 Most distance measures lack sub-compositional dominance, meaning that it is possible to reduce the distance between samples by adding dimensions [16]. When clustering compositions, methods that rely on distance, like hierarchical clustering, also lack sub-compositional dominance [55]. Instead, one should use the Euclidean distance of clr-transformed compositions (called the Aitchison distance) [55]. 
 
 ```{r}
-otu.clr.sid <- data.frame(ps.clean.sid@otu_table)
+ps.sid.clr <-  microbiome::transform(ps.clean.sid,"clr")
 
+#otu.clr.sid <- data.frame(ps.clean.sid@otu_table)
 #vegdist(otu.clr.sid,method="aitchison")
 
-ord.clean.sid <- ordinate(ps.clean.sid,"PCoA","euclidean")
+ord.sid.clr <- ordinate(ps.sid.clr,"PCoA","euclidean")
+#ord.sid.clr[["stress"]]
 
-plot_ordination(ps.clean.sid, ord.clean.sid,color="time",shape="zone",axes=c(1,2))+
+plot_ordination(ps.sid.clr, ord.sid.clr,color="time",shape="zone",axes=c(1,2))+
+  stat_ellipse()+
+  scale_color_manual(values=c("#FA7F53","#A8327D","#3B0F70"))+
+  theme_cowplot()+
+  scale_alpha_manual(breaks=c("Inshore","Offshore"),values=c(0.45,0.75),name="Reef zone")+
+  facet_wrap(~site)
+```
+
+## NMDS horn
+
+### Sids
+
+```{r}
+ord.sid.horn <- ordinate(ps.clean.sid,"PCoA","bray")
+
+plot_ordination(ps.clean.sid, ord.sid.horn,color="time",shape="zone",axes=c(1,2))+
   stat_ellipse()+
   scale_color_manual(values=c("#FA7F53","#A8327D","#3B0F70"))+
   theme_cowplot()+

@@ -36,6 +36,8 @@ library("rnaturalearthdata")
 library(cowplot)
 ```
 
+# FL keys map
+
 ```{r}
 fname <- "./zipfolder/coastline_highest_resolution.shp"
 fname
@@ -63,7 +65,7 @@ ggplot() +
 
 Alternative method, following here: https://r-spatial.github.io/sf/articles/sf5.html
 
-```{r, eval=F}
+```{r}
 #install.packages("tmap")
 library(tmap)
 qtm(flkeys)
@@ -112,7 +114,7 @@ gg.map.dmg
 
 ## Finding closest points
 
-https://gis.stackexchange.com/questions/351085/r-find-n-closest-points-to-each-point-in-spatialpointsdataframe
+[info from here](https://gis.stackexchange.com/questions/351085/r-find-n-closest-points-to-each-point-in-spatialpointsdataframe)
 
 ```{r}
 dmg.pts <- dmg[,c("Latitude","Longitude")]
@@ -125,63 +127,80 @@ points <- rbind(dmg.pts,sites)
 points.dist <- dist(points)
 points.mat <- as.matrix(points.dist)
 
+##row 60 = first site, E. Sambo, offshore
 mat.1 <- data.frame(points.mat[60,])
-order(mat.1)
-#site 1 = 51, 42, 46, 38, 40
-##e. sambo - off
+order(mat.1[,1])
+##ignoring 60+ because that's this site & others
+##site 1 = 51, 42, 46, 38, 40
 
-# pts.1 <- rbind(dmg[51,],dmg[42,],dmg[46,],dmg[38,],dmg[40,])
-# pts.1$site <- rep("site1",5)
-pts.1 <- rbind(dmg[51,],dmg[42,],dmg[46,])
-pts.1$site <- rep("site1",3)
+##5 closest points
+pts.1 <- rbind(dmg[51,],dmg[42,],dmg[46,],dmg[38,],dmg[40,])
+pts.1$site <- rep("site1",5)
+##3 closest points
+# pts.1 <- rbind(dmg[51,],dmg[42,],dmg[46,])
+# pts.1$site <- rep("site1",3)
 
+##row 61 = second site, Rocky Top, offshore
 mat.2 <- data.frame(points.mat[61,])
-order(mat.2)
-#site 2 = 57, 12, 13, 11, 56
-##rocky top - off
+order(mat.2[,1])
+##ignoring 60+ because that's this site & others
+##site 2 = 57, 12, 13, 11, 56
 
-# pts.2 <- rbind(dmg[57,],dmg[12,],dmg[13,],dmg[11,],dmg[56,])
-# pts.2$site <- rep("site2",5)
-pts.2 <- rbind(dmg[57,],dmg[12,],dmg[13,])
-pts.2$site <- rep("site2",3)
+##5 closest points
+pts.2 <- rbind(dmg[57,],dmg[12,],dmg[13,],dmg[11,],dmg[56,])
+pts.2$site <- rep("site2",5)
+##3 closest points
+# pts.2 <- rbind(dmg[57,],dmg[12,],dmg[13,])
+# pts.2$site <- rep("site2",3)
 
+##row 62 = third site, Cheeca Rocks, inshore
 mat.3 <- data.frame(points.mat[62,])
-order(mat.3)
-#12, 57, 13, 11, 18
-##cheeca rocks - in
+order(mat.3[,1])
+##ignoring 60+ because that's this site & others
+##site 3 = 12, 57, 13, 11, 18
 
-# pts.3 <- rbind(dmg[57,],dmg[12,],dmg[13,],dmg[11,],dmg[18,])
-# pts.3$site <- rep("site3",5)
-pts.3 <- rbind(dmg[57,],dmg[12,],dmg[13,])
-pts.3$site <- rep("site3",3)
+##5 closest points
+pts.3 <- rbind(dmg[57,],dmg[12,],dmg[13,],dmg[11,],dmg[18,])
+pts.3$site <- rep("site3",5)
+##3 closest points
+# pts.3 <- rbind(dmg[57,],dmg[12,],dmg[13,])
+# pts.3$site <- rep("site3",3)
 
+##row 63 = fourth site, Carysfort, offshore
 mat.4 <- data.frame(points.mat[63,])
-order(mat.4)
-#59, 7, 1, 5, 4
-##carysfort - off
+order(mat.4[,1])
+##ignoring 60+ because that's this site & others
+##59, 7, 1, 5, 4
 
-# pts.4 <- rbind(dmg[59,],dmg[7,],dmg[1,],dmg[5,],dmg[4,])
-# pts.4$site <- rep("site4",5)
-pts.4 <- rbind(dmg[59,],dmg[7,],dmg[1,])
-pts.4$site <- rep("site4",3)
+##5 closest points
+pts.4 <- rbind(dmg[59,],dmg[7,],dmg[1,],dmg[5,],dmg[4,])
+pts.4$site <- rep("site4",5)
+##3 closest points
+# pts.4 <- rbind(dmg[59,],dmg[7,],dmg[1,])
+# pts.4$site <- rep("site4",3)
 
+##row 64 = fifth site, Basin hill, inshore
 mat.5 <- data.frame(points.mat[64,])
-order(mat.5)
-#59, 7, 1, 5, 4
-##basin hill - in
+order(mat.5[,1])
+##ignoring 60+ because that's this site & others
+##59, 7, 1, 5, 4
 
+##3 closest points = same as Carysfort
 # pts.5 <- rbind(dmg[59,],dmg[7,],dmg[1,])
 # pts.5$site <- rep("site5",3)
 
+##row 65 = sixth site, W. Washerwoman, inshore
 mat.6 <- data.frame(points.mat[65,])
-order(mat.6)
+order(mat.6[,1])
+##ignoring 60+ because that's this site & others
 #40, 38, 43, 42, 44
-##w washer
 
-# pts.6 <- rbind(dmg[40,],dmg[38,],dmg[43,],dmg[42,],dmg[44,])
-# pts.6$site <- rep("site6",5)
-pts.6 <- rbind(dmg[40,],dmg[38,],dmg[43,])
-pts.6$site <- rep("site6",3)
+##5 closest points
+pts.6 <- rbind(dmg[40,],dmg[38,],dmg[43,],dmg[42,],dmg[44,])
+pts.6$site <- rep("site6",5)
+##3 closest points
+# pts.6 <- rbind(dmg[40,],dmg[38,],dmg[43,])
+# pts.6$site <- rep("site6",3)
 
 closest.pts <- rbind(pts.1,pts.2,pts.3,pts.4,pts.6)
 
@@ -208,10 +227,10 @@ ggplot(closest.pts,aes(x=site,y=score))+
   geom_point()
 
 ##closest average of 3 points:
-sites.pts$score <- c(1.33,1.67,1.67,1.33,1.33,1.57)
+#sites.pts$score <- c(1.33,1.67,1.67,1.33,1.33,1.57)
 
 ##closest average of 5 points:
-#sites.pts$score <- c(1.34,1.66,2.00,1.3,1.3,1.56)
+sites.pts$score <- c(1.34,1.66,2.00,1.3,1.3,1.56)
 #only one that changed is site 3 [cheeca]
 
 #install.packages("ggrepel")
@@ -229,7 +248,7 @@ gg.map.dmg.avg <- ggplot() +
   scale_size_continuous(limits=c(1,3))+
   xlab("")+
   ylab("")+
-  ggtitle("Mean damage score of five nearest sites")+
+  ggtitle("Mean damage score of five nearest points")+
   geom_label_repel(data=sites.pts,aes(x=lon,y=lat,label=score))
 gg.map.dmg.avg
 ```
@@ -237,7 +256,7 @@ gg.map.dmg.avg
 Multi-panel fig
 
 ```{r}
-#library("ggpubr")
+library("ggpubr")
 
 ggarrange(gg.map.dmg,gg.map.dmg.avg,nrow=2,ncol=1,labels=c("(a)","(b)"),common.legend=T,legend="right")
 

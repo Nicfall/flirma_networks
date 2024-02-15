@@ -24,7 +24,7 @@ Done on BU's SCC in linux (Terminal)
 #Also - some pre-trimming. Retain only PE reads that match amplicon primer. Remove reads containing Illumina sequencing adapters
 
 #in Terminal home directory:
-#following instructions of installing BBtools from https://jgi.doe.gov/data-and-tools/bbtools/bb-tools-user-guide/installation-guide/
+#following instructions of installing BBtools from https://jgi.doe.gov/data-and-tools/software-tools/bbtools/bb-tools-user-guide/installation-guide/
 #1. download BBMap package, sftp to installation directory
 #2. untar: 
 #tar -xvzf BBMap_(version).tar.gz
@@ -39,16 +39,20 @@ Done on BU's SCC in linux (Terminal)
 # GGACTACHVGGGTWTCTAAT
 
 ##Still in terminal - making a sample list based on the first phrase before the underscore in the .fastq name
-ls *R1_001.fastq | cut -d '_' -f 1 > samples.list
+ls *R1_001.fastq.gz | cut -d '_' -f 1 > samples.list
+##for fl18 samples, the sample is on the second underscore
+#ls *R1_001.fastq.gz | cut -d '_' -f 2 > samples.list
 
 ##cuts off the extra words in the .fastq files
-for file in $(cat samples.list); do  mv ${file}_*R1*.fastq ${file}_R1.fastq; mv ${file}_*R2*.fastq ${file}_R2.fastq; done
+for file in $(cat samples.list); do  mv ${file}*R1_001.fastq.gz ${file}_R1.fastq.gz; mv ${file}*R2_001.fastq.gz ${file}_R2.fastq.gz; done
+##FL18
+#for file in $(cat samples.list); do  mv *${file}*R1_001.fastq.gz ${file}_R1.fastq.gz; mv *${file}*R2_001.fastq.gz ${file}_R2.fastq.gz; done
 
 ##getting rid of first 4 bases (degenerate primers created them)
-for file in $(cat samples.list); do ~/bin/bbmap/bbduk.sh in1=${file}_R1.fastq in2=${file}_R2.fastq ftl=4 out1=${file}_R1_No4N.fastq out2=${file}_R2_No4N.fastq; done &>bbduk_No4N.log
+for file in $(cat samples.list); do ~/bin/bbmap/bbduk.sh in1=${file}_R1.fastq.gz in2=${file}_R2.fastq.gz ftl=4 out1=${file}_R1_No4N.fastq.gz out2=${file}_R2_No4N.fastq.gz; done &>bbduk_No4N.log
 
 ##only keeping reads that start with the 16S primer
-for file in $(cat samples.list); do ~/bin/bbmap/bbduk.sh in1=${file}_R1_No4N.fastq in2=${file}_R2_No4N.fastq restrictleft=20 k=15 literal=GTGYCAGCMGCCGCGGTA,GGACTACHVGGGTWTCTAAT copyundefined=t outm1=${file}_R1_No4N_16S.fastq outu1=${file}_R1_check.fastq outm2=${file}_R2_No4N_16S.fastq outu2=${file}_R2_check.fastq; done &>bbduk_16S.log
+for file in $(cat samples.list); do ~/bin/bbmap/bbduk.sh in1=${file}_R1_No4N.fastq.gz in2=${file}_R2_No4N.fastq.gz restrictLeft=30 hdist=2 k=15 literal=GTGYCAGCMGCCGCGGTA,GGACTACHVGGGTWTCTAAT copyundefined=t outm1=${file}_R1_No4N_16S.fastq.gz outu1=${file}_R1_check.fastq.gz outm2=${file}_R2_No4N_16S.fastq.gz outu2=${file}_R2_check.fastq.gz; done &>bbduk_16S.log
 ##higher k = more reads removed, but can't surpass k=20 or 21
 
 ##using cutadapt to remove primer
@@ -57,7 +61,7 @@ module load cutadapt/3.4
 
 for file in $(cat samples.list)
 do
-cutadapt -g GTGYCAGCMGCCGCGGTA -a ATTAGAWACCCVHGTAGTCC -G GGACTACHVGGGTWTCTAAT -A TACCGCGGCKGCTGRCAC -n 2 --discard-untrimmed -o ${file}_R1_clipped.fastq -p ${file}_R2_clipped.fastq ${file}_R1_No4N_16S.fastq ${file}_R2_No4N_16S.fastq
+cutadapt -g GTGYCAGCMGCCGCGGTA -a ATTAGAWACCCVHGTAGTCC -G GGACTACHVGGGTWTCTAAT -A TACCGCGGCKGCTGRCAC -n 2 --discard-untrimmed -o ${file}_R1_trimmed.fastq.gz -p ${file}_R2_trimmed.fastq.gz ${file}_R1_No4N_16S.fastq.gz ${file}_R2_No4N_16S.fastq.gz
 done &> clip.log
 ##-g regular 5' forward primer
 ##-G regular 5' reverse primer
@@ -66,6 +70,21 @@ done &> clip.log
 ##-max-n 0 means 0 Ns allowed
 
 # did sftp of *_R1.fastq & *_R2.fastq files to the folder to be used in dada2
+```
+
+Some extra negative control things - renaming
+
+```{bash, eval=F}
+mv hannah1_R1_trimmed.fastq.gz FALSE_neg1_hannah1_R1.fastq.gz
+mv hannah1_R2_trimmed.fastq.gz FALSE_neg1_hannah1_R2.fastq.gz
+mv hannah2_R1_trimmed.fastq.gz FALSE_neg2_hannah2_R1.fastq.gz
+mv hannah2_R2_trimmed.fastq.gz FALSE_neg2_hannah2_R2.fastq.gz
+mv neg_james_C6_S30_F_filt.fastq FALSE_neg3_james_R1.fastq.gz
+mv neg_james_C6_S30_R_filt.fastq FALSE_neg3_james_R2.fastq.gz
+mv MP_R1_trimmed.fastq.gz FALSE_neg4_MP_R1.fastq.gz
+mv MP_R2_trimmed.fastq.gz FALSE_neg4_MP_R2.fastq.gz
+mv TV_R1_trimmed.fastq.gz FALSE_neg5_TV_R1.fastq.gz
+mv TV_R2_trimmed.fastq.gz FALSE_neg5_TV_R2.fastq.gz
 ```
 
 # Call ASVs with DADA2
@@ -87,12 +106,16 @@ library(ShortRead)
 library(Biostrings)
 #packageVersion("Biostrings")
 #2.56.0
-path <- "~/nicfall@bu.edu - Google Drive/My Drive/Flirma/fl_16s/raw_temp2" # CHANGE ME to the directory containing the fastq files after unzipping.
+#path <- "~/Desktop/flpub/flpub_raw18" # CHANGE ME to the directory containing the fastq files
+#path <- "~/Desktop/flpub/flpub_raw1517"
 ```
 
 ## Read in data, check for primers
 
 ```{r dada2 werk, eval=FALSE}
+##just checking a few because all of them takes forever
+path <- "~/Desktop/flpub/flpub_raw1517/check_primers"
+
 fnFs <- sort(list.files(path, pattern = "_R1.fastq.gz", full.names = TRUE))
 fnRs <- sort(list.files(path, pattern = "_R2.fastq.gz", full.names = TRUE))
 
@@ -120,7 +143,7 @@ REV.orients
 
 fnFs.filtN <- file.path(path, "filtN", basename(fnFs)) # Put N-filterd files in filtN/ subdirectory
 fnRs.filtN <- file.path(path, "filtN", basename(fnRs))
-filterAndTrim(fnFs, fnFs.filtN, fnRs, fnRs.filtN, maxN = 0, multithread = TRUE)
+filterAndTrim(fnFs, fnFs.filtN, fnRs, fnRs.filtN, maxN = 0, multithread = TRUE,verbose=TRUE)
 
 primerHits <- function(primer, fn) {
   # Counts number of reads in which the primer is found
@@ -128,17 +151,17 @@ primerHits <- function(primer, fn) {
   return(sum(nhits > 0))
 }
 
-#towards the beginning
+#first one
 rbind(FWD.ForwardReads = sapply(FWD.orients, primerHits, fn = fnFs.filtN[[1]]), 
       FWD.ReverseReads = sapply(FWD.orients, primerHits, fn = fnRs.filtN[[1]]), 
       REV.ForwardReads = sapply(REV.orients, primerHits, fn = fnFs.filtN[[1]]), 
       REV.ReverseReads = sapply(REV.orients, primerHits, fn = fnRs.filtN[[1]]))
 
-#at the end
-rbind(FWD.ForwardReads = sapply(FWD.orients, primerHits, fn = fnFs.filtN[[4]]), 
-      FWD.ReverseReads = sapply(FWD.orients, primerHits, fn = fnRs.filtN[[4]]), 
-      REV.ForwardReads = sapply(REV.orients, primerHits, fn = fnFs.filtN[[4]]), 
-      REV.ReverseReads = sapply(REV.orients, primerHits, fn = fnRs.filtN[[4]]))
+#another one
+rbind(FWD.ForwardReads = sapply(FWD.orients, primerHits, fn = fnFs.filtN[[3]]), 
+      FWD.ReverseReads = sapply(FWD.orients, primerHits, fn = fnRs.filtN[[3]]), 
+      REV.ForwardReads = sapply(REV.orients, primerHits, fn = fnFs.filtN[[3]]), 
+      REV.ReverseReads = sapply(REV.orients, primerHits, fn = fnRs.filtN[[3]]))
 ```
 
 No primers, amazing!
@@ -149,9 +172,9 @@ No primers, amazing!
 
 ```{r raw visuals, eval=FALSE}
 #First, lets look at quality profile of R1 reads
-plotQualityProfile(fnFs.filtN[c(1,2,3,4)])
+plotQualityProfile(fnFs.filtN[c(1,2,3)])
 plotQualityProfile(fnFs.filtN[c(88,89,90,91)])
-plotQualityProfile(fnFs.filtN[c(263,264,265,266)])
+#plotQualityProfile(fnFs.filtN[c(263,264,265,266)])
 #looks great up to 200, maybe 190 to be safe
 ```
 
@@ -159,66 +182,49 @@ plotQualityProfile(fnFs.filtN[c(263,264,265,266)])
 
 ```{r raw visuals rev, eval=FALSE}
 #Then look at quality profile of R2 reads
-plotQualityProfile(fnRs.filtN[c(1,2,3,4)])
+plotQualityProfile(fnRs.filtN[c(1,2,3)])
 plotQualityProfile(fnRs.filtN[c(88,89,90,91)])
-plotQualityProfile(fnRs.filtN[c(263,264,265,266)])
+#plotQualityProfile(fnRs.filtN[c(263,264,265,266)])
 #190ish again
 ```
 
-Doing the rest on the cluster because I have too many samples
-
 ## Make ASV table
 
-R script dada.R
-
-```{bash, eval=FALSE}
-nano dada.R
-```
-
-Text within
-
-```{r dada.R script, eval=FALSE}
-#now in "R env" on cluster
-library("BiocManager")
-#BiocManager::install("dada2") 
-library(dada2)
-packageVersion("dada2") #version 1.20
-library(ShortRead)
-packageVersion("ShortRead") #1.50.0
-library(Biostrings)
-packageVersion("Biostrings") #2.60.2
-
-path <- "/projectnb2/davieslab/nicpro/flirma/fl16s" # CHANGE ME to the directory containing the fastq files
+```{r}
+##on interactive scc:
+path <- "/projectnb/davieslab/nicpro/flpub/both"
+list.files(path)
 
 fnFs <- sort(list.files(path, pattern = "_R1.fastq.gz", full.names = TRUE))
 fnRs <- sort(list.files(path, pattern = "_R2.fastq.gz", full.names = TRUE))
 
-get.sample.name <- function(fname) strsplit(basename(fname), "_")[[1]][2]
-sample.names <- unname(sapply(fnFs, get.sample.name))
-head(sample.names)
+sample.names <- sapply(strsplit(basename(fnFs), "_"), `[`, 2)
 sample.names
+```
 
+```{r}
 # Make directory and filenames for the filtered fastqs
 filt_path <- file.path(path, "trimmed")
 if(!file_test("-d", filt_path)) dir.create(filt_path)
 filtFs <- file.path(filt_path, paste0(sample.names, "_F_filt.fastq.gz"))
 filtRs <- file.path(filt_path, paste0(sample.names, "_R_filt.fastq.gz"))
 
-#changing a bit from default settings - maxEE=1 (1 max expected error, more conservative), truncating length at 175 bp for both forward & reverse [leaves ~50bp overlap], added "trimleft" to cut off primers [18 for forward, 20 for reverse]
+#changing a bit from default settings - maxEE=2 (2 max expected error, more conservative), truncating length at 175 bp for both forward & reverse [leaves overlap]
 out <- filterAndTrim(fnFs, filtFs, fnRs, filtRs, 
-                     truncLen=c(190,190), #leaves ~50bp overlap
+                     truncLen=c(175,175), #leaves overlap
                      maxN=0, #DADA does not allow Ns
-                     maxEE=c(1,1), #allow 1 expected errors, where EE = sum(10^(-Q/10)); more conservative, model converges
+                     maxEE=c(2,2), #allow 2 expected errors, where EE = sum(10^(-Q/10)); more conservative, model converges
                      truncQ=2, 
                      #trimLeft=c(18,20), #N nucleotides to remove from the start of each read
                      rm.phix=TRUE, #remove reads matching phiX genome
                      matchIDs=TRUE, #enforce matching between id-line sequence identifiers of F and R reads
-                     compress=TRUE, multithread=TRUE) # On Windows set multithread=FALSE
+                     compress=TRUE, 
+                     multithread=TRUE,
+                     verbose=TRUE) # On Windows set multithread=FALSE
 
 head(out)
 tail(out)
 
-#setDadaOpt(MAX_CONSIST=30) #increase number of cycles to allow convergence
 errF <- learnErrors(filtFs, multithread=TRUE)
 errR <- learnErrors(filtRs, multithread=TRUE)
 
@@ -228,22 +234,11 @@ errR <- learnErrors(filtRs, multithread=TRUE)
 #black line is estimated error rate after convergence
 #dots are observed error rate for each quality score
 
-#plotErrors(errF, nominalQ=TRUE) 
-#plotErrors(errR, nominalQ=TRUE) 
+plotErrors(errF, nominalQ=TRUE) 
+plotErrors(errR, nominalQ=TRUE) 
 
-### Dereplicate reads
-
-#Dereplication combines all identical sequencing reads into into “unique sequences” with a corresponding “abundance”: the number of reads with that unique sequence. 
-#Dereplication substantially reduces computation time by eliminating redundant comparisons.
-#DADA2 retains a summary of the quality information associated with each unique sequence. The consensus quality profile of a unique sequence is the average of the positional qualities from the dereplicated reads. These quality profiles inform the error model of the subsequent denoising step, significantly increasing DADA2’s accuracy.
-derepFs <- derepFastq(filtFs, verbose=TRUE)
-derepRs <- derepFastq(filtRs, verbose=TRUE)
-# Name the derep-class objects by the sample names
-names(derepFs) <- sample.names
-names(derepRs) <- sample.names
-
-dadaFs <- dada(derepFs, err=errF, multithread=TRUE)
-dadaRs <- dada(derepRs, err=errR, multithread=TRUE)
+dadaFs <- dada(filtFs, err=errF, multithread=TRUE, verbose=TRUE)
+dadaRs <- dada(filtRs, err=errR, multithread=TRUE, verbose=TRUE)
 
 #now, look at the dada class objects by sample
 #will tell how many 'real' variants in unique input seqs
@@ -256,26 +251,23 @@ dadaRs[[1]]
 #To further cull spurious sequence variants
 #Merge the denoised forward and reverse reads
 #Paired reads that do not exactly overlap are removed
-
-mergers <- mergePairs(dadaFs, derepFs, dadaRs, derepRs, verbose=TRUE)
+mergers <- mergePairs(dadaFs, filtFs, dadaRs, filtRs, verbose=TRUE)
 # Inspect the merger data.frame from the first sample
 head(mergers[[1]])
 
-summary((mergers[[1]]))
+#summary((mergers[[1]]))
 
 #We now have a data.frame for each sample with the merged $sequence, its $abundance, and the indices of the merged $forward and $reverse denoised sequences. Paired reads that did not exactly overlap were removed by mergePairs.
 
 seqtab <- makeSequenceTable(mergers)
 
-dim(seqtab)
+dim(seqtab) 
+#367 samples, 79844 ASVs
 
 # Inspect distribution of sequence lengths
 table(nchar(getSequences(seqtab)))
 
-saveRDS(seqtab,file="fl16s.seqtab.rds")
-
 plot(table(nchar(getSequences(seqtab)))) #real variants appear to be right in that 244-264 window
-### note: I've done this part previously to look at the peak before proceeding with desired length trimming below
 
 #The sequence table is a matrix with rows corresponding to (and named by) the samples, and 
 #columns corresponding to (and named by) the sequence variants. 
@@ -290,15 +282,12 @@ seqtab2 <- seqtab[,nchar(colnames(seqtab)) %in% seq(244,264)] #again, being fair
 
 seqtab.nochim <- removeBimeraDenovo(seqtab2, method="consensus", multithread=TRUE, verbose=TRUE)
 dim(seqtab.nochim)
-#Identified 1930 bimeras out of 77085 input sequences.
+#Identified 2108 bimeras out of 78369 input sequences.
 
 sum(seqtab.nochim)/sum(seqtab2)
-#
-#The fraction of chimeras varies based on factors including experimental procedures and sample complexity, 
-#but can be substantial. 
+#0.9965891
 
 # Track Read Stats #
- 
 getN <- function(x) sum(getUniques(x))
 track <- cbind(out, sapply(dadaFs, getN), sapply(mergers, getN), rowSums(seqtab2), rowSums(seqtab.nochim))
 colnames(track) <- c("input", "filtered", "denoised", "merged", "tabled", "nonchim")
@@ -306,123 +295,311 @@ rownames(track) <- sample.names
 head(track)
 tail(track)
 
-write.csv(track,file="fl16s.readstats.csv",row.names=TRUE,quote=FALSE)
-saveRDS(seqtab.nochim,file="fl16s.seqtab.nochim.RDS")
+##also the sample names still have extra info
+rownames(seqtab.nochim) <- sub("_F_filt.fastq.gz","",rownames(seqtab.nochim))
+
+# write.csv(track,file="/projectnb/davieslab/nicpro/flpub/flpub.readstats.csv",row.names=TRUE,quote=FALSE)
+# saveRDS(seqtab.nochim,file="/projectnb/davieslab/nicpro/flpub/flpub.seqtab.nochim.rds")
+
+##renaming ASVs
+asv.ids <- paste0("ASV",sprintf('%0.5d', 1:length(colnames(seqtab.nochim))))
+##save fasta file
+#uniquesToFasta(as.matrix(seqtab.both.df), fout="seqtab.nochim.both.fasta", ids = asv.ids, mode = "w", width = 20000)
+
+##seq table with new IDs
+##making a copy before overwriting 
+seqtab.nochim.ids <- seqtab.nochim
+
+colnames(seqtab.nochim.ids) <- asv.ids
+##save
+#saveRDS(seqtab.nochim.ids,file="flpub.seqtab.nochim.ids.rds")
 ```
 
-Exit & save. Submit R script
+# LULU clustering
 
-```{bash, eval=FALSE}
-nano dada.sh
-```
+## Terminal prep
 
-Text within dada.sh
+Combining both fasta files then blasting against itself, following lulu instructions
 
 ```
+nano luluprep.sh
+```
+
+Text within:
+
+```{bash}
 #!/bin/bash -l
 #$ -V # inherit the submission environment
 #$ -cwd # start job in submission directory
-#$ -N dada.sh # job name, anything you want
+#$ -N luluprep.sh # job name, anything you want
+#$ -l h_rt=24:00:00
+#$ -M thenicolakriefall@gmail.com
+#$ -m be
+
+module load blast+
+
+#First produce a blastdatabase with the OTUs
+makeblastdb -in flpub.seqtab.nochim.fasta -parse_seqids -dbtype nucl
+
+# Then blast the OTUs against the database to produce the match list 
+blastn -db flpub.seqtab.nochim.fasta -outfmt '6 qseqid sseqid pident' -out match_list.txt -qcov_hsp_perc 80 -perc_identity 90 -query flpub.seqtab.nochim.fasta
+```
+
+Exit & save
+
+```
+qsub -pe omp 8 luluprep.sh
+```
+
+## Then lulu R script
+
+```
+nano lulu.R
+```
+
+```{r, eval=F}
+library("lulu")
+
+#setwd("/projectnb/davieslab/nicpro/flpub/lulu")
+
+seqtab.nochim.ids <- readRDS("flpub.seqtab.nochim.ids.rds")
+#And match list
+matchList <- read.table("match_list.txt")
+head(matchList)
+
+#Reformat ASV table to desired LULU format
+ASVs <- data.frame(t(seqtab.nochim.ids),check.names=FALSE)
+
+#Now, run the LULU curation
+##attempting to match CMAIKI steps, except min relative cooccurrence is LULU default of 0.95 instead of 1
+curated_result <- lulu(ASVs,matchList, minimum_ratio_type = "min", minimum_ratio = 1, minimum_match = 97, minimum_relative_cooccurence = 0.95)
+
+saveRDS(curated_result,file="flpub.lulu.results.rds")
+```
+
+```
+nano lulu.sh
+```
+
+Text within:
+
+```{bash}
+#!/bin/bash -l
+#$ -V # inherit the submission environment
+#$ -cwd # start job in submission directory
+#$ -N lulu.sh # job name, anything you want
 #$ -l h_rt=24:00:00
 #$ -M thenicolakriefall@gmail.com
 #$ -m be
 
 module load R
-module load rstudio
-Rscript dada.R
+Rscript lulu.R
 ```
 
-Exit & qsub
+Exit & save
 
-```{bash, eval=FALSE}
-qsub -pe omp 16 dada.sh
+```
+qsub -pe omp 8 lulu.sh
+```
+
+Back in local computer 
+
+```{r}
+setwd("~/nicfall@bu.edu - Google Drive/My Drive/Flirma/flirma_networks/fl_16s/01.generate_asv_table")
+
+library("dplyr")
+
+curated_result <- readRDS("flpub.lulu.results.rds")
+
+summary(curated_result) #4892 discarded otus
+#71369 left
+
+#Pull out the curated OTU list, re-transpose
+seqtab.nochim.lulu <- data.frame(t(curated_result$curated_table),check.names=FALSE)
+
+##fix the lulu order
+#seqtab.nochim.lulu <- select(seqtab.nochim.lulu1, num_range("ASV", 0:77554))
+##last number is the last ASV before curation
+
+##Continue on to your favorite analysis
+#saveRDS(seqtab.nochim.lulu,file="flpub.seqtab.nochim.lulu.rds")
+```
+
+Remove singletons
+
+```{r}
+seqtab.nochim.lulu <- readRDS("flpub.seqtab.nochim.lulu.rds")
+
+##make a copy before making changes
+seqtab.pa <- seqtab.nochim.lulu
+
+seqtab.pa[seqtab.pa > 0] <- 1 #converts from abundance to P/A
+
+##extract column names where the abundance total is just 1 (aka 1 sample)
+colnames1 <- colnames(seqtab.pa)[colSums(seqtab.pa)==1]
+length(colnames1) #43725
+
+##remove singletons
+##remove column names that were equal to 1
+seqtab.nochim.lulu.nosing <- seqtab.nochim.lulu[!colnames(seqtab.nochim.lulu) %in% colnames1]
+##27644 left
+
+##make sure no columns are equal to 0.. there shouldn't be any?
+#colnames0 <- colnames(seqtab.pa)[colSums(seqtab.pa)==0]
+#colnames0
+
+tail(colSums(seqtab.nochim.lulu.nosing),n=50)
+
+## Trimming <0.1% abundance per sample
+
+##preserve row sums for trimming 
+seqtab.lulu.sums <- seqtab.nochim.lulu
+seqtab.lulu.sums$sample.sums <- rowSums(seqtab.lulu.sums)
+sample.sums.df <- seqtab.lulu.sums[,71370, drop=FALSE]
+
+#seqtab.trimmed <- seqtab.nochim.lulu.nosing
+##checking the sample sums line up with the current otu table
+row.names(seqtab.trimmed)==row.names(sample.sums.df)
+
+for (i in 1:nrow(seqtab.trimmed)) {
+  #row_sum <- sum(seqtab.trimmed[i,])
+  threshold <- sample.sums.df[i,] * 0.001
+  #print(threshold)
+  seqtab.trimmed[i,seqtab.trimmed[i,] <= threshold] <- 0
+}
+
+##remove totally zeroes now
+seqtab.trim.no0 <- seqtab.trimmed[,-which(colSums(seqtab.trimmed)==0)]
+
+##before
+seqtab.nochim.lulu.nosing[,"ASV01000"]
+##after
+seqtab.trim.no0[,"ASV01000"]
+
+tail(sort(colSums(seqtab.trim.no0),decreasing=T),n=50)
+
+#saveRDS(seqtab.trim.no0,file="flpub.seqtab.nochim.lulu.trim.rds")
+```
+
+## Subsetting the fasta down to the ASVs that are left
+
+```{r}
+otus.left <- c(colnames(seqtab.trim.no0))
+
+##saving the otus I want as a .txt file to extract from the fasta file
+#write.table(otus.left, file="otus_remaining.txt", append = FALSE, sep = "/n", row.names = FALSE, col.names = FALSE,quote=FALSE)
+```
+
+```
+awk -F'>' 'NR==FNR{ids[$0]; next} NF>1{f=($2 in ids)} f' otus_remaining.txt flpub.seqtab.nochim.fasta >> flpub.seqtab.nochim.lulu.trim.fasta
+
+##checking that the right number is there now
+grep '>' flpub.seqtab.nochim.lulu.trim.fasta | wc -l
 ```
 
 # Assign taxonomy
 
-Downloaded silva data [here; SILVA SSU r138 (modified) (151.8 MB)](http://www2.decipher.codes/Downloads.html)
+[DECIPHER taxa downloads](http://www2.decipher.codes/Downloads.html)
 
-For some reason I always have to re-install dada2 on the cluster:
+## Doing on cluster
 
-```{bash, eval=FALSE}
-BiocManager::install("dada2")
+```{bash}
+nano tax.sh
 ```
-
-In cluster
-
-```{bash, eval=FALSE}
-nano taxid.R 
-```
-
-Text for script:
-  
-```{r taxid.R, eval=FALSE}
-setwd("/projectnb/davieslab/nicpro/flirma/fl.2023/newtax")
-seqtab.nochim <- readRDS("fl16s.seqtab.nochim.RDS")
-
-#BiocManager::install("DECIPHER")
-library(DECIPHER)
-library("dada2")
-
-sq.ids <- paste0("sq", seq(1, length(colnames(seqtab.nochim))))
-#making output fasta file - did once then skipping
-#path <- "/projectnb2/davieslab/nicpro/flirma/fl.2023/fl16s.23.fasta"
-#uniquesToFasta(seqtab.nochim, path, ids = sq.ids, mode = "w", width = 20000)
-
-dna <- DNAStringSet(getSequences(seqtab.nochim)) # Create a DNAStringSet from the ASVs
-load("SILVA_SSU_r138_2019.RData") # CHANGE TO THE PATH OF YOUR TRAINING SET
-ids <- IdTaxa(dna, trainingSet, strand="both", processors=NULL, verbose=T) # use all processors
-ranks <- c("domain", "phylum", "class", "order", "family", "genus", "species") # ranks of interest
-# Convert the output object of class "Taxa" to a matrix analogous to the output from assignTaxonomy
-taxid <- t(sapply(ids, function(x) {
-  m <- match(ranks, x$rank)
-  taxa <- x$taxon[m]
-  taxa[startsWith(taxa, "unclassified_")] <- NA
-  taxa
-}))
-colnames(taxid) <- ranks; rownames(taxid) <- getSequences(seqtab.nochim)
-saveRDS(taxid,file="fl16s.23.taxid.rds")
-#taxid <- readRDS("fl16s.23.taxid.rds")
-
-colnames(seqtab.nochim)<-sq.ids
-taxid2 <- cbind(taxid, rownames(taxid)) #retaining raw sequence info before renami$
-rownames(taxid2)<-sq.ids
-
-saveRDS(taxid2,file="fl16s.23.taxid.newids.rds")
-saveRDS(seqtab.nochim,file="fl16s.23.seqtab.nochim.newids.rds")
-
-sessionInfo()
-```
-
-Save & exit, make job:
-
-```{bash, eval=FALSE}
-nano taxid.23.sh
-```
-
-Text within:
 
 ```
 #!/bin/bash -l
 #$ -V # inherit the submission environment
 #$ -cwd # start job in submission directory
-#$ -N taxid.23.sh # job name, anything you want
-#$ -l h_rt=48:00:00
+#$ -N tax.sh # job name, anything you want
+#$ -l h_rt=30:00:00
 #$ -M thenicolakriefall@gmail.com
 #$ -m be
 
 module load R
-Rscript taxid.R
+Rscript tax.R
 ```
 
-Submit job
+Exit & save
 
-```{bash, eval=FALSE}
-qsub -pe omp 32 taxid.23.sh
+```{bash}
+nano tax.R
 ```
 
-```{r session info}
-sessionInfo()
+Text within:
+
+```{r, eval=F}
+library(dada2)
+library(DECIPHER); packageVersion("DECIPHER")
+
+path.fasta <- "./flpub.seqtab.nochim.lulu.filter.fasta"
+
+dna <- DNAStringSet(getSequences(path.fasta)) # Create a DNAStringSet from the ASVs
+head(dna)
+
+load("./SILVA_SSU_r138_2019.RData") # CHANGE TO THE PATH OF YOUR TRAINING SET
+ids <- IdTaxa(dna, trainingSet, strand="top", processors=NULL, verbose=TRUE) # use all processors
+
+saveRDS(ids,file="flpub.taxa.ids.rds")
+```
+
+Exit & save, submit
+
+```
+qsub -pe omp 8 tax.sh
+```
+
+Back in R locally
+
+```{r}
+setwd("~/nicfall@bu.edu - Google Drive/My Drive/Flirma/flirma_networks/fl_16s/01.generate_asv_table")
+
+ids <- readRDS("flpub.taxa.ids.rds")
+
+ranks <- c("domain", "phylum", "class", "order", "family", "genus", "species") # ranks of interest
+# Convert the output object of class "Taxa" to a matrix analogous to the output from assignTaxonomy
+taxid <- t(sapply(ids, function(x) {
+        m <- match(ranks, x$rank)
+        taxa <- x$taxon[m]
+        taxa[startsWith(taxa, "unclassified_")] <- NA
+        taxa
+}))
+colnames(taxid) <- ranks
+
+##making a column for asv_id
+taxid2 <- cbind(taxid,rownames(taxid))
+colnames(taxid2)[8] <- "ASV_id"
+
+##save save
+#saveRDS(taxid2,file="flpub.taxa.ids2.rds")
+```
+
+# Make phyloseq object
+
+```{r}
+setwd("~/nicfall@bu.edu - Google Drive/My Drive/Flirma/flirma_networks/fl_16s/01.generate_asv_table")
+
+taxid2 <- readRDS("flpub.taxa.ids2.rds")
+seqtab.trim <- readRDS("flpub.seqtab.nochim.lulu.trim.rds")
+#write.csv(seqtab.trim,"seqtab.trim.csv")
+
+samdf <- read.csv("fl_sample_info - 16s_all_newvars.csv")
+row.names(samdf) <- samdf$sample_num
+
+#phyloseq object with new taxa ids
+##otu table that's trimmed af
+ps <- phyloseq(otu_table(seqtab.trim, taxa_are_rows=FALSE), 
+               sample_data(samdf), 
+               tax_table(taxid2))
+
+ps 
+
+# phyloseq-class experiment-level object
+# otu_table()   OTU Table:         [ 8977 taxa and 367 samples ]
+# sample_data() Sample Data:       [ 367 samples by 11 sample variables ]
+# tax_table()   Taxonomy Table:    [ 8977 taxa by 8 taxonomic ranks ]
+
+#saveRDS(ps,file="flpub.ps.lulu.trim.rds")
 ```
 
 # Remove contaminants
@@ -439,55 +616,32 @@ library(ShortRead)
 
 #### Read in previously saved datafiles ####
 setwd("~/nicfall@bu.edu - Google Drive/My Drive/Flirma/flirma_networks/fl_16s/01.generate_asv_table")
+
+ps <- readRDS("flpub.ps.lulu.trim.rds")
+ps #8977 taxa, 367 samples
 ```
 
 ## Remove chloroplasts etc. 
 
 ```{r, eval=FALSE}
-samdf <- read.csv("fl_sample_info - 16s_all_newvars.csv")
-row.names(samdf) <- samdf$sample_num
-
-taxa <- readRDS("fl16s.23.taxid.newids.rds")
-
-#seq.trim.newids <- readRDS("fl16s.rd3.seqtab.nochim.newids.rds")
-#ncol(seq.trim.newids) 
-##12,836 asvs
-
-seq.newids <- readRDS("fl16s.23.seqtab.nochim.newids.rds")
-
-#phyloseq object with new taxa ids
-ps.raw <- phyloseq(otu_table(seq.newids, taxa_are_rows=FALSE), 
-               sample_data(samdf), 
-               tax_table(taxa))
-
-ps.raw
-#75430, 360 samples untrimmed
-
-##don't want UK3 samples for read count things
-ps.raw.nouk3 <- subset_samples(ps.raw,site!="UK3")
-ps <- prune_taxa(taxa_sums(ps.raw.nouk3) > 0, ps.raw.nouk3)
-ps
-#72110, 320 samples
-sum(sample_sums(ps)) #15,222,260 raw reads
-
 #### remove mitochondria, chloroplasts, non-bacteria #### 
 ps.mito <- subset_taxa(ps, (family=="Mitochondria"))
-ps.mito #15 taxa to remove
+ps.mito #6 taxa to remove
 ps.chlor <- subset_taxa(ps, (order=="Chloroplast"))
-ps.chlor #503 taxa to remove
+ps.chlor #123 taxa to remove
 ps.notbact <- subset_taxa(ps, (domain!="Bacteria") | is.na(domain))
-ps.notbact #22412 taxa to remove
+ps.notbact #1460 taxa to remove
 
 ps.nomito <- subset_taxa(ps, (family!="Mitochondria") | is.na(family))
-ps.nomito #72095 taxa
+ps.nomito #8971 taxa
 ps.nochlor <- subset_taxa(ps.nomito, (order!="Chloroplast") | is.na(order))
-ps.nochlor #71592 taxa
+ps.nochlor #8848 taxa
 ps.clean <- subset_taxa(ps.nochlor, (domain=="Bacteria"))
-ps.clean #49180 taxa
+ps.clean #7388 taxa
 
 #just archaea
 ps.arch <- subset_taxa(ps.nomito, (domain=="Archaea"))
-ps.arch #463 taxa
+ps.arch #103 taxa
 ```
 
 ## Remove contamination from negative controls
@@ -495,6 +649,7 @@ ps.arch #463 taxa
 ```{r decontam work, eval=FALSE}
 #BiocManager::install("decontam")
 library(decontam)
+library(ggplot2)
 
 df <- as.data.frame(sample_data(ps.clean)) # Put sample_data into a ggplot-friendly data.frame
 df$LibrarySize <- sample_sums(ps.clean)
@@ -502,12 +657,12 @@ df <- df[order(df$LibrarySize),]
 df$Index <- seq(nrow(df))
 ggplot(data=df, aes(x=Index, y=LibrarySize, color=year)) + geom_point()
 
-sample_data(ps.clean)$lib_size <- sample_sums(ps.clean)
+sample_data(ps.clean)$lib_size_clean <- sample_sums(ps.clean)
 sample_data(ps.clean)$is.neg <- sample_data(ps.clean)$full_site == "neg"
 contamdf.prev <- isContaminant(ps.clean, neg="is.neg",threshold=0.5)
 table(contamdf.prev$contaminant)
-# FALSE  TRUE - without trimming
-# 49080   100 
+# FALSE  TRUE 
+#  7320    68 
 
 # Make phyloseq object of presence-absence in negative controls and true samples
 ps.pa <- transform_sample_counts(ps.clean, function(abund) 1*(abund>0))
@@ -522,29 +677,106 @@ ggplot(data=df.pa, aes(x=pa.neg, y=pa.pos, color=contaminant)) + geom_point() +
 #remove from ps.clean:
 ps.clean1 <- prune_taxa(!contamdf.prev$contaminant,ps.clean)
 #also remove negative controls, don't need them anymore I think
-ps.clean.noneg <- subset_samples(ps.clean1,(full_site!="neg"))
-ps.clean.noneg
+ps.clean2 <- subset_samples(ps.clean1,(full_site!="neg"))
+ps.clean2
 
-#saveRDS(ps.clean.noneg,file="fl16s.23.ps.clean.noneg.rds")
-
-#also remove singletons
-ps.clean.nosing <- filter_taxa(ps.clean.noneg, function (x) {sum(x > 0) > 1}, prune=TRUE)
-ps.clean.nosing 
-#otu_table()   OTU Table:         [ 19948 taxa and 316 samples ]
-
-sum(sample_sums(ps.clean.nosing))
-#11,185,208
-#~112 reads
-
-ps.trim <- prune_taxa(taxa_sums(ps.clean.nosing) >= 112, ps.clean.nosing)
-ps.trim #7423 taxa and 316 samples
-sum(sample_sums(ps.trim))
-#10,623,208
-
-#saveRDS(ps.trim,file="fl16s.23.ps.clean.trim.rds")
+ps.clean.noneg <- prune_taxa(taxa_sums(ps.clean2)>0,ps.clean2)
+ps.clean.noneg #7292 taxa, 361 samples
 ```
 
-# Rarefy
+# Removing NAs from taxa info
+
+```{r}
+library(stringr)
+
+ps.clean.copy <- ps.clean.noneg
+
+tax <- as.data.frame(ps.clean.copy@tax_table@.Data)
+
+tax.clean <- data.frame(row.names = row.names(tax),
+                        Kingdom = str_replace(tax[,1], "D_0__",""),
+                        Phylum = str_replace(tax[,2], "D_1__",""),
+                        Class = str_replace(tax[,3], "D_2__",""),
+                        Order = str_replace(tax[,4], "D_3__",""),
+                        Family = str_replace(tax[,5], "D_4__",""),
+                        Genus = str_replace(tax[,6], "D_5__",""),
+                        #Species = str_replace(tax[,7], "D_6__",""),
+                        #Sequence = c(tax[,8]),
+                        ASV_id = c(tax[,8]),
+                        stringsAsFactors = FALSE)
+tax.clean[is.na(tax.clean)] <- ""
+
+for (i in 1:7){ tax.clean[,i] <- as.character(tax.clean[,i])}
+####### Fill holes in the tax table
+tax.clean[is.na(tax.clean)] <- ""
+for (i in 1:nrow(tax.clean)){
+  if (tax.clean[i,2] == ""){
+    kingdom <- paste("Kingdom_", tax.clean[i,1], sep = "")
+    tax.clean[i, 2:6] <- kingdom
+  } else if (tax.clean[i,3] == ""){
+    phylum <- paste("Phylum_", tax.clean[i,2], sep = "")
+    tax.clean[i, 3:6] <- phylum
+  } else if (tax.clean[i,4] == ""){
+    class <- paste("Class_", tax.clean[i,3], sep = "")
+    tax.clean[i, 4:6] <- class
+  } else if (tax.clean[i,5] == ""){
+    order <- paste("Order_", tax.clean[i,4], sep = "")
+    tax.clean[i, 5:6] <- order
+  } else if (tax.clean[i,6] == ""){
+    family <- paste("Family_", tax.clean[i,5], sep = "")
+    tax.clean[i, 6:6] <- family
+  }
+}
+
+tax_table(ps.clean.copy) <- as.matrix(tax.clean)
+ps.clean.copy
+```
+
+# Samples to toss
+
+```{r}
+sample_data(ps.clean.copy)$lib_size_clean <- sample_sums(ps.clean.copy)
+
+samdf.clean <- data.frame(ps.clean.copy@sam_data)
+
+samdf.low <- subset(samdf.clean,lib_size_clean<10000)
+
+ggplot(data=samdf.low, aes(x=sample, y=lib_size_clean, color=year))+
+  geom_point()+
+  theme(axis.text.x=element_text(angle=45,hjust=1))
+
+samdf.clean <- samdf.clean[order(samdf.clean$lib_size_clean),]
+samdf.clean$Index <- seq(nrow(samdf.clean))
+ggplot(data=samdf.clean, aes(x=Index, y=lib_size_clean))+
+  geom_point()
+
+head(samdf.clean$lib_size_clean,n=50) 
+tail(samdf.clean$lib_size_clean,n=50)
+#so the 'max' should be around 102019, excluding the 2 higher outliers
+#~10% of that would be 10,202
+
+##closer looks
+ggplot(data=samdf.clean, aes(x=Index, y=lib_size_clean,color=year))+
+  geom_point()+
+  xlim(0,50)+
+  ylim(0,10000)
+
+##removing low read samples (<2500):
+subset(samdf.clean, lib_size_clean <2500)
+
+##If I were to remove:
+ps.clean.less1 <- subset_samples(ps.clean.copy,sample!="UK2-I_1086"&sample!="UK2-O_1119")
+ps.clean.less1
+ps.clean.less <- prune_taxa(taxa_sums(ps.clean.less1)>0,ps.clean.less1)
+ps.clean.less
+# otu_table()   OTU Table:         [ 7289 taxa and 359 samples ]
+# sample_data() Sample Data:       [ 359 samples by 13 sample variables ]
+# tax_table()   Taxonomy Table:    [ 7289 taxa by 7 taxonomic ranks ]
+
+#saveRDS(ps.clean.less,file="flpub.ps.lulu.trim.clean.rds")
+```
+
+# Rarefy - skipping for now
 
 ```{r rarefy raw - do once then save, eval=FALSE}
 seqtab.trim <- data.frame(ps.trim@otu_table)
@@ -590,11 +822,11 @@ Checking read depths after all this processing
 
 ```{r, eval=F}
 #ps.less <- readRDS("fl16s.23.ps.cleaner.less.rds")
-sum(sample_sums(ps.trimmer))
-mean(sample_sums(ps.trimmer))
-#35456.26
-sd(sample_sums(ps.trimmer))
-#24520.16
+sum(sample_sums(ps.clean.noneg))
+mean(sample_sums(ps.clean.noneg))
+#31531.53
+sd(sample_sums(ps.clean.noneg))
+#21519.91
 
 # #saving some other info
 # samdf.cleaner <- data.frame(ps.cleaner@sam_data)

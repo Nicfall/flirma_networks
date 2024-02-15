@@ -361,9 +361,8 @@ sample_num,full_site,site,zone,site_zone,sample,spp,year,time,season,seq_run
 1253,cores,FA,E,FALSE,FALSE_1253,cores,2018,Post,Fall,run2
 1254,cores,FA,E,FALSE,FALSE_1254,cores,2018,Post,Fall,run2
 neg,neg,FA,E,FALSE,FALSE_neg,neg control,2018,Post,Fall,run2
-PA_1067,BUMP,FA,E,FALSE,FALSE_PA_1067,pdam,2018,Post,Fall,run2
-PB_1068,BUMP,FA,E,FALSE,FALSE_PB_1068,pdam,2018,Post,Fall,run2
-PC_1069,BUMP,FA,E,FALSE,FALSE_PC_1069,pdam,2018,Post,Fall,run2
 neg1,neg,FA,E,FALSE,FALSE_neg1,neg control,other,other,other,other
 neg2,neg,FA,E,FALSE,FALSE_neg2,neg control,other,other,other,other
 neg3,neg,FA,E,FALSE,FALSE_neg3,neg control,other,other,other,other
+neg4,neg,FA,E,FALSE,FALSE_neg4,neg control,other,other,other,other
+neg5,neg,FA,E,FALSE,FALSE_neg5,neg control,other,other,other,other
